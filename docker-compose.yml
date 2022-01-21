@@ -1,0 +1,24 @@
+version: '3'
+services:
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - "127.0.0.1:8010:3306"
+    volumes:
+      - db-matchosop:/var/lib/postgresql/data
+    container_name: matchosop-db
+    environment:
+      POSTGRES_PASSWORD: mypass
+      # default user is postgres
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8011:8080
+    container_name: matchosop-adminer
+
+volumes:
+  db-matchosop:
+    driver: local
