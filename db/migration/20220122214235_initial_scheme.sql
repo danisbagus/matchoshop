@@ -6,8 +6,7 @@ SELECT 'up SQL query';
 -- users table
 CREATE TABLE users (
     user_id     SERIAL NOT NULL,
-    email       VARCHAR(100) NOT NULL,
-    username    VARCHAR(20) NOT NULL, 
+    email       VARCHAR(100) NOT NULL UNIQUE,
     password    VARCHAR(255) NOT NULL,
     created_at  TIMESTAMP NOT NULL,
     updated_at  TIMESTAMP NOT NULL,
@@ -19,7 +18,7 @@ CREATE TABLE merchants (
     merchant_id SERIAL NOT NULL,
     user_id     INT NOT NULL,
     name        VARCHAR(50) NOT NULL,
-    identifier  VARCHAR(50) NOT NULL,
+    identifier  VARCHAR(50) NOT NULL UNIQUE,
     created_at  TIMESTAMP NOT NULL,
     updated_at  TIMESTAMP NOT NULL,
     PRIMARY KEY (merchant_id)
@@ -48,11 +47,11 @@ CREATE TABLE product_categories (
 
 -- product product category table
 CREATE TABLE product_product_categories (
-    product_id           INT NOT NULL,
+    product_id          INT NOT NULL,
     product_category_id INT NOT NULL,
     created_at          TIMESTAMP NOT NULL,
     updated_at          TIMESTAMP NOT NULL
-)
+);
 
 -- +goose Down
 -- +goose StatementBegin
@@ -62,6 +61,8 @@ SELECT 'down SQL query';
 DROP TABLE IF EXISTS users;
 
 DROP TABLE IF EXISTS merchants;
+
+DROP TABLE IF EXISTS products;
 
 DROP TABLE IF EXISTS product_categories;
 
