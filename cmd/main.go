@@ -12,7 +12,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/danisbagus/matchoshop/internal/core/service"
-	"github.com/danisbagus/matchoshop/internal/handler"
+	handlerV1 "github.com/danisbagus/matchoshop/internal/handler/v1"
 	"github.com/danisbagus/matchoshop/internal/repo"
 
 	_ "github.com/lib/pq"
@@ -34,12 +34,16 @@ func main() {
 
 	userService := service.NewUserService(userRepo)
 
-	userHandler := handler.AuthHandler{Service: userService}
+	userHandlerV1 := handlerV1.AuthHandler{Service: userService}
 
 	authRouter := router.PathPrefix("/auth").Subrouter()
+	apiRouter := router.PathPrefix("/api").Subrouter()
 
-	authRouter.HandleFunc("/login", userHandler.Login).Methods(http.MethodPost)
-	authRouter.HandleFunc("/register/merchant", userHandler.RegisterMerchant).Methods(http.MethodPost)
+	// v1 route
+	authRouter.HandleFunc("/v1/login", userHandlerV1.Login).Methods(http.MethodPost)
+	authRouter.HandleFunc("/v1/register/merchant", userHandlerV1.RegisterMerchant).Methods(http.MethodPost)
+
+	apiRouter.HandleFunc("/hello", SayHello)
 
 	appPort := fmt.Sprintf("%v:%v", os.Getenv("APP_HOST"), os.Getenv("APP_PORT"))
 	fmt.Println("Starting the application at:", appPort)
@@ -53,12 +57,6 @@ func GetClient() *sqlx.DB {
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 
-	// connection := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v", dbUser, dbPassword, dbHost, dbPort, dbName)
-	// connection := fmt.Sprintf("host=%s port=%s user=%s "+"password=%s dbname=%s sslmode=disable",
-	// 	dbHost, dbPort, dbUser, dbPassword, dbName)
-
-	// goose -dir db/migration postgres "postgres://postgres:mypass@localhost:8010/matchoshop?sslmode=disable" up
-
 	connection := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		dbUser,
@@ -67,8 +65,6 @@ func GetClient() *sqlx.DB {
 		dbPort,
 		dbName,
 	)
-
-	fmt.Println(connection)
 
 	client, err := sqlx.Open("postgres", connection)
 	if err != nil {
@@ -80,4 +76,8 @@ func GetClient() *sqlx.DB {
 	client.SetMaxIdleConns(10)
 
 	return client
+}
+
+func SayHello(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, `Hello world`)
 }
