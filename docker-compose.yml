@@ -1,0 +1,25 @@
+version: '3'
+services:
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - 8010:5432
+    volumes:
+      - db-matchoshop:/var/lib/postgresql/data
+      - ./db/initdb/init.sql:/docker-entrypoint-initdb.d/init.sql
+    container_name: matchoshop-db
+    environment:
+      POSTGRES_PASSWORD: mypass
+      # default user is postgres
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8011:8080
+    container_name: matchoshop-adminer
+
+volumes:
+  db-matchoshop:
+    driver: local
