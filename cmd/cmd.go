@@ -22,7 +22,7 @@ func StartApp() {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Error loading .env file")
+		log.Println("Failed loading .env file")
 	}
 
 	client := GetClient()
@@ -50,9 +50,17 @@ func StartApp() {
 		log.Fatal("$APP_PORT must be set")
 	}
 
-	appAPP_PORT := fmt.Sprintf("%v:%v", os.Getenv("APP_HOST"), os.Getenv("APP_PORT"))
-	fmt.Println("Starting the application at:", appAPP_PORT)
-	log.Fatal(http.ListenAndServe(appAPP_PORT, router))
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		log.Fatal("$PORT must be set")
+	}
+
+	log.Printf("APP Port: %q\n", port)
+
+	appPort := fmt.Sprintf("%v:%v", os.Getenv("APP_HOST"), os.Getenv("APP_PORT"))
+	fmt.Println("Starting the application at:", appPort)
+	log.Fatal(http.ListenAndServe(appPort, router))
 }
 
 func GetClient() *sqlx.DB {
