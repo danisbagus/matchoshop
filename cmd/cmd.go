@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func main() {
+func StartApp() {
 
 	err := godotenv.Load()
 	if err != nil {
