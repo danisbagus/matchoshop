@@ -87,5 +87,5 @@ func GetClient() *sqlx.DB {
 
 func SayHello(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Hello World"))
+	w.Write([]byte("Hello World!"))
 }
