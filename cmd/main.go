@@ -45,14 +45,19 @@ func main() {
 
 	apiRouter.HandleFunc("/hello", SayHello)
 
-	appPort := fmt.Sprintf("%v:%v", os.Getenv("HOST"), os.Getenv("PORT"))
-	fmt.Println("Starting the application at:", appPort)
-	log.Fatal(http.ListenAndServe(appPort, router))
+	APP_PORT := os.Getenv("APP_PORT")
+	if APP_PORT == "" {
+		log.Fatal("$APP_PORT must be set")
+	}
+
+	appAPP_PORT := fmt.Sprintf("%v:%v", os.Getenv("APP_HOST"), os.Getenv("APP_PORT"))
+	fmt.Println("Starting the application at:", appAPP_PORT)
+	log.Fatal(http.ListenAndServe(appAPP_PORT, router))
 }
 
 func GetClient() *sqlx.DB {
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
+	dbAPP_HOST := os.Getenv("DB_APP_HOST")
+	dbAPP_PORT := os.Getenv("DB_APP_PORT")
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
@@ -61,8 +66,8 @@ func GetClient() *sqlx.DB {
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		dbUser,
 		dbPassword,
-		dbHost,
-		dbPort,
+		dbAPP_HOST,
+		dbAPP_PORT,
 		dbName,
 	)
 
