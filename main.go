@@ -45,7 +45,7 @@ func main() {
 
 	apiRouter.HandleFunc("/hello", SayHello)
 
-	appPort := fmt.Sprintf("%v:%v", os.Getenv("APP_HOST"), os.Getenv("APP_PORT"))
+	appPort := fmt.Sprintf("%v:%v", os.Getenv("HOST"), os.Getenv("PORT"))
 	fmt.Println("Starting the application at:", appPort)
 	log.Fatal(http.ListenAndServe(appPort, router))
 }
