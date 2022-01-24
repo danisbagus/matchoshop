@@ -22,7 +22,7 @@ func StartApp() {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Error loading .env file")
 	}
 
 	client := GetClient()
@@ -56,8 +56,8 @@ func StartApp() {
 }
 
 func GetClient() *sqlx.DB {
-	dbAPP_HOST := os.Getenv("DB_APP_HOST")
-	dbAPP_PORT := os.Getenv("DB_APP_PORT")
+	dbAPP_HOST := os.Getenv("DB_HOST")
+	dbAPP_PORT := os.Getenv("DB_PORT")
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
