@@ -84,5 +84,6 @@ func GetClient() *sqlx.DB {
 }
 
 func SayHello(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, `Hello world`)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Hello World"))
 }
