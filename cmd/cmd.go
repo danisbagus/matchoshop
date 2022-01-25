@@ -63,14 +63,16 @@ func GetClient() *sqlx.DB {
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
+	dbSSLMode := os.Getenv("DB_SSL_MODE")
 
 	connection := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
 		dbUser,
 		dbPassword,
 		dbHost,
 		dbPort,
 		dbName,
+		dbSSLMode,
 	)
 
 	client, err := sqlx.Open("postgres", connection)
