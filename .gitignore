@@ -17,4 +17,5 @@ vendor/
 bin/
 
 .env
+export-env.sh
 
