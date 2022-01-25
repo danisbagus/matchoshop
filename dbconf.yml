@@ -1,0 +1,9 @@
+development:
+    driver: postgres
+    dsn: postgres://postgres:mypass@localhost:8010/matchoshop?sslmode=disable
+    migrationsDir: db/migration
+
+production:
+    driver: postgres
+    dsn: postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSL_MODE}
+    migrationsDir: db/migration
