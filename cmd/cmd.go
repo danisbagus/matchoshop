@@ -75,6 +75,8 @@ func GetClient() *sqlx.DB {
 		dbSSLMode,
 	)
 
+	log.Printf("DB url connections: %s", connection)
+
 	client, err := sqlx.Open("postgres", connection)
 	if err != nil {
 		panic(err)
