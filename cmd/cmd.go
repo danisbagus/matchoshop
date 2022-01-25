@@ -64,15 +64,17 @@ func GetClient() *sqlx.DB {
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 	dbSSLMode := os.Getenv("DB_SSL_MODE")
+	timeZone := os.Getenv("TIMEZONE")
 
 	connection := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
+		"postgres://%s:%s@%s:%s/%s?sslmode=%s TimeZone=%s",
 		dbUser,
 		dbPassword,
 		dbHost,
 		dbPort,
 		dbName,
 		dbSSLMode,
+		timeZone,
 	)
 
 	log.Printf("DB url connections: %s", connection)
