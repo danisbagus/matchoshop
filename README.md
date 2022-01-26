@@ -6,7 +6,7 @@ E-commerce for men's products
 - [Golang](https://golang.org/) as main programming language.
 - [Go Module](https://go.dev/blog/using-go-modules) for package management.
 - [Goose](https://github.com/steinbacher/goose/) as migration tool.
-- [Postgresql](https://www.postgresql.org/) as Database driver.
+- [Postgresql](https://www.postgresql.org/) as database driver.
 - [Docker-compose](https://docs.docker.com/compose/) for running database container locally.
 
 ## Setup
@@ -58,7 +58,7 @@ Run the App
 ./bin/matchoshop
 ```
 
-## migration
+## Migration
 
 Create new migration
 ```bash
