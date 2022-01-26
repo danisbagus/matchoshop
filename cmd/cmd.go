@@ -61,22 +61,10 @@ func StartApp() {
 }
 
 func GetClient() *sqlx.DB {
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
+	dbURL := os.Getenv("DATABASE_URL")
 	dbSSLMode := os.Getenv("DB_SSL_MODE")
 
-	connection := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		dbUser,
-		dbPassword,
-		dbHost,
-		dbPort,
-		dbName,
-		dbSSLMode,
-	)
+	connection := fmt.Sprintf("%s?sslmode=%s", dbURL, dbSSLMode)
 
 	log.Printf("DB url connections: %s", connection)
 
