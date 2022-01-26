@@ -20,6 +20,12 @@ DB_SSL_MODE=disable
 TIMEZONE=Asia/Jakarta
 ```
 
+Export database environemnt for migration config
+```bash
+export DATABASE_URL=postgres://postgres:mypass@localhost:8010/matchoshop
+export DB_SSL_MODE=disable
+```
+
 Run database container
 
 ```bash
