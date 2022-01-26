@@ -10,7 +10,7 @@ E-commerce for men's products
 - [Docker-compose](https://docs.docker.com/compose/) for running database container locally.
 
 ## Setup
-Prepare necessary environent by rename .env.example to .env
+Prepare necessary environment by rename .env.example to .env
 
 ```bash
 HOST=
@@ -20,7 +20,7 @@ DB_SSL_MODE=disable
 TIMEZONE=Asia/Jakarta
 ```
 
-Export database environemnt for migration config
+Export database environment for migration config
 ```bash
 export DATABASE_URL=postgres://postgres:mypass@localhost:8010/matchoshop
 export DB_SSL_MODE=disable
