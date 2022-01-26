@@ -6,10 +6,11 @@ E-commerce for men's products
 - [Golang](https://golang.org/) as main programming language.
 - [Go Module](https://go.dev/blog/using-go-modules) for package management.
 - [Goose](https://github.com/steinbacher/goose/) as migration tool.
-- [Docker-compose](https://docs.docker.com/compose/) for running PostgreSQL Database locally.
+- [Postgresql](https://www.postgresql.org/) as Database driver.
+- [Docker-compose](https://docs.docker.com/compose/) for running database container locally.
 
 ## Setup
-Prepare necessary environemt by rename .env.example to .env
+Prepare necessary environent by rename .env.example to .env
 
 ```bash
 HOST=
@@ -19,13 +20,13 @@ DB_SSL_MODE=disable
 TIMEZONE=Asia/Jakarta
 ```
 
-Build Database Environment Container
+Run database container
 
 ```bash
 docker-compose up
 ```
 
-## Run the service
+## Run the App
 
 Get Go packages
 
@@ -53,14 +54,22 @@ Run the proggram
 ```
 
 ## migration
-### Create new migration
+Create new migration
+```bash
 goose create AddSomeColumns
+```
 
-### Up migration
+Up migration
+```bash
 goose up
+```
 
-### Down migration
+Down migration
+```bash
 goose down
+```
 
-### Check migration status
+Check migration status
+```bash
 goose status
+```
