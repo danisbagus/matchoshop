@@ -3,10 +3,10 @@ package service
 import (
 	"time"
 
+	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/dto"
-	"github.com/danisbagus/matchoshop/pkg/errs"
 	"golang.org/x/crypto/bcrypt"
 )
 

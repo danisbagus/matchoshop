@@ -3,8 +3,8 @@ package domain
 import (
 	"time"
 
-	"github.com/danisbagus/matchoshop/pkg/errs"
-	"github.com/danisbagus/matchoshop/pkg/logger"
+	"github.com/danisbagus/go-common-packages/errs"
+	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/dgrijalva/jwt-go"
 )
 

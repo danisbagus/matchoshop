@@ -1,8 +1,8 @@
 package dto
 
 import (
+	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
-	"github.com/danisbagus/matchoshop/pkg/errs"
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 

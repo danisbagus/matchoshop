@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/danisbagus/go-common-packages/errs"
+	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
-	"github.com/danisbagus/matchoshop/pkg/errs"
-	"github.com/danisbagus/matchoshop/pkg/logger"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"
 )
