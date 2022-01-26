@@ -6,11 +6,11 @@ E-commerce for men's products
 - [Golang](https://golang.org/) as main programming language.
 - [Go Module](https://go.dev/blog/using-go-modules) for package management.
 - [Goose](https://github.com/steinbacher/goose/) as migration tool.
-- [Postgresql](https://www.postgresql.org/) as Database driver.
+- [Postgresql](https://www.postgresql.org/) as database driver.
 - [Docker-compose](https://docs.docker.com/compose/) for running database container locally.
 
 ## Setup
-Prepare necessary environent by rename .env.example to .env
+Prepare necessary environment by rename .env.example to .env
 
 ```bash
 HOST=
@@ -20,7 +20,7 @@ DB_SSL_MODE=disable
 TIMEZONE=Asia/Jakarta
 ```
 
-Export database environemnt for migration config
+Export database environment for migration config
 ```bash
 export DATABASE_URL=postgres://postgres:mypass@localhost:8010/matchoshop
 export DB_SSL_MODE=disable
@@ -52,14 +52,14 @@ Build the app
 go build -o bin/matchoshop -v .
 ```
 
-
-Run the proggram
+Run the App
 
 ```bash
 ./bin/matchoshop
 ```
 
-## migration
+## Migration
+
 Create new migration
 ```bash
 goose create AddSomeColumns
