@@ -52,14 +52,14 @@ Build the app
 go build -o bin/matchoshop -v .
 ```
 
-
-Run the proggram
+Run the App
 
 ```bash
 ./bin/matchoshop
 ```
 
 ## migration
+
 Create new migration
 ```bash
 goose create AddSomeColumns
