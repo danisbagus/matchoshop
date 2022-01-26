@@ -47,10 +47,7 @@ func StartApp() {
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
-		// log.Fatal("$PORT must be set")
-
-		log.Println(("$PORT must be set"))
-
+		log.Fatal("$PORT must be set")
 	}
 
 	HOST := os.Getenv("HOST")
