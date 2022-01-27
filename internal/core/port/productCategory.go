@@ -9,8 +9,10 @@ import (
 type IProductCategoryRepo interface {
 	Insert(data *domain.ProductCategory) (*domain.ProductCategory, *errs.AppError)
 	CheckByMerchantIDAndName(merchantID int64, name string) (bool, *errs.AppError)
+	GetAllByMerchantID(merchantID int64) ([]domain.ProductCategory, *errs.AppError)
 }
 
 type IProductCategoryService interface {
 	Create(data *dto.CreateProductCategoryRequest) (*dto.CreateProductCategoryResponse, *errs.AppError)
+	GetList(merchantID int64) (*dto.ProductCategoryListResponse, *errs.AppError)
 }

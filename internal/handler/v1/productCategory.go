@@ -16,9 +16,9 @@ type ProductCategoryHandler struct {
 
 func (rc ProductCategoryHandler) CrateProductCategory(w http.ResponseWriter, r *http.Request) {
 
-	claimData, err := GetClaimData(r)
-	if err != nil {
-		response.Error(w, err.Code, err.Message)
+	claimData, appErr := GetClaimData(r)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 	var request dto.CreateProductCategoryRequest
@@ -42,4 +42,21 @@ func (rc ProductCategoryHandler) CrateProductCategory(w http.ResponseWriter, r *
 	}
 
 	response.Write(w, http.StatusOK, data)
+}
+
+func (rc ProductCategoryHandler) GetProductCategoryList(w http.ResponseWriter, r *http.Request) {
+
+	claimData, appErr := GetClaimData(r)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	productCategories, appErr := rc.Service.GetList(claimData.MerchantID)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	response.Write(w, http.StatusOK, productCategories)
 }

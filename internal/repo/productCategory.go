@@ -63,14 +63,45 @@ func (r ProductCategoryRepo) CheckByMerchantIDAndName(merchantID int64, name str
 
 	var totalData int64
 	err := r.db.QueryRow(sqlCountProductCategory, merchantID, name).Scan(&totalData)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			logger.Error("Error while count product category from database: " + err.Error())
-			return false, errs.NewUnexpectedError("Unexpected database error")
-		}
+	if err != nil && err != sql.ErrNoRows {
+		logger.Error("Error while count product category from database: " + err.Error())
+		return false, errs.NewUnexpectedError("Unexpected database error")
 	}
 
 	fmt.Println(totalData)
 
 	return totalData > 0, nil
+}
+
+func (r ProductCategoryRepo) GetAllByMerchantID(merchantID int64) ([]domain.ProductCategory, *errs.AppError) {
+
+	sqlGetProductCategory := `
+	SELECT 
+		product_category_id, 
+		merchant_id, 
+		name
+	FROM product_categories
+	WHERE merchant_id = $1`
+
+	rows, err := r.db.Query(sqlGetProductCategory, merchantID)
+	if err != nil && err != sql.ErrNoRows {
+		logger.Error("Error while get product category from database: " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	defer rows.Close()
+
+	productCategories := make([]domain.ProductCategory, 0)
+
+	for rows.Next() {
+		var productCategory domain.ProductCategory
+		if err := rows.Scan(&productCategory.ProductCategoryID, &productCategory.MerchantID, &productCategory.Name); err != nil {
+			logger.Error("Error while scanning product category from database: " + err.Error())
+			return nil, errs.NewUnexpectedError("Unexpected database error")
+		}
+
+		productCategories = append(productCategories, productCategory)
+	}
+
+	return productCategories, nil
 }

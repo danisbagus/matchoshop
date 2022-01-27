@@ -49,6 +49,7 @@ func StartApp() {
 	authRouter.HandleFunc("/v1/register/merchant", userHandlerV1.RegisterMerchant).Methods(http.MethodPost)
 
 	apiRouter.HandleFunc("/v1/product-category", productHandlerV1.CrateProductCategory).Methods(http.MethodPost)
+	apiRouter.HandleFunc("/v1/product-category", productHandlerV1.GetProductCategoryList).Methods(http.MethodGet)
 
 	apiRouter.HandleFunc("/hello", SayHello)
 
