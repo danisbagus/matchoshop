@@ -91,7 +91,7 @@ func (r ProductCategoryService) Update(productCategoryID int64, req *dto.CreateP
 	}
 
 	if !checkProductCategory {
-		return errs.NewBadRequestError("Product not found")
+		return errs.NewBadRequestError("Product category not found")
 	}
 
 	checkProductCategory, appErr = r.repo.CheckByIDAndMerchantIDAndName(productCategoryID, req.MerchantID, req.Name)
@@ -127,7 +127,7 @@ func (r ProductCategoryService) Delete(productCategoryID int64, merchantID int64
 	}
 
 	if !checkProductCategory {
-		return errs.NewBadRequestError("Product not found")
+		return errs.NewBadRequestError("Product category not found")
 	}
 
 	appErr = r.repo.Delete(productCategoryID)
