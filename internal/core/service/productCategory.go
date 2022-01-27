@@ -22,18 +22,18 @@ func NewProductCategoryService(repo port.IProductCategoryRepo) port.IProductCate
 
 func (r ProductCategoryService) Create(req *dto.CreateProductCategoryRequest) (*dto.CreateProductCategoryResponse, *errs.AppError) {
 
-	err := req.Validate()
-	if err != nil {
-		return nil, err
+	appErr := req.Validate()
+	if appErr != nil {
+		return nil, appErr
 	}
 
-	checkProductCategory, err := r.repo.CheckByMerchantIDAndName(req.MerchantID, req.Name)
-	if err != nil {
-		return nil, err
+	checkProductCategory, appErr := r.repo.CheckByMerchantIDAndName(req.MerchantID, req.Name)
+	if appErr != nil {
+		return nil, appErr
 	}
 
 	if checkProductCategory {
-		errorMessage := fmt.Sprintf("Product Category with name %s is alrady exits", req.Name)
+		errorMessage := fmt.Sprintf("Product Category with name %s is already exits", req.Name)
 		return nil, errs.NewBadRequestError(errorMessage)
 	}
 
@@ -74,6 +74,49 @@ func (r ProductCategoryService) GetDetail(productCategoryID int64, merchantID in
 	}
 
 	response := dto.NewGetProductCategoryDetailResponse(productCategory)
+
+	return response, nil
+}
+
+func (r ProductCategoryService) Update(productCategoryID int64, req *dto.CreateProductCategoryRequest) (*dto.UpdateProductCategoryResponse, *errs.AppError) {
+
+	appErr := req.Validate()
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	checkProductCategory, appErr := r.repo.CheckByIDAndMerchantID(productCategoryID, req.MerchantID)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	if !checkProductCategory {
+		return nil, errs.NewBadRequestError("Product not found")
+	}
+
+	checkProductCategory, appErr = r.repo.CheckByMerchantIDAndName(req.MerchantID, req.Name)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	if checkProductCategory {
+		errorMessage := fmt.Sprintf("Product Category with name %s is already exits", req.Name)
+		return nil, errs.NewBadRequestError(errorMessage)
+	}
+
+	formProductCategory := domain.ProductCategory{
+		MerchantID: req.MerchantID,
+		Name:       req.Name,
+		CreatedAt:  time.Now().Format(dbTSLayout),
+		UpdatedAt:  time.Now().Format(dbTSLayout),
+	}
+
+	appErr = r.repo.Update(productCategoryID, &formProductCategory)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	response := dto.NewUpdateProductCategoryResponse(&formProductCategory)
 
 	return response, nil
 }

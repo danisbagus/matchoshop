@@ -36,14 +36,13 @@ func (rc ProductCategoryHandler) CrateProductCategory(w http.ResponseWriter, r *
 		return
 	}
 
-	data, appErr := rc.Service.Create(&request)
-
+	productCategory, appErr := rc.Service.Create(&request)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 
-	response.Write(w, http.StatusOK, data)
+	response.Write(w, http.StatusOK, productCategory)
 }
 
 func (rc ProductCategoryHandler) GetProductCategoryList(w http.ResponseWriter, r *http.Request) {
@@ -81,5 +80,33 @@ func (rc ProductCategoryHandler) GetProductCategoryDetail(w http.ResponseWriter,
 	}
 
 	response.Write(w, http.StatusOK, productCategory)
+}
 
+func (rc ProductCategoryHandler) UpdateProductCategory(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	productCategoryID, _ := strconv.Atoi(vars["product_category_id"])
+
+	claimData, appErr := GetClaimData(r)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+	var request dto.CreateProductCategoryRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		logger.Error("Error while decoding create product category request: " + err.Error())
+		response.Error(w, http.StatusBadRequest, "Failed create product category")
+		return
+	}
+
+	request.MerchantID = claimData.MerchantID
+
+	productCategory, appErr := rc.Service.Update(int64(productCategoryID), &request)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	response.Write(w, http.StatusOK, productCategory)
 }

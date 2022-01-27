@@ -25,6 +25,16 @@ type ProductCategoryListResponse struct {
 	ProductCategories []ProductCategoryResponse `json:"data"`
 }
 
+type UpdateroductCategoryRequest struct {
+	MerchantID int64  `json:"-"`
+	Name       string `json:"name"`
+}
+
+type UpdateProductCategoryResponse struct {
+	MerchantID int64  `json:"merchant_id"`
+	Name       string `json:"name"`
+}
+
 func NewCreateProductCategoryResponse(data *domain.ProductCategory) *CreateProductCategoryResponse {
 	result := &CreateProductCategoryResponse{
 		ProductCategoryID: data.ProductCategoryID,
@@ -57,6 +67,30 @@ func NewGetProductCategoryDetailResponse(data *domain.ProductCategory) *ProductC
 }
 
 func (r CreateProductCategoryRequest) Validate() *errs.AppError {
+
+	if err := validation.Validate(r.MerchantID, validation.Required); err != nil {
+		return errs.NewBadRequestError("Merchant ID is required")
+
+	}
+
+	if err := validation.Validate(r.Name, validation.Required); err != nil {
+		return errs.NewBadRequestError("Product category name is required")
+
+	}
+
+	return nil
+}
+
+func NewUpdateProductCategoryResponse(data *domain.ProductCategory) *UpdateProductCategoryResponse {
+	result := &UpdateProductCategoryResponse{
+		MerchantID: data.MerchantID,
+		Name:       data.Name,
+	}
+
+	return result
+}
+
+func (r UpdateroductCategoryRequest) Validate() *errs.AppError {
 
 	if err := validation.Validate(r.MerchantID, validation.Required); err != nil {
 		return errs.NewBadRequestError("Merchant ID is required")
