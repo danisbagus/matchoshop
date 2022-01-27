@@ -2,6 +2,7 @@ package domain
 
 type Product struct {
 	ProductID   int64  `db:"product_id"`
+	MerchantID  int64  `db:"merchant_id"`
 	Name        string `db:"name"`
 	Sku         string `db:"sku"`
 	Description string `db:"description"`
