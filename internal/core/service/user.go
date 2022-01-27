@@ -13,10 +13,10 @@ import (
 const dbTSLayout = "2006-01-02 15:04:05"
 
 type AuthService struct {
-	repo port.IAuthRepo
+	repo port.IUserRepo
 }
 
-func NewUserService(repo port.IAuthRepo) port.IAuthService {
+func NewUserService(repo port.IUserRepo) port.IUserService {
 	return &AuthService{
 		repo: repo,
 	}
