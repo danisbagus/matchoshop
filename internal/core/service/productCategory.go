@@ -56,12 +56,24 @@ func (r ProductCategoryService) Create(req *dto.CreateProductCategoryRequest) (*
 
 func (r ProductCategoryService) GetList(merchantID int64) (*dto.ProductCategoryListResponse, *errs.AppError) {
 
-	productCategories, err := r.repo.GetAllByMerchantID(merchantID)
-	if err != nil {
-		return nil, err
+	productCategories, appErr := r.repo.GetAllByMerchantID(merchantID)
+	if appErr != nil {
+		return nil, appErr
 	}
 
 	response := dto.NewGetProductCategoryListResponse(productCategories)
+
+	return response, nil
+}
+
+func (r ProductCategoryService) GetDetail(productCategoryID int64, merchantID int64) (*dto.ProductCategoryResponse, *errs.AppError) {
+
+	productCategory, appErr := r.repo.GetOneByIDAndMerchantID(productCategoryID, merchantID)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	response := dto.NewGetProductCategoryDetailResponse(productCategory)
 
 	return response, nil
 }

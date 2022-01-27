@@ -39,7 +39,7 @@ func StartApp() {
 	productCategoryService := service.NewProductCategoryService(productCategoryRepo)
 
 	userHandlerV1 := handlerV1.AuthHandler{Service: userService}
-	productHandlerV1 := handlerV1.ProductCategoryHandler{Service: productCategoryService}
+	productCategoryHandlerV1 := handlerV1.ProductCategoryHandler{Service: productCategoryService}
 
 	authRouter := router.PathPrefix("/auth").Subrouter()
 	apiRouter := router.PathPrefix("/api").Subrouter()
@@ -48,8 +48,9 @@ func StartApp() {
 	authRouter.HandleFunc("/v1/login", userHandlerV1.Login).Methods(http.MethodPost)
 	authRouter.HandleFunc("/v1/register/merchant", userHandlerV1.RegisterMerchant).Methods(http.MethodPost)
 
-	apiRouter.HandleFunc("/v1/product-category", productHandlerV1.CrateProductCategory).Methods(http.MethodPost)
-	apiRouter.HandleFunc("/v1/product-category", productHandlerV1.GetProductCategoryList).Methods(http.MethodGet)
+	apiRouter.HandleFunc("/v1/product-category", productCategoryHandlerV1.CrateProductCategory).Methods(http.MethodPost)
+	apiRouter.HandleFunc("/v1/product-category", productCategoryHandlerV1.GetProductCategoryList).Methods(http.MethodGet)
+	apiRouter.HandleFunc("/v1/product-category/{product_category_id}", productCategoryHandlerV1.GetProductCategoryDetail).Methods(http.MethodGet)
 
 	apiRouter.HandleFunc("/hello", SayHello)
 

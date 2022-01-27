@@ -105,3 +105,31 @@ func (r ProductCategoryRepo) GetAllByMerchantID(merchantID int64) ([]domain.Prod
 
 	return productCategories, nil
 }
+
+func (r ProductCategoryRepo) GetOneByIDAndMerchantID(productCategoryID int64, merchantID int64) (*domain.ProductCategory, *errs.AppError) {
+
+	var productCategory domain.ProductCategory
+
+	sqlGetProductCategory := `
+	SELECT 
+		product_category_id, 
+		merchant_id, 
+		name
+	FROM product_categories
+	WHERE product_category_id = $1 
+	AND merchant_id = $2
+	LIMIT 1`
+
+	err := r.db.QueryRow(sqlGetProductCategory, productCategoryID, merchantID).Scan(&productCategory.ProductCategoryID, &productCategory.MerchantID, &productCategory.Name)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errs.NewNotFoundError("Product category not found!")
+		} else {
+			logger.Error("Error while get product category from database: " + err.Error())
+			return nil, errs.NewUnexpectedError("Unexpected database error")
+		}
+	}
+
+	return &productCategory, nil
+
+}

@@ -48,6 +48,14 @@ func NewGetProductCategoryListResponse(data []domain.ProductCategory) *ProductCa
 	return &ProductCategoryListResponse{ProductCategories: productCategories}
 }
 
+func NewGetProductCategoryDetailResponse(data *domain.ProductCategory) *ProductCategoryResponse {
+	return &ProductCategoryResponse{
+		ProductCategoryID: data.ProductCategoryID,
+		MerchantID:        data.MerchantID,
+		Name:              data.Name,
+	}
+}
+
 func (r CreateProductCategoryRequest) Validate() *errs.AppError {
 
 	if err := validation.Validate(r.MerchantID, validation.Required); err != nil {
