@@ -13,6 +13,6 @@ type IUserRepo interface {
 }
 
 type IUserService interface {
-	Login(req dto.LoginRequest) (*dto.LoginResponse, *errs.AppError)
-	RegisterMerchant(req *dto.RegisterMerchantRequest) (*dto.RegisterMerchantResponse, *errs.AppError)
+	Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppError)
+	RegisterMerchant(req *dto.RegisterMerchantRequest) (*dto.ResponseData, *errs.AppError)
 }

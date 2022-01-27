@@ -6,6 +6,11 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
+type ResponseData struct {
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+}
+
 type LoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -30,15 +35,32 @@ type RegisterMerchantResponse struct {
 	MerchantIdentifier string `json:"merchant_identifier"`
 }
 
-func NewRegisterUserMerchantResponse(data *domain.UserMerchant) *RegisterMerchantResponse {
-	result := RegisterMerchantResponse{
+func GenerateResponseData(message string, data interface{}) *ResponseData {
+	return &ResponseData{
+		Message: message,
+		Data:    data,
+	}
+}
+
+func NewLoginResponse(message string, accessToken string) *ResponseData {
+
+	loginResponse := LoginResponse{
+		AccessToken: accessToken,
+	}
+
+	return GenerateResponseData(message, loginResponse)
+}
+
+func NewRegisterUserMerchantResponse(message string, data *domain.UserMerchant) *ResponseData {
+
+	registerResponse := RegisterMerchantResponse{
 		UserID:             data.UserID,
 		MerchantID:         data.MerchantID,
 		MerchantName:       data.MerchantName,
 		MerchantIdentifier: data.MerchantIdentifier,
 	}
 
-	return &result
+	return GenerateResponseData(message, registerResponse)
 }
 
 func (r LoginRequest) Validate() *errs.AppError {

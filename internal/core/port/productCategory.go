@@ -18,9 +18,9 @@ type IProductCategoryRepo interface {
 }
 
 type IProductCategoryService interface {
-	Create(data *dto.CreateProductCategoryRequest) (*dto.CreateProductCategoryResponse, *errs.AppError)
-	GetList(merchantID int64) (*dto.ProductCategoryListResponse, *errs.AppError)
-	GetDetail(productCategoryID int64, merchantID int64) (*dto.ProductCategoryResponse, *errs.AppError)
-	Update(productCategoryID int64, data *dto.CreateProductCategoryRequest) *errs.AppError
-	Delete(productCategoryID int64, merchantID int64) *errs.AppError
+	Create(data *dto.CreateProductCategoryRequest) (*dto.ResponseData, *errs.AppError)
+	GetList(merchantID int64) (*dto.ResponseData, *errs.AppError)
+	GetDetail(productCategoryID int64, merchantID int64) (*dto.ResponseData, *errs.AppError)
+	Update(productCategoryID int64, data *dto.CreateProductCategoryRequest) (*dto.ResponseData, *errs.AppError)
+	Delete(productCategoryID int64, merchantID int64) (*dto.ResponseData, *errs.AppError)
 }
