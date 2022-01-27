@@ -99,13 +99,15 @@ func (rc ProductCategoryHandler) UpdateProductCategory(w http.ResponseWriter, r 
 
 	request.MerchantID = claimData.MerchantID
 
-	productCategory, appErr := rc.Service.Update(int64(productCategoryID), &request)
+	appErr = rc.Service.Update(int64(productCategoryID), &request)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 
-	response.Write(w, http.StatusOK, productCategory)
+	response.Write(w, http.StatusOK, map[string]bool{
+		"success": true,
+	})
 }
 
 func (rc ProductCategoryHandler) Delete(w http.ResponseWriter, r *http.Request) {

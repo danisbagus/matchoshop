@@ -30,11 +30,6 @@ type UpdateroductCategoryRequest struct {
 	Name       string `json:"name"`
 }
 
-type UpdateProductCategoryResponse struct {
-	MerchantID int64  `json:"merchant_id"`
-	Name       string `json:"name"`
-}
-
 func NewCreateProductCategoryResponse(data *domain.ProductCategory) *CreateProductCategoryResponse {
 	result := &CreateProductCategoryResponse{
 		ProductCategoryID: data.ProductCategoryID,
@@ -74,15 +69,6 @@ func (r CreateProductCategoryRequest) Validate() *errs.AppError {
 	}
 
 	return nil
-}
-
-func NewUpdateProductCategoryResponse(data *domain.ProductCategory) *UpdateProductCategoryResponse {
-	result := &UpdateProductCategoryResponse{
-		MerchantID: data.MerchantID,
-		Name:       data.Name,
-	}
-
-	return result
 }
 
 func (r UpdateroductCategoryRequest) Validate() *errs.AppError {

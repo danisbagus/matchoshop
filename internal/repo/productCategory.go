@@ -53,6 +53,24 @@ func (r ProductCategoryRepo) Insert(data *domain.ProductCategory) (*domain.Produ
 	return data, nil
 }
 
+func (r ProductCategoryRepo) CheckByIDAndMerchantIDAndName(productCategoryID int64, merchantID int64, name string) (bool, *errs.AppError) {
+
+	sqlCountProductCategory := `SELECT COUNT(product_category_Id) 
+	FROM product_categories 
+	WHERE product_category_Id != $1
+	AND merchant_id = $2
+	AND name = $3`
+
+	var totalData int64
+	err := r.db.QueryRow(sqlCountProductCategory, productCategoryID, merchantID, name).Scan(&totalData)
+	if err != nil && err != sql.ErrNoRows {
+		logger.Error("Error while count product category from database: " + err.Error())
+		return false, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return totalData > 0, nil
+}
+
 func (r ProductCategoryRepo) CheckByMerchantIDAndName(merchantID int64, name string) (bool, *errs.AppError) {
 
 	sqlCountProductCategory := `SELECT COUNT(product_category_Id) 
