@@ -31,10 +31,7 @@ func (rc ProductCategoryHandler) CrateProductCategory(w http.ResponseWriter, r *
 		return
 	}
 
-	if claimData.MerchantID != request.MerchantID {
-		response.Error(w, http.StatusBadRequest, "Not allowed use not owned merchant ID")
-		return
-	}
+	request.MerchantID = claimData.MerchantID
 
 	productCategory, appErr := rc.Service.Create(&request)
 	if appErr != nil {

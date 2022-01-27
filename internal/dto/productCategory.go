@@ -7,7 +7,7 @@ import (
 )
 
 type CreateProductCategoryRequest struct {
-	MerchantID int64  `json:"merchant_id"`
+	MerchantID int64  `json:"-"`
 	Name       string `json:"name"`
 }
 
@@ -68,11 +68,6 @@ func NewGetProductCategoryDetailResponse(data *domain.ProductCategory) *ProductC
 
 func (r CreateProductCategoryRequest) Validate() *errs.AppError {
 
-	if err := validation.Validate(r.MerchantID, validation.Required); err != nil {
-		return errs.NewBadRequestError("Merchant ID is required")
-
-	}
-
 	if err := validation.Validate(r.Name, validation.Required); err != nil {
 		return errs.NewBadRequestError("Product category name is required")
 
@@ -91,11 +86,6 @@ func NewUpdateProductCategoryResponse(data *domain.ProductCategory) *UpdateProdu
 }
 
 func (r UpdateroductCategoryRequest) Validate() *errs.AppError {
-
-	if err := validation.Validate(r.MerchantID, validation.Required); err != nil {
-		return errs.NewBadRequestError("Merchant ID is required")
-
-	}
 
 	if err := validation.Validate(r.Name, validation.Required); err != nil {
 		return errs.NewBadRequestError("Product category name is required")
