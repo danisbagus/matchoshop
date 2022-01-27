@@ -33,13 +33,13 @@ func (rc ProductCategoryHandler) CrateProductCategory(w http.ResponseWriter, r *
 
 	request.MerchantID = claimData.MerchantID
 
-	productCategory, appErr := rc.Service.Create(&request)
+	createData, appErr := rc.Service.Create(&request)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 
-	response.Write(w, http.StatusOK, productCategory)
+	response.Write(w, http.StatusOK, createData)
 }
 
 func (rc ProductCategoryHandler) GetProductCategoryList(w http.ResponseWriter, r *http.Request) {
@@ -99,15 +99,13 @@ func (rc ProductCategoryHandler) UpdateProductCategory(w http.ResponseWriter, r 
 
 	request.MerchantID = claimData.MerchantID
 
-	appErr = rc.Service.Update(int64(productCategoryID), &request)
+	updateData, appErr := rc.Service.Update(int64(productCategoryID), &request)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 
-	response.Write(w, http.StatusOK, map[string]bool{
-		"success": true,
-	})
+	response.Write(w, http.StatusOK, updateData)
 }
 
 func (rc ProductCategoryHandler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -121,13 +119,11 @@ func (rc ProductCategoryHandler) Delete(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	appErr = rc.Service.Delete(int64(productCategoryID), claimData.MerchantID)
+	deleteData, appErr := rc.Service.Delete(int64(productCategoryID), claimData.MerchantID)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 
-	response.Write(w, http.StatusOK, map[string]bool{
-		"success": true,
-	})
+	response.Write(w, http.StatusOK, deleteData)
 }

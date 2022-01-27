@@ -22,7 +22,7 @@ func NewUserService(repo port.IUserRepo) port.IUserService {
 	}
 }
 
-func (r AuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, *errs.AppError) {
+func (r AuthService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppError) {
 	var appErr *errs.AppError
 	var login *domain.User
 
@@ -50,10 +50,12 @@ func (r AuthService) Login(req dto.LoginRequest) (*dto.LoginResponse, *errs.AppE
 		return nil, appErr
 	}
 
-	return &dto.LoginResponse{AccessToken: accessToken}, nil
+	response := dto.NewLoginResponse("Successfully login", accessToken)
+
+	return response, nil
 }
 
-func (r AuthService) RegisterMerchant(req *dto.RegisterMerchantRequest) (*dto.RegisterMerchantResponse, *errs.AppError) {
+func (r AuthService) RegisterMerchant(req *dto.RegisterMerchantRequest) (*dto.ResponseData, *errs.AppError) {
 	err := req.Validate()
 	if err != nil {
 		return nil, err
@@ -71,7 +73,7 @@ func (r AuthService) RegisterMerchant(req *dto.RegisterMerchantRequest) (*dto.Re
 	if err != nil {
 		return nil, err
 	}
-	response := dto.NewRegisterUserMerchantResponse(newData)
+	response := dto.NewRegisterUserMerchantResponse("Successfully register merchant", newData)
 
 	return response, nil
 

@@ -30,15 +30,16 @@ type UpdateroductCategoryRequest struct {
 	Name       string `json:"name"`
 }
 
-func NewCreateProductCategoryResponse(data *domain.ProductCategory) *CreateProductCategoryResponse {
-	result := &CreateProductCategoryResponse{
+func NewCreateProductCategoryResponse(message string, data *domain.ProductCategory) *ResponseData {
+
+	createProductCategoryResponse := &CreateProductCategoryResponse{
 		ProductCategoryID: data.ProductCategoryID,
 	}
 
-	return result
+	return GenerateResponseData(message, createProductCategoryResponse)
 }
 
-func NewGetProductCategoryListResponse(data []domain.ProductCategory) *ProductCategoryListResponse {
+func NewGetProductCategoryListResponse(message string, data []domain.ProductCategory) *ResponseData {
 
 	productCategories := make([]ProductCategoryResponse, len(data))
 
@@ -50,15 +51,19 @@ func NewGetProductCategoryListResponse(data []domain.ProductCategory) *ProductCa
 		}
 	}
 
-	return &ProductCategoryListResponse{ProductCategories: productCategories}
+	productCategoryListResponse := &ProductCategoryListResponse{ProductCategories: productCategories}
+
+	return GenerateResponseData(message, productCategoryListResponse)
 }
 
-func NewGetProductCategoryDetailResponse(data *domain.ProductCategory) *ProductCategoryResponse {
-	return &ProductCategoryResponse{
+func NewGetProductCategoryDetailResponse(message string, data *domain.ProductCategory) *ResponseData {
+	productCategoryResponse := &ProductCategoryResponse{
 		ProductCategoryID: data.ProductCategoryID,
 		MerchantID:        data.MerchantID,
 		Name:              data.Name,
 	}
+
+	return GenerateResponseData(message, productCategoryResponse)
 }
 
 func (r CreateProductCategoryRequest) Validate() *errs.AppError {
