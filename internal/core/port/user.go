@@ -6,13 +6,13 @@ import (
 	"github.com/danisbagus/matchoshop/internal/dto"
 )
 
-type IAuthRepo interface {
+type IUserRepo interface {
 	FindOne(email string) (*domain.User, *errs.AppError)
 	Verify(token string) *errs.AppError
 	CreateUserMerchant(data *domain.UserMerchant) (*domain.UserMerchant, *errs.AppError)
 }
 
-type IAuthService interface {
+type IUserService interface {
 	Login(req dto.LoginRequest) (*dto.LoginResponse, *errs.AppError)
 	RegisterMerchant(req *dto.RegisterMerchantRequest) (*dto.RegisterMerchantResponse, *errs.AppError)
 }

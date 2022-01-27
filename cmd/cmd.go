@@ -13,6 +13,7 @@ import (
 
 	"github.com/danisbagus/matchoshop/internal/core/service"
 	handlerV1 "github.com/danisbagus/matchoshop/internal/handler/v1"
+	"github.com/danisbagus/matchoshop/internal/middleware"
 	"github.com/danisbagus/matchoshop/internal/repo"
 
 	_ "github.com/lib/pq"
@@ -30,11 +31,15 @@ func StartApp() {
 
 	router := mux.NewRouter()
 
+	// wiring
 	userRepo := repo.NewUserRepo(client)
+	productCategoryRepo := repo.NewProductCategoryRepo(client)
 
 	userService := service.NewUserService(userRepo)
+	productCategoryService := service.NewProductCategoryService(productCategoryRepo)
 
 	userHandlerV1 := handlerV1.AuthHandler{Service: userService}
+	productCategoryHandlerV1 := handlerV1.ProductCategoryHandler{Service: productCategoryService}
 
 	authRouter := router.PathPrefix("/auth").Subrouter()
 	apiRouter := router.PathPrefix("/api").Subrouter()
@@ -43,7 +48,17 @@ func StartApp() {
 	authRouter.HandleFunc("/v1/login", userHandlerV1.Login).Methods(http.MethodPost)
 	authRouter.HandleFunc("/v1/register/merchant", userHandlerV1.RegisterMerchant).Methods(http.MethodPost)
 
+	apiRouter.HandleFunc("/v1/product-category", productCategoryHandlerV1.CrateProductCategory).Methods(http.MethodPost)
+	apiRouter.HandleFunc("/v1/product-category", productCategoryHandlerV1.GetProductCategoryList).Methods(http.MethodGet)
+	apiRouter.HandleFunc("/v1/product-category/{product_category_id}", productCategoryHandlerV1.GetProductCategoryDetail).Methods(http.MethodGet)
+	apiRouter.HandleFunc("/v1/product-category/{product_category_id}", productCategoryHandlerV1.UpdateProductCategory).Methods(http.MethodPut)
+	apiRouter.HandleFunc("/v1/product-category/{product_category_id}", productCategoryHandlerV1.Delete).Methods(http.MethodDelete)
+
 	apiRouter.HandleFunc("/hello", SayHello)
+
+	// middleware
+	authMiddleware := middleware.AuthMiddleware{UserRepo: repo.NewUserRepo(client)}
+	apiRouter.Use(authMiddleware.AuthorizationHandler())
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {

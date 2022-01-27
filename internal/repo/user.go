@@ -18,7 +18,7 @@ type AuthRepo struct {
 	db *sqlx.DB
 }
 
-func NewUserRepo(db *sqlx.DB) port.IAuthRepo {
+func NewUserRepo(db *sqlx.DB) port.IUserRepo {
 	return &AuthRepo{
 		db: db,
 	}
