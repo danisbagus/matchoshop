@@ -33,7 +33,7 @@ func (r ProductCategoryService) Create(req *dto.CreateProductCategoryRequest) (*
 	}
 
 	if checkProductCategory {
-		errorMessage := fmt.Sprintf("Product Category with name %s is already exits", req.Name)
+		errorMessage := fmt.Sprintf("Product category with name %s is already exits", req.Name)
 		return nil, errs.NewBadRequestError(errorMessage)
 	}
 
