@@ -107,3 +107,25 @@ func (rc ProductCategoryHandler) UpdateProductCategory(w http.ResponseWriter, r 
 
 	response.Write(w, http.StatusOK, productCategory)
 }
+
+func (rc ProductCategoryHandler) Delete(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	productCategoryID, _ := strconv.Atoi(vars["product_category_id"])
+
+	claimData, appErr := GetClaimData(r)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	appErr = rc.Service.Delete(int64(productCategoryID), claimData.MerchantID)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	response.Write(w, http.StatusOK, map[string]bool{
+		"success": true,
+	})
+}

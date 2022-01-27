@@ -120,3 +120,22 @@ func (r ProductCategoryService) Update(productCategoryID int64, req *dto.CreateP
 
 	return response, nil
 }
+
+func (r ProductCategoryService) Delete(productCategoryID int64, merchantID int64) *errs.AppError {
+
+	checkProductCategory, appErr := r.repo.CheckByIDAndMerchantID(productCategoryID, merchantID)
+	if appErr != nil {
+		return appErr
+	}
+
+	if !checkProductCategory {
+		return errs.NewBadRequestError("Product not found")
+	}
+
+	appErr = r.repo.Delete(productCategoryID)
+	if appErr != nil {
+		return appErr
+	}
+
+	return nil
+}

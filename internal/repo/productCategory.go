@@ -177,3 +177,27 @@ func (r ProductCategoryRepo) Update(productCategoryID int64, data *domain.Produc
 
 	return nil
 }
+
+func (r ProductCategoryRepo) Delete(productCategoryID int64) *errs.AppError {
+
+	tx, err := r.db.Begin()
+	if err != nil {
+		logger.Error("Error when starting delete product category: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	sqlDelete := `
+	DELETE FROM product_categories 
+	WHERE product_category_id = $1`
+
+	_, err = tx.Exec(sqlDelete, productCategoryID)
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while commiting transaction: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return nil
+}
