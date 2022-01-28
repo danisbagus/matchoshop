@@ -113,7 +113,8 @@ func (r ProductCategoryRepo) GetAllByMerchantID(merchantID int64) ([]domain.Prod
 		merchant_id, 
 		name
 	FROM product_categories
-	WHERE merchant_id = $1`
+	WHERE merchant_id = $1
+	ORDER BY name ASC`
 
 	rows, err := r.db.Query(sqlGetProductCategory, merchantID)
 	if err != nil && err != sql.ErrNoRows {
