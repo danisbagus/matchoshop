@@ -39,3 +39,20 @@ func (rc ProductHandler) CrateProduct(w http.ResponseWriter, r *http.Request) {
 
 	response.Write(w, http.StatusOK, createData)
 }
+
+func (rc ProductHandler) GetProductist(w http.ResponseWriter, r *http.Request) {
+
+	claimData, appErr := GetClaimData(r)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	products, appErr := rc.Service.GetList(claimData.MerchantID)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	response.Write(w, http.StatusOK, products)
+}

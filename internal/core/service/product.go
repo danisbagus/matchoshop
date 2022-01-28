@@ -78,3 +78,15 @@ func (r ProductService) Create(req *dto.CreateProductRequest) (*dto.ResponseData
 	response := dto.NewCreateProductResponse("Sucessfully create data", newProductData)
 	return response, nil
 }
+
+func (r ProductService) GetList(merchantID int64) (*dto.ResponseData, *errs.AppError) {
+
+	products, appErr := r.repo.GetAllByMerchantID(merchantID)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	response := dto.NewGetProductListResponse("Successfully get data", products)
+
+	return response, nil
+}

@@ -69,3 +69,41 @@ func (r ProductRepo) CheckBySKUAndMerchantID(sku string, merchantID int64) (bool
 
 	return totalData > 0, nil
 }
+
+func (r ProductRepo) GetAllByMerchantID(merchantID int64) ([]domain.ProductList, *errs.AppError) {
+
+	sqlGetProduct := `
+	SELECT 
+		p.product_id, 
+		p.merchant_id, 
+		p.name, 
+		p.sku, 
+		p.price, 
+		pc.name as product_category_name
+	FROM products p
+	JOIN product_product_categories ppc ON ppc.product_id = p.product_id
+	JOIN product_categories pc ON pc.product_category_id = ppc.product_category_id
+	WHERE p.merchant_id = $1`
+
+	rows, err := r.db.Query(sqlGetProduct, merchantID)
+	if err != nil && err != sql.ErrNoRows {
+		logger.Error("Error while get all product from database: " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	defer rows.Close()
+
+	products := make([]domain.ProductList, 0)
+
+	for rows.Next() {
+		var product domain.ProductList
+		if err := rows.Scan(&product.ProductID, &product.MerchantID, &product.Name, &product.Sku, &product.Price, &product.ProductCategoryName); err != nil {
+			logger.Error("Error while scanning product category from database: " + err.Error())
+			return nil, errs.NewUnexpectedError("Unexpected database error")
+		}
+
+		products = append(products, product)
+	}
+
+	return products, nil
+}
