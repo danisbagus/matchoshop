@@ -92,7 +92,7 @@ func (rc ProductCategoryHandler) UpdateProductCategory(w http.ResponseWriter, r 
 	var request dto.CreateProductCategoryRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		logger.Error("Error while decoding create product category request: " + err.Error())
+		logger.Error("Error while decoding update product category request: " + err.Error())
 		response.Error(w, http.StatusBadRequest, "Failed create product category")
 		return
 	}

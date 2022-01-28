@@ -43,12 +43,39 @@ func (r ProductProductCategoryRepo) BulkInsert(data []domain.ProductProductCateg
 	sqlInsert := fmt.Sprintf("INSERT INTO product_product_categories (product_id, product_category_id) VALUES %s",
 		strings.Join(valueStrings, ","))
 
-	fmt.Println(sqlInsert)
-
 	_, err = tx.Exec(sqlInsert, valueArgs...)
 	if err != nil {
 		tx.Rollback()
 		logger.Error("Error while insert product product category: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while commiting transaction: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return nil
+}
+
+func (r ProductProductCategoryRepo) DeleteAll(productID int64) *errs.AppError {
+
+	tx, err := r.db.Begin()
+	if err != nil {
+		logger.Error("Error when starting delete product product category: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	sqlDeleteAll := `
+	DELETE FROM product_product_categories 
+	WHERE product_id = $1`
+
+	_, err = tx.Exec(sqlDeleteAll, productID)
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while delete product product category: " + err.Error())
 		return errs.NewUnexpectedError("Unexpected database error")
 	}
 

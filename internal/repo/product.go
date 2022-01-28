@@ -53,6 +53,23 @@ func (r ProductRepo) Insert(data *domain.Product) (*domain.Product, *errs.AppErr
 	return data, nil
 }
 
+func (r ProductRepo) CheckByIDAndMerchantID(productID int64, merchantID int64) (bool, *errs.AppError) {
+
+	sqlCountProduct := `SELECT COUNT(product_Id) 
+	FROM products 
+	WHERE product_id = $1
+	AND merchant_id = $2`
+
+	var totalData int64
+	err := r.db.QueryRow(sqlCountProduct, productID, merchantID).Scan(&totalData)
+	if err != nil && err != sql.ErrNoRows {
+		logger.Error("Error while count product from database: " + err.Error())
+		return false, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return totalData > 0, nil
+}
+
 func (r ProductRepo) CheckBySKUAndMerchantID(sku string, merchantID int64) (bool, *errs.AppError) {
 
 	sqlCountProduct := `SELECT COUNT(product_Id) 
@@ -62,6 +79,24 @@ func (r ProductRepo) CheckBySKUAndMerchantID(sku string, merchantID int64) (bool
 
 	var totalData int64
 	err := r.db.QueryRow(sqlCountProduct, merchantID, sku).Scan(&totalData)
+	if err != nil && err != sql.ErrNoRows {
+		logger.Error("Error while count product from database: " + err.Error())
+		return false, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return totalData > 0, nil
+}
+
+func (r ProductRepo) CheckByIDAndSKUAndMerchantID(productID int64, sku string, merchantID int64) (bool, *errs.AppError) {
+
+	sqlCountProduct := `SELECT COUNT(product_Id) 
+	FROM products 
+	WHERE product_id != $1
+	AND merchant_id = $2
+	AND sku = $3`
+
+	var totalData int64
+	err := r.db.QueryRow(sqlCountProduct, productID, merchantID, sku).Scan(&totalData)
 	if err != nil && err != sql.ErrNoRows {
 		logger.Error("Error while count product from database: " + err.Error())
 		return false, errs.NewUnexpectedError("Unexpected database error")
@@ -137,4 +172,40 @@ func (r ProductRepo) GetOneByIDAndMerchantID(productID int64, merchantID int64) 
 	}
 
 	return &product, nil
+}
+
+func (r ProductRepo) Update(productID int64, data *domain.Product) *errs.AppError {
+
+	tx, err := r.db.Begin()
+	if err != nil {
+		logger.Error("Error when starting update product: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	sqlUpdate := `
+	UPDATE products 
+	SET merchant_id = $2, 
+		name = $3, 
+		sku = $4,
+		price = $5,
+		description = $6,
+		created_at = $7, 
+		updated_at = $8
+	WHERE product_id = $1`
+
+	_, err = tx.Exec(sqlUpdate, productID, data.MerchantID, data.Name, data.Sku, data.Price, data.Description, data.CreatedAt, data.UpdatedAt)
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while update product: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while commiting transaction: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return nil
 }

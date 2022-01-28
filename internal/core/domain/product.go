@@ -27,5 +27,7 @@ type ProductDetail struct {
 	Sku               string `db:"sku"`
 	Price             int64  `db:"price"`
 	Description       string `db:"description"`
+	CreatedAt         string `db:"created_at"`
+	UpdatedAt         string `db:"updated_at"`
 	ProductCategories []ProductCategory
 }

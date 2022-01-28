@@ -245,6 +245,11 @@ func (r ProductCategoryRepo) Delete(productCategoryID int64) *errs.AppError {
 	WHERE product_category_id = $1`
 
 	_, err = tx.Exec(sqlDelete, productCategoryID)
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while delete product category: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
 
 	err = tx.Commit()
 	if err != nil {

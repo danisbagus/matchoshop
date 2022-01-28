@@ -78,3 +78,32 @@ func (rc ProductHandler) GetProductDetail(w http.ResponseWriter, r *http.Request
 
 	response.Write(w, http.StatusOK, productCategory)
 }
+
+func (rc ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	productID, _ := strconv.Atoi(vars["product_id"])
+
+	claimData, appErr := GetClaimData(r)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+	var request dto.CreateProductRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		logger.Error("Error while decoding update product request: " + err.Error())
+		response.Error(w, http.StatusBadRequest, "Failed create product category")
+		return
+	}
+
+	request.MerchantID = claimData.MerchantID
+
+	updateData, appErr := rc.Service.Update(int64(productID), &request)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	response.Write(w, http.StatusOK, updateData)
+}

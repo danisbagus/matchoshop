@@ -7,4 +7,5 @@ import (
 
 type IProductProductCategoryRepo interface {
 	BulkInsert(data []domain.ProductProductCategory) *errs.AppError
+	DeleteAll(productID int64) *errs.AppError
 }
