@@ -191,3 +191,29 @@ func (r ProductService) Update(productID int64, req *dto.CreateProductRequest) (
 
 	return response, nil
 }
+
+func (r ProductService) Delete(productID int64, merchantID int64) (*dto.ResponseData, *errs.AppError) {
+
+	checkProduct, appErr := r.repo.CheckByIDAndMerchantID(productID, merchantID)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	if !checkProduct {
+		return nil, errs.NewBadRequestError("Product not found")
+	}
+
+	appErr = r.repo.Delete(productID)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	appErr = r.productProductCategoryRepo.DeleteAll(productID)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	response := dto.GenerateResponseData("Successfully delete data", map[string]string{})
+
+	return response, nil
+}

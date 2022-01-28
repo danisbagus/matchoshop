@@ -107,3 +107,23 @@ func (rc ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
 	response.Write(w, http.StatusOK, updateData)
 }
+
+func (rc ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	productID, _ := strconv.Atoi(vars["product_id"])
+
+	claimData, appErr := GetClaimData(r)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	deleteData, appErr := rc.Service.Delete(int64(productID), claimData.MerchantID)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	response.Write(w, http.StatusOK, deleteData)
+}

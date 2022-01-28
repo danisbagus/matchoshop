@@ -56,6 +56,7 @@ func StartApp() {
 	apiRouter.HandleFunc("/v1/product", productHandlerV1.GetProductList).Methods(http.MethodGet)
 	apiRouter.HandleFunc("/v1/product/{product_id}", productHandlerV1.GetProductDetail).Methods(http.MethodGet)
 	apiRouter.HandleFunc("/v1/product/{product_id}", productHandlerV1.UpdateProduct).Methods(http.MethodPut)
+	apiRouter.HandleFunc("/v1/product/{product_id}", productHandlerV1.Delete).Methods(http.MethodDelete)
 
 	apiRouter.HandleFunc("/v1/product-category", productCategoryHandlerV1.CrateProductCategory).Methods(http.MethodPost)
 	apiRouter.HandleFunc("/v1/product-category", productCategoryHandlerV1.GetProductCategoryList).Methods(http.MethodGet)

@@ -14,6 +14,7 @@ type IProductRepo interface {
 	GetAllByMerchantID(merchantID int64) ([]domain.ProductList, *errs.AppError)
 	GetOneByIDAndMerchantID(productID int64, merchantID int64) (*domain.ProductDetail, *errs.AppError)
 	Update(productID int64, data *domain.Product) *errs.AppError
+	Delete(productID int64) *errs.AppError
 }
 
 type IProductService interface {
@@ -21,4 +22,5 @@ type IProductService interface {
 	GetList(merchantID int64) (*dto.ResponseData, *errs.AppError)
 	GetDetail(productID int64, merchantID int64) (*dto.ResponseData, *errs.AppError)
 	Update(productID int64, data *dto.CreateProductRequest) (*dto.ResponseData, *errs.AppError)
+	Delete(productID int64, merchantID int64) (*dto.ResponseData, *errs.AppError)
 }
