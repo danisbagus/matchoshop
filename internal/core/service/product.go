@@ -36,18 +36,20 @@ func (r ProductService) Create(req *dto.CreateProductRequest) (*dto.ResponseData
 		return nil, appErr
 	}
 
-	checkProductCategory, appErr := r.productCategoryRepo.CheckByIDAndMerchantID(req.ProductCategoryID, req.MerchantID)
-	if appErr != nil {
-		return nil, appErr
-	}
-
-	if !checkProductCategory {
-		return nil, errs.NewBadRequestError("Product category not found")
-	}
-
 	if checkProduct {
 		errorMessage := fmt.Sprintf("Product with SKU %s is already exits", req.Sku)
 		return nil, errs.NewBadRequestError(errorMessage)
+	}
+
+	for _, productCategoryID := range req.ProductCategoryID {
+		checkProductCategory, appErr := r.productCategoryRepo.CheckByIDAndMerchantID(productCategoryID, req.MerchantID)
+		if appErr != nil {
+			return nil, appErr
+		}
+
+		if !checkProductCategory {
+			return nil, errs.NewBadRequestError("Product category not found")
+		}
 	}
 
 	formProduct := domain.Product{
@@ -65,12 +67,16 @@ func (r ProductService) Create(req *dto.CreateProductRequest) (*dto.ResponseData
 		return nil, appErr
 	}
 
-	formProductProductCategory := domain.ProductProductCategory{
-		ProductID:         newProductData.ProductID,
-		ProductCategoryID: req.ProductCategoryID,
+	formProductProductCategory := make([]domain.ProductProductCategory, 0)
+
+	for _, productCategoryID := range req.ProductCategoryID {
+		formProductProductCategory = append(formProductProductCategory, domain.ProductProductCategory{
+			ProductID:         newProductData.ProductID,
+			ProductCategoryID: productCategoryID,
+		})
 	}
 
-	appErr = r.productProductCategoryRepo.Insert(&formProductProductCategory)
+	appErr = r.productProductCategoryRepo.BulkInsert(formProductProductCategory)
 	if appErr != nil {
 		return nil, appErr
 	}

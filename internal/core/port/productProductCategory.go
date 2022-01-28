@@ -6,5 +6,5 @@ import (
 )
 
 type IProductProductCategoryRepo interface {
-	Insert(data *domain.ProductProductCategory) *errs.AppError
+	BulkInsert(data []domain.ProductProductCategory) *errs.AppError
 }

@@ -7,12 +7,12 @@ import (
 )
 
 type CreateProductRequest struct {
-	MerchantID        int64  `json:"-"`
-	Name              string `json:"name"`
-	Sku               string `json:"sku"`
-	Description       string `json:"description"`
-	ProductCategoryID int64  `json:"product_category_id"`
-	Price             int64  `json:"price"`
+	MerchantID        int64   `json:"-"`
+	Name              string  `json:"name"`
+	Sku               string  `json:"sku"`
+	Description       string  `json:"description"`
+	ProductCategoryID []int64 `json:"product_category_id"`
+	Price             int64   `json:"price"`
 }
 
 type CreateProductResponse struct {
@@ -53,8 +53,9 @@ func (r CreateProductRequest) Validate() *errs.AppError {
 		return errs.NewBadRequestError("Price is required")
 	} else if r.Price < 100 {
 		return errs.NewValidationError("Minimum price is 100")
+	} else if len(r.ProductCategoryID) < 1 {
+		return errs.NewValidationError("Product category ID required")
 	}
-
 	return nil
 }
 
@@ -66,6 +67,7 @@ func NewGetProductListResponse(message string, data []domain.ProductList) *Respo
 	for i := 0; i < len(data); i++ {
 		if mapValue, ok := mapProduct[data[i].ProductID]; ok {
 			mapValue.ProductCategories = append(mapValue.ProductCategories, data[i].ProductCategoryName)
+			mapProduct[data[i].ProductID] = mapValue
 		} else {
 			product := ProductListResponse{
 				ProductID:         data[i].ProductID,
@@ -76,7 +78,6 @@ func NewGetProductListResponse(message string, data []domain.ProductList) *Respo
 				ProductCategories: []string{data[i].ProductCategoryName},
 			}
 			mapProduct[data[i].ProductID] = product
-
 		}
 	}
 
