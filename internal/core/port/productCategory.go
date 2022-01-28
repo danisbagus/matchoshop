@@ -12,6 +12,7 @@ type IProductCategoryRepo interface {
 	CheckByMerchantIDAndName(merchantID int64, name string) (bool, *errs.AppError)
 	CheckByIDAndMerchantID(productCategoryID int64, merchantID int64) (bool, *errs.AppError)
 	GetAllByMerchantID(merchantID int64) ([]domain.ProductCategory, *errs.AppError)
+	GetAllByProductIDAndMerchantID(productID int64, merchantID int64) ([]domain.ProductCategory, *errs.AppError)
 	GetOneByIDAndMerchantID(productCategoryID int64, merchantID int64) (*domain.ProductCategory, *errs.AppError)
 	Update(productCategoryID int64, data *domain.ProductCategory) *errs.AppError
 	Delete(productCategoryID int64) *errs.AppError

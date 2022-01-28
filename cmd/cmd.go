@@ -33,12 +33,16 @@ func StartApp() {
 
 	// wiring
 	userRepo := repo.NewUserRepo(client)
+	productRepo := repo.NewProductRepo(client)
 	productCategoryRepo := repo.NewProductCategoryRepo(client)
+	productProductCategoryRepo := repo.NewProductProductCategoryRepo(client)
 
 	userService := service.NewUserService(userRepo)
+	productService := service.NewProductService(productRepo, productCategoryRepo, productProductCategoryRepo)
 	productCategoryService := service.NewProductCategoryService(productCategoryRepo)
 
 	userHandlerV1 := handlerV1.AuthHandler{Service: userService}
+	productHandlerV1 := handlerV1.ProductHandler{Service: productService}
 	productCategoryHandlerV1 := handlerV1.ProductCategoryHandler{Service: productCategoryService}
 
 	authRouter := router.PathPrefix("/auth").Subrouter()
@@ -47,6 +51,12 @@ func StartApp() {
 	// v1 route
 	authRouter.HandleFunc("/v1/login", userHandlerV1.Login).Methods(http.MethodPost)
 	authRouter.HandleFunc("/v1/register/merchant", userHandlerV1.RegisterMerchant).Methods(http.MethodPost)
+
+	apiRouter.HandleFunc("/v1/product", productHandlerV1.CrateProduct).Methods(http.MethodPost)
+	apiRouter.HandleFunc("/v1/product", productHandlerV1.GetProductList).Methods(http.MethodGet)
+	apiRouter.HandleFunc("/v1/product/{product_id}", productHandlerV1.GetProductDetail).Methods(http.MethodGet)
+	apiRouter.HandleFunc("/v1/product/{product_id}", productHandlerV1.UpdateProduct).Methods(http.MethodPut)
+	apiRouter.HandleFunc("/v1/product/{product_id}", productHandlerV1.Delete).Methods(http.MethodDelete)
 
 	apiRouter.HandleFunc("/v1/product-category", productCategoryHandlerV1.CrateProductCategory).Methods(http.MethodPost)
 	apiRouter.HandleFunc("/v1/product-category", productCategoryHandlerV1.GetProductCategoryList).Methods(http.MethodGet)

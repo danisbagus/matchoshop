@@ -12,22 +12,22 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type ProductCategoryHandler struct {
-	Service port.IProductCategoryService
+type ProductHandler struct {
+	Service port.IProductService
 }
 
-func (rc ProductCategoryHandler) CrateProductCategory(w http.ResponseWriter, r *http.Request) {
+func (rc ProductHandler) CrateProduct(w http.ResponseWriter, r *http.Request) {
 
 	claimData, appErr := GetClaimData(r)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
-	var request dto.CreateProductCategoryRequest
+	var request dto.CreateProductRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		logger.Error("Error while decoding create product category request: " + err.Error())
-		response.Error(w, http.StatusBadRequest, "Failed create product category")
+		logger.Error("Error while decoding create product request: " + err.Error())
+		response.Error(w, http.StatusBadRequest, "Failed create product")
 		return
 	}
 
@@ -42,7 +42,7 @@ func (rc ProductCategoryHandler) CrateProductCategory(w http.ResponseWriter, r *
 	response.Write(w, http.StatusOK, createData)
 }
 
-func (rc ProductCategoryHandler) GetProductCategoryList(w http.ResponseWriter, r *http.Request) {
+func (rc ProductHandler) GetProductList(w http.ResponseWriter, r *http.Request) {
 
 	claimData, appErr := GetClaimData(r)
 	if appErr != nil {
@@ -50,19 +50,19 @@ func (rc ProductCategoryHandler) GetProductCategoryList(w http.ResponseWriter, r
 		return
 	}
 
-	productCategories, appErr := rc.Service.GetList(claimData.MerchantID)
+	products, appErr := rc.Service.GetList(claimData.MerchantID)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 
-	response.Write(w, http.StatusOK, productCategories)
+	response.Write(w, http.StatusOK, products)
 }
 
-func (rc ProductCategoryHandler) GetProductCategoryDetail(w http.ResponseWriter, r *http.Request) {
+func (rc ProductHandler) GetProductDetail(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-	productCategoryID, _ := strconv.Atoi(vars["product_category_id"])
+	productID, _ := strconv.Atoi(vars["product_id"])
 
 	claimData, appErr := GetClaimData(r)
 	if appErr != nil {
@@ -70,7 +70,7 @@ func (rc ProductCategoryHandler) GetProductCategoryDetail(w http.ResponseWriter,
 		return
 	}
 
-	productCategory, appErr := rc.Service.GetDetail(int64(productCategoryID), claimData.MerchantID)
+	productCategory, appErr := rc.Service.GetDetail(int64(productID), claimData.MerchantID)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -79,27 +79,27 @@ func (rc ProductCategoryHandler) GetProductCategoryDetail(w http.ResponseWriter,
 	response.Write(w, http.StatusOK, productCategory)
 }
 
-func (rc ProductCategoryHandler) UpdateProductCategory(w http.ResponseWriter, r *http.Request) {
+func (rc ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-	productCategoryID, _ := strconv.Atoi(vars["product_category_id"])
+	productID, _ := strconv.Atoi(vars["product_id"])
 
 	claimData, appErr := GetClaimData(r)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
-	var request dto.CreateProductCategoryRequest
+	var request dto.CreateProductRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		logger.Error("Error while decoding update product category request: " + err.Error())
+		logger.Error("Error while decoding update product request: " + err.Error())
 		response.Error(w, http.StatusBadRequest, "Failed create product category")
 		return
 	}
 
 	request.MerchantID = claimData.MerchantID
 
-	updateData, appErr := rc.Service.Update(int64(productCategoryID), &request)
+	updateData, appErr := rc.Service.Update(int64(productID), &request)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -108,10 +108,10 @@ func (rc ProductCategoryHandler) UpdateProductCategory(w http.ResponseWriter, r 
 	response.Write(w, http.StatusOK, updateData)
 }
 
-func (rc ProductCategoryHandler) Delete(w http.ResponseWriter, r *http.Request) {
+func (rc ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-	productCategoryID, _ := strconv.Atoi(vars["product_category_id"])
+	productID, _ := strconv.Atoi(vars["product_id"])
 
 	claimData, appErr := GetClaimData(r)
 	if appErr != nil {
@@ -119,7 +119,7 @@ func (rc ProductCategoryHandler) Delete(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	deleteData, appErr := rc.Service.Delete(int64(productCategoryID), claimData.MerchantID)
+	deleteData, appErr := rc.Service.Delete(int64(productID), claimData.MerchantID)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
