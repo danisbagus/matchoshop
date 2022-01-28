@@ -3,11 +3,13 @@ package v1
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/danisbagus/go-common-packages/http/response"
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/dto"
+	"github.com/gorilla/mux"
 )
 
 type ProductHandler struct {
@@ -40,7 +42,7 @@ func (rc ProductHandler) CrateProduct(w http.ResponseWriter, r *http.Request) {
 	response.Write(w, http.StatusOK, createData)
 }
 
-func (rc ProductHandler) GetProductist(w http.ResponseWriter, r *http.Request) {
+func (rc ProductHandler) GetProductList(w http.ResponseWriter, r *http.Request) {
 
 	claimData, appErr := GetClaimData(r)
 	if appErr != nil {
@@ -55,4 +57,24 @@ func (rc ProductHandler) GetProductist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.Write(w, http.StatusOK, products)
+}
+
+func (rc ProductHandler) GetProductDetail(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	productID, _ := strconv.Atoi(vars["product_id"])
+
+	claimData, appErr := GetClaimData(r)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	productCategory, appErr := rc.Service.GetDetail(int64(productID), claimData.MerchantID)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	response.Write(w, http.StatusOK, productCategory)
 }

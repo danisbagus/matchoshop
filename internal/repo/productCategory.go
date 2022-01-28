@@ -139,6 +139,41 @@ func (r ProductCategoryRepo) GetAllByMerchantID(merchantID int64) ([]domain.Prod
 	return productCategories, nil
 }
 
+func (r ProductCategoryRepo) GetAllByProductIDAndMerchantID(productID int64, merchantID int64) ([]domain.ProductCategory, *errs.AppError) {
+
+	sqlGetProductCategory := `
+	SELECT 
+		pc.product_category_id, 
+		pc.merchant_id, 
+		pc.name
+	FROM product_categories pc
+	JOIN product_product_categories ppc ON ppc.product_category_id = pc.product_category_id
+	WHERE ppc.product_id = $1
+	AND pc.merchant_id = $2`
+
+	rows, err := r.db.Query(sqlGetProductCategory, productID, merchantID)
+	if err != nil && err != sql.ErrNoRows {
+		logger.Error("Error while get product category from database: " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	defer rows.Close()
+
+	productCategories := make([]domain.ProductCategory, 0)
+
+	for rows.Next() {
+		var productCategory domain.ProductCategory
+		if err := rows.Scan(&productCategory.ProductCategoryID, &productCategory.MerchantID, &productCategory.Name); err != nil {
+			logger.Error("Error while scanning product category from database: " + err.Error())
+			return nil, errs.NewUnexpectedError("Unexpected database error")
+		}
+
+		productCategories = append(productCategories, productCategory)
+	}
+
+	return productCategories, nil
+}
+
 func (r ProductCategoryRepo) GetOneByIDAndMerchantID(productCategoryID int64, merchantID int64) (*domain.ProductCategory, *errs.AppError) {
 
 	var productCategory domain.ProductCategory

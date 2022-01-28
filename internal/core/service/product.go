@@ -96,3 +96,22 @@ func (r ProductService) GetList(merchantID int64) (*dto.ResponseData, *errs.AppE
 
 	return response, nil
 }
+
+func (r ProductService) GetDetail(productID int64, merchantID int64) (*dto.ResponseData, *errs.AppError) {
+
+	product, appErr := r.repo.GetOneByIDAndMerchantID(productID, merchantID)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	productCategories, appErr := r.productCategoryRepo.GetAllByProductIDAndMerchantID(productID, merchantID)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	product.ProductCategories = productCategories
+
+	response := dto.NewGetProductDetailResponse("Successfully get data", product)
+
+	return response, nil
+}
