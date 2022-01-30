@@ -28,12 +28,12 @@ func (r ProductRepo) Insert(data *domain.Product) (*domain.Product, *errs.AppErr
 		return nil, errs.NewUnexpectedError("Unexpected database error")
 	}
 
-	sqlInsert := `INSERT INTO products(merchant_id, name, sku, description, price, created_at, updated_at) 
-					  VALUES($1, $2, $3, $4, $5, $6, $7)
+	sqlInsert := `INSERT INTO products(name, sku, description, price, created_at, updated_at) 
+					  VALUES($1, $2, $3, $4, $5, $6)
 					  RETURNING product_id`
 
 	var productID int64
-	err = tx.QueryRow(sqlInsert, data.MerchantID, data.Name, data.Sku, data.Description, data.Price, data.CreatedAt, data.UpdatedAt).Scan(&productID)
+	err = tx.QueryRow(sqlInsert, data.Name, data.Sku, data.Description, data.Price, data.CreatedAt, data.UpdatedAt).Scan(&productID)
 
 	if err != nil {
 		tx.Rollback()
@@ -53,15 +53,14 @@ func (r ProductRepo) Insert(data *domain.Product) (*domain.Product, *errs.AppErr
 	return data, nil
 }
 
-func (r ProductRepo) CheckByIDAndMerchantID(productID int64, merchantID int64) (bool, *errs.AppError) {
+func (r ProductRepo) CheckByID(productID int64) (bool, *errs.AppError) {
 
 	sqlCountProduct := `SELECT COUNT(product_Id) 
 	FROM products 
-	WHERE product_id = $1
-	AND merchant_id = $2`
+	WHERE product_id = $1`
 
 	var totalData int64
-	err := r.db.QueryRow(sqlCountProduct, productID, merchantID).Scan(&totalData)
+	err := r.db.QueryRow(sqlCountProduct, productID).Scan(&totalData)
 	if err != nil && err != sql.ErrNoRows {
 		logger.Error("Error while count product from database: " + err.Error())
 		return false, errs.NewUnexpectedError("Unexpected database error")
@@ -70,15 +69,14 @@ func (r ProductRepo) CheckByIDAndMerchantID(productID int64, merchantID int64) (
 	return totalData > 0, nil
 }
 
-func (r ProductRepo) CheckBySKUAndMerchantID(sku string, merchantID int64) (bool, *errs.AppError) {
+func (r ProductRepo) CheckBySKU(sku string) (bool, *errs.AppError) {
 
 	sqlCountProduct := `SELECT COUNT(product_Id) 
 	FROM products 
-	WHERE merchant_id = $1
-	AND sku = $2`
+	WHERE sku = $1`
 
 	var totalData int64
-	err := r.db.QueryRow(sqlCountProduct, merchantID, sku).Scan(&totalData)
+	err := r.db.QueryRow(sqlCountProduct, sku).Scan(&totalData)
 	if err != nil && err != sql.ErrNoRows {
 		logger.Error("Error while count product from database: " + err.Error())
 		return false, errs.NewUnexpectedError("Unexpected database error")
@@ -87,16 +85,15 @@ func (r ProductRepo) CheckBySKUAndMerchantID(sku string, merchantID int64) (bool
 	return totalData > 0, nil
 }
 
-func (r ProductRepo) CheckByIDAndSKUAndMerchantID(productID int64, sku string, merchantID int64) (bool, *errs.AppError) {
+func (r ProductRepo) CheckByIDAndSKU(productID int64, sku string) (bool, *errs.AppError) {
 
 	sqlCountProduct := `SELECT COUNT(product_Id) 
 	FROM products 
 	WHERE product_id != $1
-	AND merchant_id = $2
-	AND sku = $3`
+	AND sku = $2`
 
 	var totalData int64
-	err := r.db.QueryRow(sqlCountProduct, productID, merchantID, sku).Scan(&totalData)
+	err := r.db.QueryRow(sqlCountProduct, productID, sku).Scan(&totalData)
 	if err != nil && err != sql.ErrNoRows {
 		logger.Error("Error while count product from database: " + err.Error())
 		return false, errs.NewUnexpectedError("Unexpected database error")
@@ -105,12 +102,11 @@ func (r ProductRepo) CheckByIDAndSKUAndMerchantID(productID int64, sku string, m
 	return totalData > 0, nil
 }
 
-func (r ProductRepo) GetAllByMerchantID(merchantID int64) ([]domain.ProductList, *errs.AppError) {
+func (r ProductRepo) GetAll() ([]domain.ProductList, *errs.AppError) {
 
 	sqlGetProduct := `
 	SELECT 
 		p.product_id, 
-		p.merchant_id, 
 		p.name, 
 		p.sku, 
 		p.price, 
@@ -118,10 +114,9 @@ func (r ProductRepo) GetAllByMerchantID(merchantID int64) ([]domain.ProductList,
 	FROM products p
 	JOIN product_product_categories ppc ON ppc.product_id = p.product_id
 	JOIN product_categories pc ON pc.product_category_id = ppc.product_category_id
-	WHERE p.merchant_id = $1
 	ORDER BY p.name ASC`
 
-	rows, err := r.db.Query(sqlGetProduct, merchantID)
+	rows, err := r.db.Query(sqlGetProduct)
 	if err != nil && err != sql.ErrNoRows {
 		logger.Error("Error while get all product from database: " + err.Error())
 		return nil, errs.NewUnexpectedError("Unexpected database error")
@@ -133,7 +128,7 @@ func (r ProductRepo) GetAllByMerchantID(merchantID int64) ([]domain.ProductList,
 
 	for rows.Next() {
 		var product domain.ProductList
-		if err := rows.Scan(&product.ProductID, &product.MerchantID, &product.Name, &product.Sku, &product.Price, &product.ProductCategoryName); err != nil {
+		if err := rows.Scan(&product.ProductID, &product.Name, &product.Sku, &product.Price, &product.ProductCategoryName); err != nil {
 			logger.Error("Error while scanning product category from database: " + err.Error())
 			return nil, errs.NewUnexpectedError("Unexpected database error")
 		}
@@ -144,24 +139,22 @@ func (r ProductRepo) GetAllByMerchantID(merchantID int64) ([]domain.ProductList,
 	return products, nil
 }
 
-func (r ProductRepo) GetOneByIDAndMerchantID(productID int64, merchantID int64) (*domain.ProductDetail, *errs.AppError) {
+func (r ProductRepo) GetOneByID(productID int64) (*domain.ProductDetail, *errs.AppError) {
 
 	var product domain.ProductDetail
 
 	sqlGetProduct := `
 	SELECT 
 		p.product_id, 
-		p.merchant_id, 
 		p.name, 
 		p.sku, 
 		p.price, 
 		p.description
 	FROM products p
 	WHERE p.product_id = $1
-	AND p.merchant_id = $2
 	LIMIT 1`
 
-	err := r.db.QueryRow(sqlGetProduct, productID, merchantID).Scan(&product.ProductID, &product.MerchantID, &product.Name, &product.Sku, &product.Price, &product.Description)
+	err := r.db.QueryRow(sqlGetProduct, productID).Scan(&product.ProductID, &product.Name, &product.Sku, &product.Price, &product.Description)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errs.NewNotFoundError("Product not found!")
@@ -184,16 +177,15 @@ func (r ProductRepo) Update(productID int64, data *domain.Product) *errs.AppErro
 
 	sqlUpdate := `
 	UPDATE products 
-	SET merchant_id = $2, 
-		name = $3, 
-		sku = $4,
-		price = $5,
-		description = $6,
-		created_at = $7, 
-		updated_at = $8
+	SET name = $2, 
+		sku = $3,
+		price = $4,
+		description = $5,
+		created_at = $6, 
+		updated_at = $7
 	WHERE product_id = $1`
 
-	_, err = tx.Exec(sqlUpdate, productID, data.MerchantID, data.Name, data.Sku, data.Price, data.Description, data.CreatedAt, data.UpdatedAt)
+	_, err = tx.Exec(sqlUpdate, productID, data.Name, data.Sku, data.Price, data.Description, data.CreatedAt, data.UpdatedAt)
 	if err != nil {
 		tx.Rollback()
 		logger.Error("Error while update product: " + err.Error())

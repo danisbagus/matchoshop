@@ -27,7 +27,7 @@ func (r ProductCategoryService) Create(req *dto.CreateProductCategoryRequest) (*
 		return nil, appErr
 	}
 
-	checkProductCategory, appErr := r.repo.CheckByMerchantIDAndName(req.MerchantID, req.Name)
+	checkProductCategory, appErr := r.repo.CheckByName(req.Name)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -38,10 +38,9 @@ func (r ProductCategoryService) Create(req *dto.CreateProductCategoryRequest) (*
 	}
 
 	formProductCategory := domain.ProductCategory{
-		MerchantID: req.MerchantID,
-		Name:       req.Name,
-		CreatedAt:  time.Now().Format(dbTSLayout),
-		UpdatedAt:  time.Now().Format(dbTSLayout),
+		Name:      req.Name,
+		CreatedAt: time.Now().Format(dbTSLayout),
+		UpdatedAt: time.Now().Format(dbTSLayout),
 	}
 
 	newProductCategoryData, err := r.repo.Insert(&formProductCategory)
@@ -54,9 +53,9 @@ func (r ProductCategoryService) Create(req *dto.CreateProductCategoryRequest) (*
 	return response, nil
 }
 
-func (r ProductCategoryService) GetList(merchantID int64) (*dto.ResponseData, *errs.AppError) {
+func (r ProductCategoryService) GetList() (*dto.ResponseData, *errs.AppError) {
 
-	productCategories, appErr := r.repo.GetAllByMerchantID(merchantID)
+	productCategories, appErr := r.repo.GetAll()
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -66,9 +65,9 @@ func (r ProductCategoryService) GetList(merchantID int64) (*dto.ResponseData, *e
 	return response, nil
 }
 
-func (r ProductCategoryService) GetDetail(productCategoryID int64, merchantID int64) (*dto.ResponseData, *errs.AppError) {
+func (r ProductCategoryService) GetDetail(productCategoryID int64) (*dto.ResponseData, *errs.AppError) {
 
-	productCategory, appErr := r.repo.GetOneByIDAndMerchantID(productCategoryID, merchantID)
+	productCategory, appErr := r.repo.GetOneByID(productCategoryID)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -85,7 +84,7 @@ func (r ProductCategoryService) Update(productCategoryID int64, req *dto.CreateP
 		return nil, appErr
 	}
 
-	checkProductCategory, appErr := r.repo.CheckByIDAndMerchantID(productCategoryID, req.MerchantID)
+	checkProductCategory, appErr := r.repo.CheckByID(productCategoryID)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -94,7 +93,7 @@ func (r ProductCategoryService) Update(productCategoryID int64, req *dto.CreateP
 		return nil, errs.NewBadRequestError("Product category not found")
 	}
 
-	checkProductCategory, appErr = r.repo.CheckByIDAndMerchantIDAndName(productCategoryID, req.MerchantID, req.Name)
+	checkProductCategory, appErr = r.repo.CheckByIDAndName(productCategoryID, req.Name)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -105,10 +104,9 @@ func (r ProductCategoryService) Update(productCategoryID int64, req *dto.CreateP
 	}
 
 	formProductCategory := domain.ProductCategory{
-		MerchantID: req.MerchantID,
-		Name:       req.Name,
-		CreatedAt:  time.Now().Format(dbTSLayout),
-		UpdatedAt:  time.Now().Format(dbTSLayout),
+		Name:      req.Name,
+		CreatedAt: time.Now().Format(dbTSLayout),
+		UpdatedAt: time.Now().Format(dbTSLayout),
 	}
 
 	appErr = r.repo.Update(productCategoryID, &formProductCategory)
@@ -121,9 +119,9 @@ func (r ProductCategoryService) Update(productCategoryID int64, req *dto.CreateP
 	return response, nil
 }
 
-func (r ProductCategoryService) Delete(productCategoryID int64, merchantID int64) (*dto.ResponseData, *errs.AppError) {
+func (r ProductCategoryService) Delete(productCategoryID int64) (*dto.ResponseData, *errs.AppError) {
 
-	checkProductCategory, appErr := r.repo.CheckByIDAndMerchantID(productCategoryID, merchantID)
+	checkProductCategory, appErr := r.repo.CheckByID(productCategoryID)
 	if appErr != nil {
 		return nil, appErr
 	}

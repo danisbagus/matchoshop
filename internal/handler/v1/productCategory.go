@@ -31,7 +31,11 @@ func (rc ProductCategoryHandler) CrateProductCategory(w http.ResponseWriter, r *
 		return
 	}
 
-	request.MerchantID = claimData.MerchantID
+	appErr = checkAuthorizeByRoleID(claimData.RoleID)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
 
 	createData, appErr := rc.Service.Create(&request)
 	if appErr != nil {
@@ -44,13 +48,7 @@ func (rc ProductCategoryHandler) CrateProductCategory(w http.ResponseWriter, r *
 
 func (rc ProductCategoryHandler) GetProductCategoryList(w http.ResponseWriter, r *http.Request) {
 
-	claimData, appErr := GetClaimData(r)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
-	}
-
-	productCategories, appErr := rc.Service.GetList(claimData.MerchantID)
+	productCategories, appErr := rc.Service.GetList()
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -64,13 +62,7 @@ func (rc ProductCategoryHandler) GetProductCategoryDetail(w http.ResponseWriter,
 	vars := mux.Vars(r)
 	productCategoryID, _ := strconv.Atoi(vars["product_category_id"])
 
-	claimData, appErr := GetClaimData(r)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
-	}
-
-	productCategory, appErr := rc.Service.GetDetail(int64(productCategoryID), claimData.MerchantID)
+	productCategory, appErr := rc.Service.GetDetail(int64(productCategoryID))
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -97,7 +89,11 @@ func (rc ProductCategoryHandler) UpdateProductCategory(w http.ResponseWriter, r 
 		return
 	}
 
-	request.MerchantID = claimData.MerchantID
+	appErr = checkAuthorizeByRoleID(claimData.RoleID)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
 
 	updateData, appErr := rc.Service.Update(int64(productCategoryID), &request)
 	if appErr != nil {
@@ -119,7 +115,13 @@ func (rc ProductCategoryHandler) Delete(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	deleteData, appErr := rc.Service.Delete(int64(productCategoryID), claimData.MerchantID)
+	appErr = checkAuthorizeByRoleID(claimData.RoleID)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	deleteData, appErr := rc.Service.Delete(int64(productCategoryID))
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return

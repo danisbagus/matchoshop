@@ -62,3 +62,12 @@ func GetClaimData(r *http.Request) (*domain.AccessTokenClaims, *errs.AppError) {
 	claims := jwtToken.Claims.(*domain.AccessTokenClaims)
 	return claims, nil
 }
+
+func checkAuthorizeByRoleID(RoleID int64) *errs.AppError {
+
+	if RoleID != 1 && RoleID != 2 {
+		return errs.NewAuthorizationError("Not authorized")
+	}
+
+	return nil
+}

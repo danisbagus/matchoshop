@@ -21,9 +21,8 @@ type User struct {
 }
 
 type AccessTokenClaims struct {
-	UserID     int64 `json:"user_id"`
-	RoleID     int64 `json:"role_id"`
-	MerchantID int64 `json:"merchant_id"`
+	UserID int64 `json:"user_id"`
+	RoleID int64 `json:"role_id"`
 	jwt.StandardClaims
 }
 
@@ -38,9 +37,8 @@ func NewAuthToken(claims AccessTokenClaims) AuthToken {
 
 func (r User) ClaimsForAccessToken() AccessTokenClaims {
 	return AccessTokenClaims{
-		UserID:     r.UserID,
-		RoleID:     r.UserID,
-		MerchantID: 1,
+		UserID: r.UserID,
+		RoleID: r.UserID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(ACCESS_TOKEN_DURATION).Unix(),
 		},
