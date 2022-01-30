@@ -35,22 +35,6 @@ func (rc AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	response.Write(w, http.StatusOK, *token)
 }
 
-func (rc AuthHandler) RegisterMerchant(w http.ResponseWriter, r *http.Request) {
-	var registerRequest dto.RegisterMerchantRequest
-	if err := json.NewDecoder(r.Body).Decode(&registerRequest); err != nil {
-		logger.Error("Error while decoding register merchant request: " + err.Error())
-		response.Error(w, http.StatusBadRequest, "Failed to register merchant")
-		return
-	}
-
-	token, appErr := rc.Service.RegisterMerchant(&registerRequest)
-	if appErr != nil {
-		response.Write(w, appErr.Code, appErr.AsMessage())
-		return
-	}
-	response.Write(w, http.StatusOK, *token)
-}
-
 func GetClaimData(r *http.Request) (*domain.AccessTokenClaims, *errs.AppError) {
 	authHeader := r.Header.Get("Authorization")
 	splitToken := strings.Split(authHeader, "Bearer")

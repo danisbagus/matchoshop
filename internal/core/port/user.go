@@ -9,10 +9,8 @@ import (
 type IUserRepo interface {
 	FindOne(email string) (*domain.User, *errs.AppError)
 	Verify(token string) *errs.AppError
-	CreateUserMerchant(data *domain.UserMerchant) (*domain.UserMerchant, *errs.AppError)
 }
 
 type IUserService interface {
 	Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppError)
-	RegisterMerchant(req *dto.RegisterMerchantRequest) (*dto.ResponseData, *errs.AppError)
 }

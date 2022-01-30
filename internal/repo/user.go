@@ -26,9 +26,9 @@ func NewUserRepo(db *sqlx.DB) port.IUserRepo {
 
 func (r AuthRepo) FindOne(email string) (*domain.User, *errs.AppError) {
 	var login domain.User
-	sqlVerify := `SELECT user_id, email, password FROM users WHERE email = $1`
+	sqlVerify := `SELECT user_id, email, password, role_id FROM users WHERE email = $1`
 
-	err := r.db.QueryRow(sqlVerify, email).Scan(&login.UserID, &login.Email, &login.Password)
+	err := r.db.QueryRow(sqlVerify, email).Scan(&login.UserID, &login.Email, &login.Password, &login.RoleID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errs.NewAuthenticationError("invalid credentials")
@@ -51,53 +51,6 @@ func (r AuthRepo) Verify(token string) *errs.AppError {
 		return errs.NewAuthorizationError("Invalid token")
 	}
 	return nil
-}
-
-func (r AuthRepo) CreateUserMerchant(data *domain.UserMerchant) (*domain.UserMerchant, *errs.AppError) {
-
-	tx, err := r.db.Begin()
-	if err != nil {
-		logger.Error("Error when starting create new user merchant " + err.Error())
-		return nil, errs.NewUnexpectedError("Unexpected database error")
-	}
-
-	sqlInsertUser := `INSERT INTO users(email, password, created_at, updated_at) 
-					  VALUES($1, $2, $3, $4)
-					  RETURNING user_id`
-
-	var userID int64
-	err = tx.QueryRow(sqlInsertUser, data.Email, data.Password, data.CreatedAt, data.UpdatedAt).Scan(&userID)
-
-	if err != nil {
-		tx.Rollback()
-		logger.Error("Error while insert new user: " + err.Error())
-		return nil, errs.NewUnexpectedError("Unexpected database error")
-	}
-
-	sqlInserMerchant := `INSERT INTO merchants(user_id, name, identifier, created_at, updated_at) 
-					     VALUES($1, $2, $3, $4, $5)
-						 RETURNING merchant_id`
-
-	var merchantID int64
-	err = tx.QueryRow(sqlInserMerchant, userID, data.MerchantName, data.MerchantIdentifier, data.CreatedAt, data.UpdatedAt).Scan(&merchantID)
-
-	if err != nil {
-		tx.Rollback()
-		logger.Error("Error while insert new merchant: " + err.Error())
-		return nil, errs.NewUnexpectedError("Unexpected database error")
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		tx.Rollback()
-		logger.Error("Error while commiting transaction: " + err.Error())
-		return nil, errs.NewUnexpectedError("Unexpected database error")
-	}
-
-	data.MerchantID = merchantID
-	data.UserID = userID
-
-	return data, nil
 }
 
 func jwtTokenFromString(tokenString string) (*jwt.Token, error) {

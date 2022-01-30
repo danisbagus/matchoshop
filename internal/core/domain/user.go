@@ -15,18 +15,14 @@ type User struct {
 	UserID    int64  `db:"user_id"`
 	Email     string `db:"email"`
 	Password  string `db:"password"`
+	RoleID    int64  `db:"role_id"`
 	CreatedAt string `db:"created_at"`
 	UpdatedAt string `db:"updated_at"`
 }
 
-type UserMerchant struct {
-	User
-	MerchantID         int64
-	MerchantName       string
-	MerchantIdentifier string
-}
-
 type AccessTokenClaims struct {
+	UserID     int64 `json:"user_id"`
+	RoleID     int64 `json:"role_id"`
 	MerchantID int64 `json:"merchant_id"`
 	jwt.StandardClaims
 }
@@ -42,7 +38,9 @@ func NewAuthToken(claims AccessTokenClaims) AuthToken {
 
 func (r User) ClaimsForAccessToken() AccessTokenClaims {
 	return AccessTokenClaims{
-		MerchantID: r.UserID,
+		UserID:     r.UserID,
+		RoleID:     r.UserID,
+		MerchantID: 1,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(ACCESS_TOKEN_DURATION).Unix(),
 		},
