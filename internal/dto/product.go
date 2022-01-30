@@ -7,7 +7,6 @@ import (
 )
 
 type CreateProductRequest struct {
-	MerchantID        int64   `json:"-"`
 	Name              string  `json:"name"`
 	Sku               string  `json:"sku"`
 	Description       string  `json:"description"`
@@ -21,7 +20,6 @@ type CreateProductResponse struct {
 
 type ProductListResponse struct {
 	ProductID         int64    `json:"product_id"`
-	MerchantID        int64    `json:"merchant_id"`
 	Name              string   `json:"name"`
 	Sku               string   `json:"sku"`
 	Price             int64    `json:"price"`
@@ -34,7 +32,6 @@ type ProductListListResponse struct {
 
 type ProductDetailtResponse struct {
 	ProductID         int64                     `json:"product_id"`
-	MerchantID        int64                     `json:"merchant_id"`
 	Name              string                    `json:"name"`
 	Sku               string                    `json:"sku"`
 	Price             int64                     `json:"price"`
@@ -63,7 +60,6 @@ func NewGetProductListResponse(message string, data []domain.ProductList) *Respo
 		} else {
 			product := ProductListResponse{
 				ProductID:         data[i].ProductID,
-				MerchantID:        data[i].MerchantID,
 				Name:              data[i].Name,
 				Sku:               data[i].Sku,
 				Price:             data[i].Price,
@@ -85,7 +81,6 @@ func NewGetProductListResponse(message string, data []domain.ProductList) *Respo
 func NewGetProductDetailResponse(message string, data *domain.ProductDetail) *ResponseData {
 	productDetail := &ProductDetailtResponse{
 		ProductID:   data.ProductID,
-		MerchantID:  data.MerchantID,
 		Name:        data.Name,
 		Sku:         data.Sku,
 		Price:       data.Price,
@@ -97,7 +92,6 @@ func NewGetProductDetailResponse(message string, data *domain.ProductDetail) *Re
 	for _, valData := range data.ProductCategories {
 		productCategory := ProductCategoryResponse{
 			ProductCategoryID: valData.ProductCategoryID,
-			MerchantID:        valData.MerchantID,
 			Name:              valData.Name,
 		}
 		productCategories = append(productCategories, productCategory)

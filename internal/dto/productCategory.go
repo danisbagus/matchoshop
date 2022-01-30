@@ -7,8 +7,7 @@ import (
 )
 
 type CreateProductCategoryRequest struct {
-	MerchantID int64  `json:"-"`
-	Name       string `json:"name"`
+	Name string `json:"name"`
 }
 
 type CreateProductCategoryResponse struct {
@@ -17,7 +16,6 @@ type CreateProductCategoryResponse struct {
 
 type ProductCategoryResponse struct {
 	ProductCategoryID int64  `json:"product_category_id"`
-	MerchantID        int64  `json:"merchant_id"`
 	Name              string `json:"name"`
 }
 
@@ -26,8 +24,7 @@ type ProductCategoryListResponse struct {
 }
 
 type UpdateroductCategoryRequest struct {
-	MerchantID int64  `json:"-"`
-	Name       string `json:"name"`
+	Name string `json:"name"`
 }
 
 func NewCreateProductCategoryResponse(message string, data *domain.ProductCategory) *ResponseData {
@@ -46,7 +43,6 @@ func NewGetProductCategoryListResponse(message string, data []domain.ProductCate
 	for keyData, valData := range data {
 		productCategories[keyData] = ProductCategoryResponse{
 			ProductCategoryID: valData.ProductCategoryID,
-			MerchantID:        valData.MerchantID,
 			Name:              valData.Name,
 		}
 	}
@@ -59,7 +55,6 @@ func NewGetProductCategoryListResponse(message string, data []domain.ProductCate
 func NewGetProductCategoryDetailResponse(message string, data *domain.ProductCategory) *ResponseData {
 	productCategoryResponse := &ProductCategoryResponse{
 		ProductCategoryID: data.ProductCategoryID,
-		MerchantID:        data.MerchantID,
 		Name:              data.Name,
 	}
 

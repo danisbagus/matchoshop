@@ -31,7 +31,7 @@ func (r ProductService) Create(req *dto.CreateProductRequest) (*dto.ResponseData
 		return nil, appErr
 	}
 
-	checkProduct, appErr := r.repo.CheckBySKUAndMerchantID(req.Sku, req.MerchantID)
+	checkProduct, appErr := r.repo.CheckBySKU(req.Sku)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -42,7 +42,7 @@ func (r ProductService) Create(req *dto.CreateProductRequest) (*dto.ResponseData
 	}
 
 	for _, productCategoryID := range req.ProductCategoryID {
-		checkProductCategory, appErr := r.productCategoryRepo.CheckByIDAndMerchantID(productCategoryID, req.MerchantID)
+		checkProductCategory, appErr := r.productCategoryRepo.CheckByID(productCategoryID)
 		if appErr != nil {
 			return nil, appErr
 		}
@@ -53,7 +53,6 @@ func (r ProductService) Create(req *dto.CreateProductRequest) (*dto.ResponseData
 	}
 
 	formProduct := domain.Product{
-		MerchantID:  req.MerchantID,
 		Name:        req.Name,
 		Sku:         req.Sku,
 		Description: req.Description,
@@ -85,9 +84,9 @@ func (r ProductService) Create(req *dto.CreateProductRequest) (*dto.ResponseData
 	return response, nil
 }
 
-func (r ProductService) GetList(merchantID int64) (*dto.ResponseData, *errs.AppError) {
+func (r ProductService) GetList() (*dto.ResponseData, *errs.AppError) {
 
-	products, appErr := r.repo.GetAllByMerchantID(merchantID)
+	products, appErr := r.repo.GetAll()
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -97,14 +96,14 @@ func (r ProductService) GetList(merchantID int64) (*dto.ResponseData, *errs.AppE
 	return response, nil
 }
 
-func (r ProductService) GetDetail(productID int64, merchantID int64) (*dto.ResponseData, *errs.AppError) {
+func (r ProductService) GetDetail(productID int64) (*dto.ResponseData, *errs.AppError) {
 
-	product, appErr := r.repo.GetOneByIDAndMerchantID(productID, merchantID)
+	product, appErr := r.repo.GetOneByID(productID)
 	if appErr != nil {
 		return nil, appErr
 	}
 
-	productCategories, appErr := r.productCategoryRepo.GetAllByProductIDAndMerchantID(productID, merchantID)
+	productCategories, appErr := r.productCategoryRepo.GetAllByProductID(productID)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -123,7 +122,7 @@ func (r ProductService) Update(productID int64, req *dto.CreateProductRequest) (
 		return nil, appErr
 	}
 
-	checkProduct, appErr := r.repo.CheckByIDAndMerchantID(productID, req.MerchantID)
+	checkProduct, appErr := r.repo.CheckByID(productID)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -132,7 +131,7 @@ func (r ProductService) Update(productID int64, req *dto.CreateProductRequest) (
 		return nil, errs.NewBadRequestError("Product not found")
 	}
 
-	checkProductSKU, appErr := r.repo.CheckByIDAndSKUAndMerchantID(productID, req.Sku, req.MerchantID)
+	checkProductSKU, appErr := r.repo.CheckByIDAndSKU(productID, req.Sku)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -143,7 +142,7 @@ func (r ProductService) Update(productID int64, req *dto.CreateProductRequest) (
 	}
 
 	for _, productCategoryID := range req.ProductCategoryID {
-		checkProductCategory, appErr := r.productCategoryRepo.CheckByIDAndMerchantID(productCategoryID, req.MerchantID)
+		checkProductCategory, appErr := r.productCategoryRepo.CheckByID(productCategoryID)
 		if appErr != nil {
 			return nil, appErr
 		}
@@ -154,7 +153,6 @@ func (r ProductService) Update(productID int64, req *dto.CreateProductRequest) (
 	}
 
 	formProduct := domain.Product{
-		MerchantID:  req.MerchantID,
 		Name:        req.Name,
 		Sku:         req.Sku,
 		Description: req.Description,
@@ -192,9 +190,9 @@ func (r ProductService) Update(productID int64, req *dto.CreateProductRequest) (
 	return response, nil
 }
 
-func (r ProductService) Delete(productID int64, merchantID int64) (*dto.ResponseData, *errs.AppError) {
+func (r ProductService) Delete(productID int64) (*dto.ResponseData, *errs.AppError) {
 
-	checkProduct, appErr := r.repo.CheckByIDAndMerchantID(productID, merchantID)
+	checkProduct, appErr := r.repo.CheckByID(productID)
 	if appErr != nil {
 		return nil, appErr
 	}

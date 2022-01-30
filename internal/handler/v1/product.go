@@ -31,7 +31,11 @@ func (rc ProductHandler) CrateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	request.MerchantID = claimData.MerchantID
+	appErr = checkAuthorizeByRoleID(claimData.RoleID)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
 
 	createData, appErr := rc.Service.Create(&request)
 	if appErr != nil {
@@ -44,13 +48,7 @@ func (rc ProductHandler) CrateProduct(w http.ResponseWriter, r *http.Request) {
 
 func (rc ProductHandler) GetProductList(w http.ResponseWriter, r *http.Request) {
 
-	claimData, appErr := GetClaimData(r)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
-	}
-
-	products, appErr := rc.Service.GetList(claimData.MerchantID)
+	products, appErr := rc.Service.GetList()
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -64,13 +62,7 @@ func (rc ProductHandler) GetProductDetail(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	productID, _ := strconv.Atoi(vars["product_id"])
 
-	claimData, appErr := GetClaimData(r)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
-	}
-
-	productCategory, appErr := rc.Service.GetDetail(int64(productID), claimData.MerchantID)
+	productCategory, appErr := rc.Service.GetDetail(int64(productID))
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -97,7 +89,11 @@ func (rc ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	request.MerchantID = claimData.MerchantID
+	appErr = checkAuthorizeByRoleID(claimData.RoleID)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
 
 	updateData, appErr := rc.Service.Update(int64(productID), &request)
 	if appErr != nil {
@@ -119,7 +115,13 @@ func (rc ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deleteData, appErr := rc.Service.Delete(int64(productID), claimData.MerchantID)
+	appErr = checkAuthorizeByRoleID(claimData.RoleID)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	deleteData, appErr := rc.Service.Delete(int64(productID))
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
