@@ -11,7 +11,7 @@ E-commerce for men's products
 - [Mockery](https://github.com/vektra/mockery/) for generate mockup object
 
 ## Setup
-Prepare necessary environment by rename .env.example to .env
+### Prepare necessary environment by rename .env.example to .env
 
 ```bash
 HOST=
@@ -21,13 +21,13 @@ DB_SSL_MODE=disable
 TIMEZONE=Asia/Jakarta
 ```
 
-Export database environment for migration config
+### Export database environment for migration config
 ```bash
 export DATABASE_URL=postgres://postgres:mypass@localhost:8010/matchoshop
 export DB_SSL_MODE=disable
 ```
 
-Run database container
+### Run database container
 
 ```bash
 docker-compose up
@@ -35,25 +35,25 @@ docker-compose up
 
 ## Run the App
 
-Get Go packages
+### Get Go packages
 
 ```bash
 go get .
 ```
 
-Update Go package vendor
+### Update Go package vendor
 
 ```bash
 go mod vendor
 ```
 
-Build the app
+### Build the app
 
 ```bash
 go build -o bin/matchoshop -v .
 ```
 
-Run the App
+### Run the App
 
 ```bash
 ./bin/matchoshop
@@ -61,22 +61,22 @@ Run the App
 
 ## Migration
 
-Create new migration
+### Create new migration
 ```bash
 goose create AddSomeColumns
 ```
 
-Up migration
+### Up migration
 ```bash
 goose up
 ```
 
-Down migration
+### Down migration
 ```bash
 goose down
 ```
 
-Check migration status
+### Check migration status
 ```bash
 goose status
 ```
@@ -92,14 +92,14 @@ cd intenal/core/port && mockery --name=IProductCategoryRepo --output=./../../moc
 
 ## Unit Test
 
-Run unit test for service layer
+### Run unit test for service layer
 
 ```bash
 cd intenal/core/service && go test -v
 ```
 
-Run unit test specific function
-go test -v [fucntion name]
+### Run unit test specific function
+go test -v [function name]
 
 ```bash
 go test -v -run TestProductCategory_GetDetail_GetOneByID_Success
