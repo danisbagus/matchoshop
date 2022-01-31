@@ -38,7 +38,7 @@ func NewAuthToken(claims AccessTokenClaims) AuthToken {
 func (r User) ClaimsForAccessToken() AccessTokenClaims {
 	return AccessTokenClaims{
 		UserID: r.UserID,
-		RoleID: r.UserID,
+		RoleID: r.RoleID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(ACCESS_TOKEN_DURATION).Unix(),
 		},

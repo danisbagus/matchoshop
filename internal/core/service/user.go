@@ -10,17 +10,17 @@ import (
 
 const dbTSLayout = "2006-01-02 15:04:05"
 
-type AuthService struct {
+type UserService struct {
 	repo port.IUserRepo
 }
 
 func NewUserService(repo port.IUserRepo) port.IUserService {
-	return &AuthService{
+	return &UserService{
 		repo: repo,
 	}
 }
 
-func (r AuthService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppError) {
+func (r UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppError) {
 	var appErr *errs.AppError
 	var login *domain.User
 

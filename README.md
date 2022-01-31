@@ -8,6 +8,7 @@ E-commerce for men's products
 - [Goose](https://github.com/steinbacher/goose/) as migration tool.
 - [Postgresql](https://www.postgresql.org/) as database driver.
 - [Docker-compose](https://docs.docker.com/compose/) for running database container locally.
+- [Mockery](https://github.com/vektra/mockery/) for generate mockup object
 
 ## Setup
 Prepare necessary environment by rename .env.example to .env
@@ -78,4 +79,28 @@ goose down
 Check migration status
 ```bash
 goose status
+```
+
+## Mockup
+### Generate new mockup object
+
+cd intenal/core/port && mockery --name=[inteface name] --output=[destination file] --filename=[file name]
+
+```bash
+cd intenal/core/port && mockery --name=IProductCategoryRepo --output=./../../mocks --filename=productCategoryRepo.go
+```
+
+## Unit Test
+
+Run unit test for service layer
+
+```bash
+cd intenal/core/service && go test -v
+```
+
+Run unit test specific function
+go test -v [fucntion name]
+
+```bash
+go test -v -run TestProductCategory_GetDetail_GetOneByID_Success
 ```
