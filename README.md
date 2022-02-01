@@ -82,6 +82,7 @@ goose status
 ```
 
 ## Mockup
+
 ### Generate new mockup object
 
 cd intenal/core/port && mockery --name=[inteface name] --output=[destination file] --filename=[file name]
@@ -92,7 +93,8 @@ cd intenal/core/port && mockery --name=IProductCategoryRepo --output=./../../moc
 
 ## Unit Test
 
-### Run unit test for service layer
+### Run unit test
+cd [test file directory] && go test -v
 
 ```bash
 cd intenal/core/service && go test -v
@@ -102,5 +104,13 @@ cd intenal/core/service && go test -v
 go test -v [function name]
 
 ```bash
-go test -v -run TestProductCategory_GetDetail_GetOneByID_Success
+go test -v -run TestProductCategory_Create_Success
+```
+
+## Heroku
+
+### Deploy to heroku server
+
+```bash
+git push heroku master
 ```
