@@ -35,13 +35,19 @@ docker-compose up
 
 ## Run the App
 
-### Get Go packages
+### Get packages
 
 ```bash
 go get .
 ```
 
-### Update Go package vendor
+### Delete unused packages if necessary
+
+```bash
+go mod tidy
+```
+
+### Update package vendor
 
 ```bash
 go mod vendor
