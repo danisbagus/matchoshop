@@ -113,7 +113,7 @@ go test -v [function name]
 go test -v -run TestProductCategory_Create_Success
 ```
 
-## Heroku
+## Deployment
 
 ### Deploy to heroku server
 
