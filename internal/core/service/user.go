@@ -24,10 +24,10 @@ func (r UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppEr
 	var appErr *errs.AppError
 	var login *domain.User
 
-	err := req.Validate()
+	appErr = req.Validate()
 
-	if err != nil {
-		return nil, err
+	if appErr != nil {
+		return nil, appErr
 	}
 
 	if login, appErr = r.repo.FindOne(req.Email); appErr != nil {
@@ -39,7 +39,7 @@ func (r UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppEr
 		return nil, errs.NewAuthenticationError("invalid credentials")
 	}
 
-	claims := login.ClaimsForAccessToken()
+	claims := login.AccessTokenClaims()
 
 	authToken := domain.NewAuthToken(claims)
 
@@ -48,7 +48,12 @@ func (r UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppEr
 		return nil, appErr
 	}
 
-	response := dto.NewLoginResponse("Successfully login", accessToken)
+	refreshToken, appErr := r.repo.GenerateAndSaveRefreshTokenToStore(&authToken)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	response := dto.NewLoginResponse("Successfully login", accessToken, refreshToken)
 
 	return response, nil
 }

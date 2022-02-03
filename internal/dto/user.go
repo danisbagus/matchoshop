@@ -17,7 +17,7 @@ type LoginRequest struct {
 
 type LoginResponse struct {
 	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token,omitempty"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 func GenerateResponseData(message string, data interface{}) *ResponseData {
@@ -27,10 +27,11 @@ func GenerateResponseData(message string, data interface{}) *ResponseData {
 	}
 }
 
-func NewLoginResponse(message string, accessToken string) *ResponseData {
+func NewLoginResponse(message string, accessToken string, refreshToken string) *ResponseData {
 
 	loginResponse := LoginResponse{
-		AccessToken: accessToken,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}
 
 	return GenerateResponseData(message, loginResponse)
