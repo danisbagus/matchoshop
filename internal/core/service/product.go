@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
@@ -98,14 +99,59 @@ func (r ProductService) GetList() (*dto.ResponseData, *errs.AppError) {
 
 func (r ProductService) GetDetail(productID int64) (*dto.ResponseData, *errs.AppError) {
 
-	product, appErr := r.repo.GetOneByID(productID)
-	if appErr != nil {
-		return nil, appErr
+	var product *domain.ProductDetail
+	var productCategories []domain.ProductCategory
+
+	productChan := make(chan *domain.ProductDetail, 1)
+	productCategoriesChan := make(chan []domain.ProductCategory, 1)
+	errorChan := make(chan *errs.AppError, 2)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// get detail product
+	go func() {
+		defer wg.Done()
+
+		product, appErr := r.repo.GetOneByID(productID)
+		if appErr != nil {
+			errorChan <- appErr
+		}
+
+		productChan <- product
+	}()
+
+	// get detail product category
+	go func() {
+		defer wg.Done()
+
+		productCategories, appErr := r.productCategoryRepo.GetAllByProductID(productID)
+		if appErr != nil {
+			errorChan <- appErr
+		}
+
+		productCategoriesChan <- productCategories
+
+	}()
+
+	wg.Wait()
+
+	close(errorChan)
+	close(productChan)
+	close(productCategoriesChan)
+
+	for appErr := range errorChan {
+		if appErr != nil {
+			return nil, appErr
+		}
 	}
 
-	productCategories, appErr := r.productCategoryRepo.GetAllByProductID(productID)
-	if appErr != nil {
-		return nil, appErr
+	for dataChan := range productChan {
+		product = dataChan
+	}
+
+	for dataChan := range productCategoriesChan {
+		productCategories = dataChan
 	}
 
 	product.ProductCategories = productCategories
