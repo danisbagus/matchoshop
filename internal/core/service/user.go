@@ -11,12 +11,14 @@ import (
 const dbTSLayout = "2006-01-02 15:04:05"
 
 type UserService struct {
-	repo port.IUserRepo
+	repo                  port.IUserRepo
+	refreshTokenStoreRepo port.IRefreshTokenStoreRepo
 }
 
-func NewUserService(repo port.IUserRepo) port.IUserService {
+func NewUserService(repo port.IUserRepo, refreshTokenStoreRepo port.IRefreshTokenStoreRepo) port.IUserService {
 	return &UserService{
-		repo: repo,
+		repo:                  repo,
+		refreshTokenStoreRepo: refreshTokenStoreRepo,
 	}
 }
 
@@ -48,7 +50,12 @@ func (r UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppEr
 		return nil, appErr
 	}
 
-	refreshToken, appErr := r.repo.GenerateAndSaveRefreshTokenToStore(&authToken)
+	refreshToken, appErr := generateRefreshToken(&authToken)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	appErr = r.refreshTokenStoreRepo.Insert(refreshToken)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -66,4 +73,13 @@ func hashPassword(password string) (string, error) {
 func checkPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func generateRefreshToken(authToken *domain.AuthToken) (string, *errs.AppError) {
+	refreshToken, appErr := authToken.NewRefreshToken()
+	if appErr != nil {
+		return "", appErr
+	}
+
+	return refreshToken, nil
 }

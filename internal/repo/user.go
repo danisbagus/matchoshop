@@ -42,28 +42,6 @@ func (r UserRepo) FindOne(email string) (*domain.User, *errs.AppError) {
 	return &login, nil
 }
 
-func (r UserRepo) GenerateAndSaveRefreshTokenToStore(authToken *domain.AuthToken) (string, *errs.AppError) {
-	// generate ther refresh token
-	refreshToken, appErr := generateRefreshToken(authToken)
-	if appErr != nil {
-		return "", appErr
-	}
-
-	// store it to stroe
-	sqlInsert := `INSERT INTO refresh_token_stores(refresh_token, created_at) 
-	VALUES($1, $2)`
-
-	currentTime := time.Now().Format(dbTSLayout)
-
-	_, err := r.db.Exec(sqlInsert, refreshToken, currentTime)
-	if err != nil {
-		logger.Error("Error while insert refresh token: " + err.Error())
-		return "", errs.NewUnexpectedError("Unexpected database error")
-	}
-
-	return refreshToken, nil
-}
-
 func (r UserRepo) Verify(token string) *errs.AppError {
 	jwtToken, err := jwtTokenFromString(token)
 	if err != nil {
@@ -85,14 +63,4 @@ func jwtTokenFromString(tokenString string) (*jwt.Token, error) {
 		return nil, err
 	}
 	return token, nil
-}
-
-func generateRefreshToken(authToken *domain.AuthToken) (string, *errs.AppError) {
-
-	refreshToken, appErr := authToken.NewRefreshToken()
-	if appErr != nil {
-		return "", appErr
-	}
-
-	return refreshToken, nil
 }

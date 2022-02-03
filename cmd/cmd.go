@@ -36,8 +36,9 @@ func StartApp() {
 	productRepo := repo.NewProductRepo(client)
 	productCategoryRepo := repo.NewProductCategoryRepo(client)
 	productProductCategoryRepo := repo.NewProductProductCategoryRepo(client)
+	refreshTokenStoreRepo := repo.NewRefreshTokenStoreRepo(client)
 
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, refreshTokenStoreRepo)
 	productService := service.NewProductService(productRepo, productCategoryRepo, productProductCategoryRepo)
 	productCategoryService := service.NewProductCategoryService(productCategoryRepo)
 
