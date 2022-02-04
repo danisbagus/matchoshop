@@ -6,4 +6,5 @@ import (
 
 type IRefreshTokenStoreRepo interface {
 	Insert(refreshToken string) *errs.AppError
+	CheckRefreshToken(refreshToken string) (bool, *errs.AppError)
 }

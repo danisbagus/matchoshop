@@ -35,6 +35,25 @@ func (rc AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	response.Write(w, http.StatusOK, *token)
 }
 
+func (rc AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var refreshRequest dto.RefreshTokenRequest
+	if err := json.NewDecoder(r.Body).Decode(&refreshRequest); err != nil {
+		logger.Error("Error while decoding refresh token request: " + err.Error())
+		response.Error(w, http.StatusBadRequest, "Failed to refresh token")
+		return
+	}
+
+	token, appErr := rc.Service.Refresh(refreshRequest)
+
+	if appErr != nil {
+
+		response.Write(w, appErr.Code, appErr.AsMessage())
+		return
+	}
+
+	response.Write(w, http.StatusOK, *token)
+}
+
 func GetClaimData(r *http.Request) (*domain.AccessTokenClaims, *errs.AppError) {
 	authHeader := r.Header.Get("Authorization")
 	splitToken := strings.Split(authHeader, "Bearer")

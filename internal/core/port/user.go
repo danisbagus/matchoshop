@@ -13,4 +13,5 @@ type IUserRepo interface {
 
 type IUserService interface {
 	Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppError)
+	Refresh(request dto.RefreshTokenRequest) (*dto.ResponseData, *errs.AppError)
 }

@@ -44,7 +44,21 @@ func NewAuthToken(claims AccessTokenClaims) AuthToken {
 	return AuthToken{token: token}
 }
 
-func (r User) AccessTokenClaims() AccessTokenClaims {
+func (r User) ClaimsForAccessToken() AccessTokenClaims {
+	return r.claimsForUser()
+}
+
+func (r User) claimsForUser() AccessTokenClaims {
+	return AccessTokenClaims{
+		UserID: r.UserID,
+		RoleID: r.RoleID,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Add(ACCESS_TOKEN_DURATION).Unix(),
+		},
+	}
+}
+
+func (r RefreshTokenClaims) AccessTokenClaims() AccessTokenClaims {
 	return AccessTokenClaims{
 		UserID: r.UserID,
 		RoleID: r.RoleID,
@@ -75,7 +89,6 @@ func (r AuthToken) NewAccessToken() (string, *errs.AppError) {
 }
 
 func (r AuthToken) NewRefreshToken() (string, *errs.AppError) {
-
 	claims := r.token.Claims.(AccessTokenClaims)
 	refreshClaims := claims.RefreshTokenClaims()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
@@ -87,4 +100,19 @@ func (r AuthToken) NewRefreshToken() (string, *errs.AppError) {
 	}
 
 	return signedString, nil
+}
+
+func NewAccessTokenFromRefreshToken(refreshToken string) (string, *errs.AppError) {
+	token, err := jwt.ParseWithClaims(refreshToken, &RefreshTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(HMAC_SAMPLE_SECRET), nil
+	})
+	if err != nil {
+		return "", errs.NewAuthenticationError("Invalid or expired refresh token")
+	}
+
+	claims := token.Claims.(*RefreshTokenClaims)
+	accessTokenClaims := claims.AccessTokenClaims()
+	authToken := NewAuthToken(accessTokenClaims)
+
+	return authToken.NewAccessToken()
 }
