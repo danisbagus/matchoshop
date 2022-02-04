@@ -12,7 +12,9 @@ import (
 )
 
 var mockUserRepo = &mocks.IUserRepo{Mock: mock.Mock{}}
-var userService = UserService{repo: mockUserRepo}
+var mockRefreshTokenStoreRepo = &mocks.IRefreshTokenStoreRepo{Mock: mock.Mock{}}
+
+var userService = UserService{repo: mockUserRepo, refreshTokenStoreRepo: mockRefreshTokenStoreRepo}
 
 func TestUser_Login_NotValidated(t *testing.T) {
 	// Arrange
@@ -74,6 +76,13 @@ func TestUser_Login_Success(t *testing.T) {
 	}
 
 	mockUserRepo.Mock.On("FindOne", req.Email).Return(&resultFindOne, nil)
+
+	resAccessToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJyb2xlX2lkIjoxLCJleHAiOjE2NDM5NzQ5MTh9.jfOtv_66VPWzGQRY1ZPSsMzPglUAjVLYkdMqRG1WQXA"
+	resRefreshToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaF90b2tlbiIsInVzZXJfaWQiOjEsInJvbGVfaWQiOjEsImV4cCI6MTY0NjU2MzMxOH0.hTDIKmmlbEqqhNWrZua9osl-P6ftzzNe8MOcjk4ZUCg"
+
+	mockUserRepo.Mock.On("GenerateAccessTokenAndRefreshToken", &resultFindOne).Return(resAccessToken, resRefreshToken, nil)
+
+	mockRefreshTokenStoreRepo.Mock.On("Insert", resRefreshToken).Return(nil)
 
 	login, appErr := userService.Login(req)
 
