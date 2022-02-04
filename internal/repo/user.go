@@ -54,6 +54,25 @@ func (r UserRepo) Verify(token string) *errs.AppError {
 	return nil
 }
 
+func (r UserRepo) GenerateAccessTokenAndRefreshToken(data *domain.User) (string, string, *errs.AppError) {
+
+	claims := data.ClaimsForAccessToken()
+
+	authToken := domain.NewAuthToken(claims)
+
+	accessToken, appErr := authToken.NewAccessToken()
+	if appErr != nil {
+		return "", "", appErr
+	}
+
+	refreshToken, appErr := generateRefreshToken(&authToken)
+	if appErr != nil {
+		return "", "", appErr
+	}
+
+	return accessToken, refreshToken, nil
+}
+
 func jwtTokenFromString(tokenString string) (*jwt.Token, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &domain.AccessTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(domain.HMAC_SAMPLE_SECRET), nil
@@ -63,4 +82,13 @@ func jwtTokenFromString(tokenString string) (*jwt.Token, error) {
 		return nil, err
 	}
 	return token, nil
+}
+
+func generateRefreshToken(authToken *domain.AuthToken) (string, *errs.AppError) {
+	refreshToken, appErr := authToken.NewRefreshToken()
+	if appErr != nil {
+		return "", appErr
+	}
+
+	return refreshToken, nil
 }

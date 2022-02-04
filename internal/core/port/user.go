@@ -9,6 +9,7 @@ import (
 type IUserRepo interface {
 	FindOne(email string) (*domain.User, *errs.AppError)
 	Verify(token string) *errs.AppError
+	GenerateAccessTokenAndRefreshToken(data *domain.User) (string, string, *errs.AppError)
 }
 
 type IUserService interface {

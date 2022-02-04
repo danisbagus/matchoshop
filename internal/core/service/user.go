@@ -42,16 +42,7 @@ func (r UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppEr
 		return nil, errs.NewAuthenticationError("invalid credentials")
 	}
 
-	claims := login.ClaimsForAccessToken()
-
-	authToken := domain.NewAuthToken(claims)
-
-	var accessToken string
-	if accessToken, appErr = authToken.NewAccessToken(); appErr != nil {
-		return nil, appErr
-	}
-
-	refreshToken, appErr := generateRefreshToken(&authToken)
+	accessToken, refreshToken, appErr := r.repo.GenerateAccessTokenAndRefreshToken(login)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -109,13 +100,4 @@ func hashPassword(password string) (string, error) {
 func checkPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
-}
-
-func generateRefreshToken(authToken *domain.AuthToken) (string, *errs.AppError) {
-	refreshToken, appErr := authToken.NewRefreshToken()
-	if appErr != nil {
-		return "", appErr
-	}
-
-	return refreshToken, nil
 }
