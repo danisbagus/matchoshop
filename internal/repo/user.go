@@ -8,23 +8,23 @@ import (
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"
 )
 
 const ACCESS_TOKEN_DURATION = time.Hour
+const dbTSLayout = "2006-01-02 15:04:05"
 
-type AuthRepo struct {
+type UserRepo struct {
 	db *sqlx.DB
 }
 
 func NewUserRepo(db *sqlx.DB) port.IUserRepo {
-	return &AuthRepo{
+	return &UserRepo{
 		db: db,
 	}
 }
 
-func (r AuthRepo) FindOne(email string) (*domain.User, *errs.AppError) {
+func (r UserRepo) FindOne(email string) (*domain.User, *errs.AppError) {
 	var login domain.User
 	sqlVerify := `SELECT user_id, email, password, role_id FROM users WHERE email = $1`
 
@@ -41,8 +41,8 @@ func (r AuthRepo) FindOne(email string) (*domain.User, *errs.AppError) {
 	return &login, nil
 }
 
-func (r AuthRepo) Verify(token string) *errs.AppError {
-	jwtToken, err := jwtTokenFromString(token)
+func (r UserRepo) Verify(token string) *errs.AppError {
+	jwtToken, err := domain.JwtTokenFromString(token)
 	if err != nil {
 		return errs.NewAuthorizationError(err.Error())
 	}
@@ -53,13 +53,21 @@ func (r AuthRepo) Verify(token string) *errs.AppError {
 	return nil
 }
 
-func jwtTokenFromString(tokenString string) (*jwt.Token, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &domain.AccessTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(domain.HMAC_SAMPLE_SECRET), nil
-	})
-	if err != nil {
-		logger.Error("Error while parsing token: " + err.Error())
-		return nil, err
+func (r UserRepo) GenerateAccessTokenAndRefreshToken(data *domain.User) (string, string, *errs.AppError) {
+
+	claims := data.ClaimsForAccessToken()
+
+	authToken := domain.NewAuthToken(claims)
+
+	accessToken, appErr := authToken.NewAccessToken()
+	if appErr != nil {
+		return "", "", appErr
 	}
-	return token, nil
+
+	refreshToken, appErr := authToken.NewRefreshToken()
+	if appErr != nil {
+		return "", "", appErr
+	}
+
+	return accessToken, refreshToken, nil
 }

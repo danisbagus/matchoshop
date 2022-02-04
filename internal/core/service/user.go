@@ -5,18 +5,21 @@ import (
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/dto"
+	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 )
 
 const dbTSLayout = "2006-01-02 15:04:05"
 
 type UserService struct {
-	repo port.IUserRepo
+	repo                  port.IUserRepo
+	refreshTokenStoreRepo port.IRefreshTokenStoreRepo
 }
 
-func NewUserService(repo port.IUserRepo) port.IUserService {
+func NewUserService(repo port.IUserRepo, refreshTokenStoreRepo port.IRefreshTokenStoreRepo) port.IUserService {
 	return &UserService{
-		repo: repo,
+		repo:                  repo,
+		refreshTokenStoreRepo: refreshTokenStoreRepo,
 	}
 }
 
@@ -24,10 +27,10 @@ func (r UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppEr
 	var appErr *errs.AppError
 	var login *domain.User
 
-	err := req.Validate()
+	appErr = req.Validate()
 
-	if err != nil {
-		return nil, err
+	if appErr != nil {
+		return nil, appErr
 	}
 
 	if login, appErr = r.repo.FindOne(req.Email); appErr != nil {
@@ -39,18 +42,54 @@ func (r UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppEr
 		return nil, errs.NewAuthenticationError("invalid credentials")
 	}
 
-	claims := login.ClaimsForAccessToken()
-
-	authToken := domain.NewAuthToken(claims)
-
-	var accessToken string
-	if accessToken, appErr = authToken.NewAccessToken(); appErr != nil {
+	accessToken, refreshToken, appErr := r.repo.GenerateAccessTokenAndRefreshToken(login)
+	if appErr != nil {
 		return nil, appErr
 	}
 
-	response := dto.NewLoginResponse("Successfully login", accessToken)
+	appErr = r.refreshTokenStoreRepo.Insert(refreshToken)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	response := dto.NewLoginResponse("Successfully login", accessToken, refreshToken)
 
 	return response, nil
+}
+
+func (r UserService) Refresh(request dto.RefreshTokenRequest) (*dto.ResponseData, *errs.AppError) {
+
+	// check token is valid or not
+	if validationErr := request.IsAccessTokenValid(); validationErr != nil {
+
+		// check token is expired or not
+		if validationErr.Errors == jwt.ValidationErrorExpired {
+			var appErr *errs.AppError
+
+			// check refresh token is exits or not
+			checkRefreshToken, appErr := r.refreshTokenStoreRepo.CheckRefreshToken(request.RefreshToken)
+			if appErr != nil {
+				return nil, appErr
+			}
+
+			if !checkRefreshToken {
+				return nil, errs.NewAuthenticationError("refresh token not found")
+			}
+
+			// generate a access token from refresh token.
+			var accessToken string
+			if accessToken, appErr = domain.NewAccessTokenFromRefreshToken(request.RefreshToken); appErr != nil {
+				return nil, appErr
+			}
+
+			response := dto.NewRefreshTokenResponse("Successfully refresh token", accessToken)
+
+			return response, nil
+		}
+		return nil, errs.NewAuthenticationError("invalid token")
+	}
+
+	return nil, errs.NewAuthenticationError("cannot generate a new access token until the current one expires")
 }
 
 func hashPassword(password string) (string, error) {

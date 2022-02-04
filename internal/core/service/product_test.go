@@ -193,6 +193,15 @@ func TestProduct_GetDetail_NotFound(t *testing.T) {
 
 	mockProductRepo.Mock.On("GetOneByID", productID).Return(nil, errs.NewNotFoundError("Product not found!"))
 
+	ProductCategoriesResult := []domain.ProductCategory{
+		{
+			ProductCategoryID: 1,
+			Name:              "Modern shoes",
+		},
+	}
+
+	mockProductCategoryRepo.Mock.On("GetAllByProductID", productID).Return(ProductCategoriesResult, nil)
+
 	product, appErr := productService.GetDetail(productID)
 
 	assert.Nil(t, product)

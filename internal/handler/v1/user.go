@@ -14,11 +14,11 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-type AuthHandler struct {
+type UserHandler struct {
 	Service port.IUserService
 }
 
-func (rc AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (rc UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var loginRequest dto.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
 		logger.Error("Error while decoding login request: " + err.Error())
@@ -28,6 +28,25 @@ func (rc AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	token, appErr := rc.Service.Login(loginRequest)
 	if appErr != nil {
+		response.Write(w, appErr.Code, appErr.AsMessage())
+		return
+	}
+
+	response.Write(w, http.StatusOK, *token)
+}
+
+func (rc UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	var refreshRequest dto.RefreshTokenRequest
+	if err := json.NewDecoder(r.Body).Decode(&refreshRequest); err != nil {
+		logger.Error("Error while decoding refresh token request: " + err.Error())
+		response.Error(w, http.StatusBadRequest, "Failed to refresh token")
+		return
+	}
+
+	token, appErr := rc.Service.Refresh(refreshRequest)
+
+	if appErr != nil {
+
 		response.Write(w, appErr.Code, appErr.AsMessage())
 		return
 	}

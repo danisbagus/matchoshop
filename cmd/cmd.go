@@ -36,12 +36,13 @@ func StartApp() {
 	productRepo := repo.NewProductRepo(client)
 	productCategoryRepo := repo.NewProductCategoryRepo(client)
 	productProductCategoryRepo := repo.NewProductProductCategoryRepo(client)
+	refreshTokenStoreRepo := repo.NewRefreshTokenStoreRepo(client)
 
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, refreshTokenStoreRepo)
 	productService := service.NewProductService(productRepo, productCategoryRepo, productProductCategoryRepo)
 	productCategoryService := service.NewProductCategoryService(productCategoryRepo)
 
-	userHandlerV1 := handlerV1.AuthHandler{Service: userService}
+	userHandlerV1 := handlerV1.UserHandler{Service: userService}
 	productHandlerV1 := handlerV1.ProductHandler{Service: productService}
 	productCategoryHandlerV1 := handlerV1.ProductCategoryHandler{Service: productCategoryService}
 
@@ -50,6 +51,7 @@ func StartApp() {
 
 	// v1 route
 	authRouter.HandleFunc("/v1/login", userHandlerV1.Login).Methods(http.MethodPost)
+	authRouter.HandleFunc("/v1/refresh", userHandlerV1.Refresh).Methods(http.MethodPost)
 
 	apiRouter.HandleFunc("/v1/product", productHandlerV1.CrateProduct).Methods(http.MethodPost)
 	apiRouter.HandleFunc("/v1/product", productHandlerV1.GetProductList).Methods(http.MethodGet)

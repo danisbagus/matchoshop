@@ -91,10 +91,8 @@ goose status
 
 ### Generate new mockup object
 
-cd intenal/core/port && mockery --name=[inteface name] --output=[destination file] --filename=[file name]
-
 ```bash
-cd intenal/core/port && mockery --name=IProductCategoryRepo --output=./../../mocks --filename=productCategoryRepo.go
+mockery --all --dir=internal  --output=internal/mocks
 ```
 
 ## Unit Test
