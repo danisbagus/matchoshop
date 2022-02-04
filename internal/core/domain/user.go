@@ -44,6 +44,17 @@ func NewAuthToken(claims AccessTokenClaims) AuthToken {
 	return AuthToken{token: token}
 }
 
+func JwtTokenFromString(tokenString string) (*jwt.Token, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &AccessTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(HMAC_SAMPLE_SECRET), nil
+	})
+	if err != nil {
+		logger.Error("Error while parsing token: " + err.Error())
+		return nil, err
+	}
+	return token, nil
+}
+
 func (r User) ClaimsForAccessToken() AccessTokenClaims {
 	return r.claimsForUser()
 }

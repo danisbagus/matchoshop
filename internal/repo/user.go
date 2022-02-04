@@ -8,7 +8,6 @@ import (
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -43,7 +42,7 @@ func (r UserRepo) FindOne(email string) (*domain.User, *errs.AppError) {
 }
 
 func (r UserRepo) Verify(token string) *errs.AppError {
-	jwtToken, err := jwtTokenFromString(token)
+	jwtToken, err := domain.JwtTokenFromString(token)
 	if err != nil {
 		return errs.NewAuthorizationError(err.Error())
 	}
@@ -65,30 +64,10 @@ func (r UserRepo) GenerateAccessTokenAndRefreshToken(data *domain.User) (string,
 		return "", "", appErr
 	}
 
-	refreshToken, appErr := generateRefreshToken(&authToken)
+	refreshToken, appErr := authToken.NewRefreshToken()
 	if appErr != nil {
 		return "", "", appErr
 	}
 
 	return accessToken, refreshToken, nil
-}
-
-func jwtTokenFromString(tokenString string) (*jwt.Token, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &domain.AccessTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(domain.HMAC_SAMPLE_SECRET), nil
-	})
-	if err != nil {
-		logger.Error("Error while parsing token: " + err.Error())
-		return nil, err
-	}
-	return token, nil
-}
-
-func generateRefreshToken(authToken *domain.AuthToken) (string, *errs.AppError) {
-	refreshToken, appErr := authToken.NewRefreshToken()
-	if appErr != nil {
-		return "", appErr
-	}
-
-	return refreshToken, nil
 }
