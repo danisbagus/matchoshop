@@ -98,10 +98,10 @@ mockery --all --dir=internal  --output=internal/mocks
 ## Unit Test
 
 ### Run unit test
-cd [test file directory] && go test -v
+go test -v ./path/to/test_file
 
 ```bash
-cd intenal/core/service && go test -v
+go test -v ./internal/core/service
 ```
 
 ### Run unit test specific function
