@@ -42,7 +42,7 @@ func StartApp() {
 	productService := service.NewProductService(productRepo, productCategoryRepo, productProductCategoryRepo)
 	productCategoryService := service.NewProductCategoryService(productCategoryRepo)
 
-	userHandlerV1 := handlerV1.AuthHandler{Service: userService}
+	userHandlerV1 := handlerV1.UserHandler{Service: userService}
 	productHandlerV1 := handlerV1.ProductHandler{Service: productService}
 	productCategoryHandlerV1 := handlerV1.ProductCategoryHandler{Service: productCategoryService}
 
