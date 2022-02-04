@@ -39,29 +39,6 @@ func (_m *IUserRepo) FindOne(email string) (*domain.User, *errs.AppError) {
 	return r0, r1
 }
 
-// GenerateAndSaveRefreshTokenToStore provides a mock function with given fields: authToken
-func (_m *IUserRepo) GenerateAndSaveRefreshTokenToStore(authToken *domain.AuthToken) (string, *errs.AppError) {
-	ret := _m.Called(authToken)
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func(*domain.AuthToken) string); ok {
-		r0 = rf(authToken)
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	var r1 *errs.AppError
-	if rf, ok := ret.Get(1).(func(*domain.AuthToken) *errs.AppError); ok {
-		r1 = rf(authToken)
-	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*errs.AppError)
-		}
-	}
-
-	return r0, r1
-}
-
 // Verify provides a mock function with given fields: token
 func (_m *IUserRepo) Verify(token string) *errs.AppError {
 	ret := _m.Called(token)
