@@ -54,8 +54,6 @@ func (rc ProductHandler) GetProductList(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
 	response.Write(w, http.StatusOK, products)
 }
 
