@@ -22,20 +22,24 @@ type ProductListResponse struct {
 	ProductID         int64    `json:"product_id"`
 	Name              string   `json:"name"`
 	Sku               string   `json:"sku"`
+	Image             string   `json:"image"`
 	Price             int64    `json:"price"`
+	Rating            float32  `json:"rating"`
+	NumbReviews       int64    `json:"numb_reviews"`
 	ProductCategories []string `json:"product_categories"`
-}
-
-type ProductListListResponse struct {
-	Products []ProductListResponse `json:"data"`
 }
 
 type ProductDetailtResponse struct {
 	ProductID         int64                     `json:"product_id"`
 	Name              string                    `json:"name"`
 	Sku               string                    `json:"sku"`
+	Image             string                    `json:"image"`
 	Price             int64                     `json:"price"`
 	Description       string                    `json:"description"`
+	Brand             string                    `json:"brand"`
+	Stock             int64                     `json:"stock"`
+	Rating            float32                   `json:"rating"`
+	NumbReviews       int64                     `json:"numb_reviews"`
 	ProductCategories []ProductCategoryResponse `json:"product_categories"`
 }
 
@@ -62,7 +66,10 @@ func NewGetProductListResponse(message string, data []domain.ProductList) *Respo
 				ProductID:         data[i].ProductID,
 				Name:              data[i].Name,
 				Sku:               data[i].Sku,
+				Image:             "https://i.picsum.photos/id/167/300/300.jpg?hmac=pUvtrq_DnPmk3ui2smKHRtf7_EqebkD3wjh_9pE22d0",
 				Price:             data[i].Price,
+				Rating:            4.2,
+				NumbReviews:       175,
 				ProductCategories: []string{data[i].ProductCategoryName},
 			}
 			mapProduct[data[i].ProductID] = product
@@ -73,9 +80,7 @@ func NewGetProductListResponse(message string, data []domain.ProductList) *Respo
 		products = append(products, valData)
 	}
 
-	productListResponse := &ProductListListResponse{Products: products}
-
-	return GenerateResponseData(message, productListResponse)
+	return GenerateResponseData(message, products)
 }
 
 func NewGetProductDetailResponse(message string, data *domain.ProductDetail) *ResponseData {
@@ -83,8 +88,13 @@ func NewGetProductDetailResponse(message string, data *domain.ProductDetail) *Re
 		ProductID:   data.ProductID,
 		Name:        data.Name,
 		Sku:         data.Sku,
+		Image:       "https://i.picsum.photos/id/399/1000/1000.jpg?hmac=Ily1BaUSN3DBCaX_fHgQkjQhqzeRhpY4zjKhwOYuA2E",
 		Price:       data.Price,
 		Description: data.Description,
+		Brand:       "Other",
+		Rating:      4.2,
+		NumbReviews: 175,
+		Stock:       44,
 	}
 
 	productCategories := make([]ProductCategoryResponse, 0)
