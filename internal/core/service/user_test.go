@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var mockUserRepo = &mocks.IUserRepo{Mock: mock.Mock{}}
-var mockRefreshTokenStoreRepo = &mocks.IRefreshTokenStoreRepo{Mock: mock.Mock{}}
+var mockUserRepo = &mocks.UserRepo{Mock: mock.Mock{}}
+var mockRefreshTokenStoreRepo = &mocks.RefreshTokenStoreRepo{Mock: mock.Mock{}}
 
 var userService = UserService{repo: mockUserRepo, refreshTokenStoreRepo: mockRefreshTokenStoreRepo}
 

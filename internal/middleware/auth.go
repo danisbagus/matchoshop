@@ -10,7 +10,7 @@ import (
 )
 
 type AuthMiddleware struct {
-	UserRepo port.IUserRepo
+	UserRepo port.UserRepo
 }
 
 func (rc AuthMiddleware) AuthorizationHandler() func(http.Handler) http.Handler {

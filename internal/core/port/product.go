@@ -6,7 +6,7 @@ import (
 	"github.com/danisbagus/matchoshop/internal/dto"
 )
 
-type IProductRepo interface {
+type ProductRepo interface {
 	Insert(data *domain.Product) (*domain.Product, *errs.AppError)
 	CheckByID(productID int64) (bool, *errs.AppError)
 	CheckBySKU(sku string) (bool, *errs.AppError)
@@ -17,7 +17,7 @@ type IProductRepo interface {
 	Delete(productID int64) *errs.AppError
 }
 
-type IProductService interface {
+type ProductService interface {
 	Create(data *dto.CreateProductRequest) (*dto.ResponseData, *errs.AppError)
 	GetList() (*dto.ResponseData, *errs.AppError)
 	GetDetail(productID int64) (*dto.ResponseData, *errs.AppError)

@@ -5,7 +5,7 @@ import (
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 )
 
-type IProductProductCategoryRepo interface {
+type ProductProductCategoryRepo interface {
 	BulkInsert(data []domain.ProductProductCategory) *errs.AppError
 	DeleteAll(productID int64) *errs.AppError
 }

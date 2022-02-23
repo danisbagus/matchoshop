@@ -12,11 +12,11 @@ import (
 const dbTSLayout = "2006-01-02 15:04:05"
 
 type UserService struct {
-	repo                  port.IUserRepo
-	refreshTokenStoreRepo port.IRefreshTokenStoreRepo
+	repo                  port.UserRepo
+	refreshTokenStoreRepo port.RefreshTokenStoreRepo
 }
 
-func NewUserService(repo port.IUserRepo, refreshTokenStoreRepo port.IRefreshTokenStoreRepo) port.IUserService {
+func NewUserService(repo port.UserRepo, refreshTokenStoreRepo port.RefreshTokenStoreRepo) port.UserService {
 	return &UserService{
 		repo:                  repo,
 		refreshTokenStoreRepo: refreshTokenStoreRepo,
