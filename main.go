@@ -1,7 +1,7 @@
 package main
 
-import "github.com/danisbagus/matchoshop/cmd"
+import app "github.com/danisbagus/matchoshop/app/api"
 
 func main() {
-	cmd.StartApp()
+	app.StartApp()
 }
