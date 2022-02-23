@@ -11,10 +11,10 @@ import (
 )
 
 type ProductCategoryService struct {
-	repo port.IProductCategoryRepo
+	repo port.ProductCategoryRepo
 }
 
-func NewProductCategoryService(repo port.IProductCategoryRepo) port.IProductCategoryService {
+func NewProductCategoryService(repo port.ProductCategoryRepo) port.ProductCategoryService {
 	return &ProductCategoryService{
 		repo: repo,
 	}

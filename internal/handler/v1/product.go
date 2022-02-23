@@ -13,7 +13,7 @@ import (
 )
 
 type ProductHandler struct {
-	Service port.IProductService
+	Service port.ProductService
 }
 
 func (rc ProductHandler) CrateProduct(w http.ResponseWriter, r *http.Request) {

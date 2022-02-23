@@ -6,13 +6,13 @@ import (
 	"github.com/danisbagus/matchoshop/internal/dto"
 )
 
-type IUserRepo interface {
+type UserRepo interface {
 	FindOne(email string) (*domain.User, *errs.AppError)
 	Verify(token string) *errs.AppError
 	GenerateAccessTokenAndRefreshToken(data *domain.User) (string, string, *errs.AppError)
 }
 
-type IUserService interface {
+type UserService interface {
 	Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppError)
 	Refresh(request dto.RefreshTokenRequest) (*dto.ResponseData, *errs.AppError)
 }

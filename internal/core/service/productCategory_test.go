@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var mockProductCategoryRepo = &mocks.IProductCategoryRepo{Mock: mock.Mock{}}
+var mockProductCategoryRepo = &mocks.ProductCategoryRepo{Mock: mock.Mock{}}
 var productCategoryService = ProductCategoryService{repo: mockProductCategoryRepo}
 
 func TestProductCategory_Create_NotValidated(t *testing.T) {

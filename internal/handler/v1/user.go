@@ -15,7 +15,7 @@ import (
 )
 
 type UserHandler struct {
-	Service port.IUserService
+	Service port.UserService
 }
 
 func (rc UserHandler) Login(w http.ResponseWriter, r *http.Request) {

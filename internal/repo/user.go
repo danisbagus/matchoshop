@@ -18,7 +18,7 @@ type UserRepo struct {
 	db *sqlx.DB
 }
 
-func NewUserRepo(db *sqlx.DB) port.IUserRepo {
+func NewUserRepo(db *sqlx.DB) port.UserRepo {
 	return &UserRepo{
 		db: db,
 	}

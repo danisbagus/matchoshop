@@ -12,12 +12,12 @@ import (
 )
 
 type ProductService struct {
-	repo                       port.IProductRepo
-	productCategoryRepo        port.IProductCategoryRepo
-	productProductCategoryRepo port.IProductProductCategoryRepo
+	repo                       port.ProductRepo
+	productCategoryRepo        port.ProductCategoryRepo
+	productProductCategoryRepo port.ProductProductCategoryRepo
 }
 
-func NewProductService(repo port.IProductRepo, productCategoryRepo port.IProductCategoryRepo, productProductCategoryRepo port.IProductProductCategoryRepo) port.IProductService {
+func NewProductService(repo port.ProductRepo, productCategoryRepo port.ProductCategoryRepo, productProductCategoryRepo port.ProductProductCategoryRepo) port.ProductService {
 	return &ProductService{
 		repo:                       repo,
 		productCategoryRepo:        productCategoryRepo,

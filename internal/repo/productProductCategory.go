@@ -15,7 +15,7 @@ type ProductProductCategoryRepo struct {
 	db *sqlx.DB
 }
 
-func NewProductProductCategoryRepo(db *sqlx.DB) port.IProductProductCategoryRepo {
+func NewProductProductCategoryRepo(db *sqlx.DB) port.ProductProductCategoryRepo {
 	return &ProductProductCategoryRepo{
 		db: db,
 	}

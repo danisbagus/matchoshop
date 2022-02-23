@@ -14,7 +14,7 @@ type RefreshTokenStoreRepo struct {
 	db *sqlx.DB
 }
 
-func NewRefreshTokenStoreRepo(db *sqlx.DB) port.IRefreshTokenStoreRepo {
+func NewRefreshTokenStoreRepo(db *sqlx.DB) port.RefreshTokenStoreRepo {
 	return &RefreshTokenStoreRepo{
 		db: db,
 	}

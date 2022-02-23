@@ -6,7 +6,7 @@ import (
 	"github.com/danisbagus/matchoshop/internal/dto"
 )
 
-type IProductCategoryRepo interface {
+type ProductCategoryRepo interface {
 	Insert(data *domain.ProductCategory) (*domain.ProductCategory, *errs.AppError)
 	CheckByIDAndName(productCategoryID int64, name string) (bool, *errs.AppError)
 	CheckByName(name string) (bool, *errs.AppError)
@@ -18,7 +18,7 @@ type IProductCategoryRepo interface {
 	Delete(productCategoryID int64) *errs.AppError
 }
 
-type IProductCategoryService interface {
+type ProductCategoryService interface {
 	Create(data *dto.CreateProductCategoryRequest) (*dto.ResponseData, *errs.AppError)
 	GetList() (*dto.ResponseData, *errs.AppError)
 	GetDetail(productCategoryID int64) (*dto.ResponseData, *errs.AppError)

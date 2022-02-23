@@ -13,7 +13,7 @@ import (
 )
 
 type ProductCategoryHandler struct {
-	Service port.IProductCategoryService
+	Service port.ProductCategoryService
 }
 
 func (rc ProductCategoryHandler) CrateProductCategory(w http.ResponseWriter, r *http.Request) {
