@@ -14,6 +14,31 @@ type UserRepo struct {
 	mock.Mock
 }
 
+// CreateUserCustomer provides a mock function with given fields: data
+func (_m *UserRepo) CreateUserCustomer(data *domain.User) (*domain.User, *errs.AppError) {
+	ret := _m.Called(data)
+
+	var r0 *domain.User
+	if rf, ok := ret.Get(0).(func(*domain.User) *domain.User); ok {
+		r0 = rf(data)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.User)
+		}
+	}
+
+	var r1 *errs.AppError
+	if rf, ok := ret.Get(1).(func(*domain.User) *errs.AppError); ok {
+		r1 = rf(data)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*errs.AppError)
+		}
+	}
+
+	return r0, r1
+}
+
 // FindOne provides a mock function with given fields: email
 func (_m *UserRepo) FindOne(email string) (*domain.User, *errs.AppError) {
 	ret := _m.Called(email)

@@ -3,7 +3,6 @@ package service
 import (
 	"testing"
 
-	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/dto"
 	"github.com/danisbagus/matchoshop/internal/mocks"
@@ -35,7 +34,10 @@ func TestUser_Login_NotFound(t *testing.T) {
 		Password: "test12",
 	}
 
-	mockUserRepo.Mock.On("FindOne", req.Email).Return(nil, errs.NewAuthenticationError("invalid credentials"))
+	resultFindOne := domain.User{
+		UserID: 0,
+	}
+	mockUserRepo.Mock.On("FindOne", req.Email).Return(&resultFindOne, nil)
 
 	login, appErr := userService.Login(req)
 
@@ -88,4 +90,39 @@ func TestUser_Login_Success(t *testing.T) {
 
 	assert.NotNil(t, login)
 	assert.Nil(t, appErr)
+}
+
+func TestUser_Register_Not_Validated(t *testing.T) {
+
+	req := dto.RegisterCustomerRequest{
+		Email:           "matcho@live.com",
+		Name:            "customer 1",
+		Password:        "test12345",
+		ConfirmPassword: "test123456",
+	}
+
+	register, appErr := userService.RegisterCustomer(&req)
+
+	assert.Nil(t, register)
+	assert.NotNil(t, appErr)
+}
+
+func TestUser_Register_Email_Already_Used(t *testing.T) {
+
+	req := dto.RegisterCustomerRequest{
+		Email:           "matcho@live.com",
+		Name:            "customer 1",
+		Password:        "test12345",
+		ConfirmPassword: "test123456",
+	}
+
+	resultFindOne := domain.User{
+		UserID: 1,
+	}
+	mockUserRepo.Mock.On("FindOne", req.Email).Return(&resultFindOne, nil)
+
+	register, appErr := userService.RegisterCustomer(&req)
+
+	assert.Nil(t, register)
+	assert.NotNil(t, appErr)
 }

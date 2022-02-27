@@ -63,3 +63,28 @@ func (_m *UserService) Refresh(request dto.RefreshTokenRequest) (*dto.ResponseDa
 
 	return r0, r1
 }
+
+// RegisterCustomer provides a mock function with given fields: req
+func (_m *UserService) RegisterCustomer(req *dto.RegisterCustomerRequest) (*dto.ResponseData, *errs.AppError) {
+	ret := _m.Called(req)
+
+	var r0 *dto.ResponseData
+	if rf, ok := ret.Get(0).(func(*dto.RegisterCustomerRequest) *dto.ResponseData); ok {
+		r0 = rf(req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*dto.ResponseData)
+		}
+	}
+
+	var r1 *errs.AppError
+	if rf, ok := ret.Get(1).(func(*dto.RegisterCustomerRequest) *errs.AppError); ok {
+		r1 = rf(req)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*errs.AppError)
+		}
+	}
+
+	return r0, r1
+}
