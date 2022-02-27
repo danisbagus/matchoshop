@@ -54,6 +54,23 @@ func (rc UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	response.Write(w, http.StatusOK, *token)
 }
 
+func (rc UserHandler) RegisterCustomer(w http.ResponseWriter, r *http.Request) {
+	var registerRequest dto.RegisterCustomerRequest
+	if err := json.NewDecoder(r.Body).Decode(&registerRequest); err != nil {
+		logger.Error("Error while decoding register customer request: " + err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	token, appErr := rc.Service.RegisterCustomer(&registerRequest)
+	if appErr != nil {
+		response.Write(w, appErr.Code, appErr.AsMessage())
+		return
+	}
+
+	response.Write(w, http.StatusOK, *token)
+}
+
 func GetClaimData(r *http.Request) (*domain.AccessTokenClaims, *errs.AppError) {
 	authHeader := r.Header.Get("Authorization")
 	splitToken := strings.Split(authHeader, "Bearer")

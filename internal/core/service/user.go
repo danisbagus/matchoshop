@@ -1,6 +1,8 @@
 package service
 
 import (
+	"time"
+
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
@@ -33,8 +35,13 @@ func (r UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppEr
 		return nil, appErr
 	}
 
-	if login, appErr = r.repo.FindOne(req.Email); appErr != nil {
+	login, appErr = r.repo.FindOne(req.Email)
+	if appErr != nil {
 		return nil, appErr
+	}
+
+	if login.UserID == 0 {
+		return nil, errs.NewAuthenticationError("user not found")
 	}
 
 	match := checkPasswordHash(req.Password, login.Password)
@@ -52,7 +59,7 @@ func (r UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppEr
 		return nil, appErr
 	}
 
-	response := dto.NewLoginResponse("Successfully login", accessToken, refreshToken)
+	response := dto.NewLoginResponse("Successfully login", accessToken, refreshToken, login)
 
 	return response, nil
 }
@@ -90,6 +97,56 @@ func (r UserService) Refresh(request dto.RefreshTokenRequest) (*dto.ResponseData
 	}
 
 	return nil, errs.NewAuthenticationError("cannot generate a new access token until the current one expires")
+}
+
+func (r UserService) RegisterCustomer(req *dto.RegisterCustomerRequest) (*dto.ResponseData, *errs.AppError) {
+	appErr := req.Validate()
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	// hashing password
+	hashPassword, _ := hashPassword(req.Password)
+
+	// validate email
+	user, appErr := r.repo.FindOne(req.Email)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	if user.UserID != 0 {
+		return nil, errs.NewAuthenticationError("Email already used")
+	}
+
+	form := domain.User{
+		Name:      req.Name,
+		Email:     req.Email,
+		Password:  hashPassword,
+		RoleID:    3,
+		CreatedAt: time.Now().Format(dbTSLayout),
+		UpdatedAt: time.Now().Format(dbTSLayout),
+	}
+
+	newData, appErr := r.repo.CreateUserCustomer(&form)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	// generate access token and refresh token
+	accessToken, refreshToken, appErr := r.repo.GenerateAccessTokenAndRefreshToken(newData)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	// insert refresh token
+	appErr = r.refreshTokenStoreRepo.Insert(refreshToken)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	response := dto.NewRegisterUserCustomerResponse("Successfully register", accessToken, refreshToken, newData)
+
+	return response, nil
 }
 
 func hashPassword(password string) (string, error) {

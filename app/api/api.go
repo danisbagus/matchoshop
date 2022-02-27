@@ -13,7 +13,6 @@ import (
 
 	"github.com/danisbagus/matchoshop/internal/core/service"
 	handlerV1 "github.com/danisbagus/matchoshop/internal/handler/v1"
-	"github.com/danisbagus/matchoshop/internal/middleware"
 	"github.com/danisbagus/matchoshop/internal/repo"
 
 	_ "github.com/lib/pq"
@@ -52,6 +51,7 @@ func StartApp() {
 	// v1 route
 	authRouter.HandleFunc("/v1/login", userHandlerV1.Login).Methods(http.MethodPost)
 	authRouter.HandleFunc("/v1/refresh", userHandlerV1.Refresh).Methods(http.MethodPost)
+	authRouter.HandleFunc("/v1/register/customer", userHandlerV1.RegisterCustomer).Methods(http.MethodPost)
 
 	apiRouter.HandleFunc("/v1/product", productHandlerV1.CrateProduct).Methods(http.MethodPost)
 	apiRouter.HandleFunc("/v1/product", productHandlerV1.GetProductList).Methods(http.MethodGet)
@@ -68,8 +68,8 @@ func StartApp() {
 	apiRouter.HandleFunc("/hello", SayHello)
 
 	// middleware
-	authMiddleware := middleware.AuthMiddleware{UserRepo: repo.NewUserRepo(client)}
-	apiRouter.Use(authMiddleware.AuthorizationHandler())
+	// authMiddleware := middleware.AuthMiddleware{UserRepo: repo.NewUserRepo(client)}
+	// apiRouter.Use(authMiddleware.AuthorizationHandler())
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
