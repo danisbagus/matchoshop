@@ -37,6 +37,19 @@ func (r UserRepo) FindOne(email string) (*domain.User, *errs.AppError) {
 	return &login, nil
 }
 
+func (r UserRepo) FindOneById(userID int64) (*domain.User, *errs.AppError) {
+	var login domain.User
+	sqlVerify := `SELECT user_id, email, password, name, role_id FROM users WHERE user_id = $1`
+
+	err := r.db.QueryRow(sqlVerify, userID).Scan(&login.UserID, &login.Email, &login.Password, &login.Name, &login.RoleID)
+	if err != nil && err != sql.ErrNoRows {
+		logger.Error("Error while verifying login request from database: " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return &login, nil
+}
+
 func (r UserRepo) Verify(token string) *errs.AppError {
 	jwtToken, err := domain.JwtTokenFromString(token)
 	if err != nil {
@@ -98,4 +111,35 @@ func (r UserRepo) CreateUserCustomer(data *domain.User) (*domain.User, *errs.App
 	data.UserID = userID
 
 	return data, nil
+}
+
+func (r UserRepo) Update(userID int64, data *domain.User) *errs.AppError {
+
+	tx, err := r.db.Begin()
+	if err != nil {
+		logger.Error("Error when starting update user: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	sqlUpdate := `
+	UPDATE users 
+	SET name = $2, 
+		updated_at = $3
+	WHERE user_id = $1`
+
+	_, err = tx.Exec(sqlUpdate, userID, data.Name, time.Now().Format(dbTSLayout))
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while update user: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while commiting transaction: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return nil
 }

@@ -149,6 +149,36 @@ func (r UserService) RegisterCustomer(req *dto.RegisterCustomerRequest) (*dto.Re
 	return response, nil
 }
 
+func (r UserService) Update(userID int64, req *dto.UpdateUserRequest) (*dto.ResponseData, *errs.AppError) {
+
+	appErr := req.Validate()
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	user, appErr := r.repo.FindOneById(userID)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	if user.UserID == 0 {
+		return nil, errs.NewBadRequestError("User not found")
+	}
+
+	formUpdate := domain.User{
+		Name: req.Name,
+	}
+
+	appErr = r.repo.Update(userID, &formUpdate)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	response := dto.GenerateResponseData("Successfully update data", map[string]string{})
+
+	return response, nil
+}
+
 func hashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	return string(bytes), err

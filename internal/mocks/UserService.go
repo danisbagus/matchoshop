@@ -88,3 +88,28 @@ func (_m *UserService) RegisterCustomer(req *dto.RegisterCustomerRequest) (*dto.
 
 	return r0, r1
 }
+
+// Update provides a mock function with given fields: userID, data
+func (_m *UserService) Update(userID int64, data *dto.UpdateUserRequest) (*dto.ResponseData, *errs.AppError) {
+	ret := _m.Called(userID, data)
+
+	var r0 *dto.ResponseData
+	if rf, ok := ret.Get(0).(func(int64, *dto.UpdateUserRequest) *dto.ResponseData); ok {
+		r0 = rf(userID, data)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*dto.ResponseData)
+		}
+	}
+
+	var r1 *errs.AppError
+	if rf, ok := ret.Get(1).(func(int64, *dto.UpdateUserRequest) *errs.AppError); ok {
+		r1 = rf(userID, data)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*errs.AppError)
+		}
+	}
+
+	return r0, r1
+}

@@ -3,6 +3,7 @@ package service
 import (
 	"testing"
 
+	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/dto"
 	"github.com/danisbagus/matchoshop/internal/mocks"
@@ -125,4 +126,86 @@ func TestUser_Register_Email_Already_Used(t *testing.T) {
 
 	assert.Nil(t, register)
 	assert.NotNil(t, appErr)
+}
+
+func TestUser_Update_Not_Validated(t *testing.T) {
+
+	req := dto.UpdateUserRequest{}
+	userID := 2
+
+	update, appErr := userService.Update(int64(userID), &req)
+
+	assert.Nil(t, update)
+	assert.NotNil(t, appErr)
+}
+
+func TestUser_Update_User_Not_Found(t *testing.T) {
+
+	req := dto.UpdateUserRequest{
+		Name: "Customer 3",
+	}
+	userID := 2
+
+	resFindOneByID := domain.User{
+		UserID: 0,
+	}
+
+	mockUserRepo.Mock.On("FindOneById", int64(userID)).Return(&resFindOneByID, nil)
+
+	update, appErr := userService.Update(int64(userID), &req)
+
+	assert.Nil(t, update)
+	assert.NotNil(t, appErr)
+}
+
+func TestUser_Update_Unexpected_Error_Update(t *testing.T) {
+
+	req := dto.UpdateUserRequest{
+		Name: "Customer 112345678901234567890123456789012345678901234567890234567890",
+	}
+	userID := 1
+
+	resFindOneByID := domain.User{
+		UserID: 1,
+		Name:   "Customer 3",
+	}
+
+	mockUserRepo.Mock.On("FindOneById", int64(userID)).Return(&resFindOneByID, nil)
+
+	formUpdate := domain.User{
+		Name: req.Name,
+	}
+
+	mockUserRepo.Mock.On("Update", int64(userID), &formUpdate).Return(errs.NewUnexpectedError("Unexpected database error"))
+
+	update, appErr := userService.Update(int64(userID), &req)
+
+	assert.Nil(t, update)
+	assert.NotNil(t, appErr)
+}
+
+func TestUser_Update_Success(t *testing.T) {
+
+	req := dto.UpdateUserRequest{
+		Name: "Customer 4",
+	}
+	userID := 1
+
+	resFindOneByID := domain.User{
+		UserID: 1,
+		Name:   "Customer 3",
+	}
+
+	mockUserRepo.Mock.On("FindOneById", int64(userID)).Return(&resFindOneByID, nil)
+
+	formUpdate := domain.User{
+		Name: req.Name,
+	}
+
+	mockUserRepo.Mock.On("Update", int64(userID), &formUpdate).Return(nil)
+
+	update, appErr := userService.Update(int64(userID), &req)
+
+	assert.NotNil(t, update)
+	assert.Nil(t, appErr)
 }

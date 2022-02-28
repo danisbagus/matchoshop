@@ -32,6 +32,10 @@ type RegisterCustomerRequest struct {
 	ConfirmPassword string `json:"confirm_password"`
 }
 
+type UpdateUserRequest struct {
+	Name string `json:"name"`
+}
+
 type LoginResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
@@ -123,6 +127,14 @@ func (r RegisterCustomerRequest) Validate() *errs.AppError {
 		return errs.NewBadRequestError("Invalid confirm password")
 	}
 
+	return nil
+}
+
+func (r UpdateUserRequest) Validate() *errs.AppError {
+
+	if err := validation.Validate(r.Name, validation.Required); err != nil {
+		return errs.NewBadRequestError("name is required")
+	}
 	return nil
 }
 
