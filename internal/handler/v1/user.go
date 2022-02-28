@@ -71,6 +71,23 @@ func (rc UserHandler) RegisterCustomer(w http.ResponseWriter, r *http.Request) {
 	response.Write(w, http.StatusOK, *token)
 }
 
+func (rc UserHandler) GetUserDetail(w http.ResponseWriter, r *http.Request) {
+
+	claimData, appErr := GetClaimData(r)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	userData, appErr := rc.Service.GetDetail(claimData.UserID)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	response.Write(w, http.StatusOK, userData)
+}
+
 func (rc UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	claimData, appErr := GetClaimData(r)

@@ -209,3 +209,33 @@ func TestUser_Update_Success(t *testing.T) {
 	assert.NotNil(t, update)
 	assert.Nil(t, appErr)
 }
+
+func TestUser_GetDetail_UserNotFound(t *testing.T) {
+	userID := 2
+
+	resFindOneByID := &domain.User{
+		UserID: 0,
+	}
+
+	mockUserRepo.Mock.On("FindOneById", int64(userID)).Return(resFindOneByID, nil)
+
+	userDetail, appErr := userService.GetDetail(int64(userID))
+
+	assert.Nil(t, userDetail)
+	assert.NotNil(t, appErr)
+}
+
+func TestUser_GetDetail_Success(t *testing.T) {
+	userID := 2
+
+	resFindOneByID := &domain.User{
+		UserID: 2,
+	}
+
+	mockUserRepo.Mock.On("FindOneById", int64(userID)).Return(resFindOneByID, nil)
+
+	userDetail, appErr := userService.GetDetail(int64(userID))
+
+	assert.NotNil(t, userDetail)
+	assert.Nil(t, appErr)
+}

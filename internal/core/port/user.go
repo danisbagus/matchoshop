@@ -19,5 +19,6 @@ type UserService interface {
 	Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppError)
 	Refresh(request dto.RefreshTokenRequest) (*dto.ResponseData, *errs.AppError)
 	RegisterCustomer(req *dto.RegisterCustomerRequest) (*dto.ResponseData, *errs.AppError)
+	GetDetail(userID int64) (*dto.ResponseData, *errs.AppError)
 	Update(userID int64, data *dto.UpdateUserRequest) (*dto.ResponseData, *errs.AppError)
 }

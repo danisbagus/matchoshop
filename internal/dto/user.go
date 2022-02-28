@@ -45,6 +45,12 @@ type LoginResponse struct {
 	RoleID       int64  `json:"role_id"`
 }
 
+type UserDetailResponse struct {
+	UserID int64  `json:"user_id"`
+	Name   string `json:"name"`
+	Email  string `json:"email"`
+	RoleID int64  `json:"role_id"`
+}
 type RefreshTokenResponse struct {
 	AccessToken string `json:"access_token"`
 }
@@ -100,6 +106,18 @@ func NewRegisterUserCustomerResponse(message string, accessToken string, refresh
 	}
 
 	return GenerateResponseData(message, registerResponse)
+}
+
+func NewGetUserDetailResponse(message string, data *domain.User) *ResponseData {
+
+	userDetailResponse := &UserDetailResponse{
+		UserID: data.UserID,
+		Name:   data.Name,
+		Email:  data.Email,
+		RoleID: data.RoleID,
+	}
+
+	return GenerateResponseData(message, userDetailResponse)
 }
 
 func (r LoginRequest) Validate() *errs.AppError {

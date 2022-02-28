@@ -149,6 +149,22 @@ func (r UserService) RegisterCustomer(req *dto.RegisterCustomerRequest) (*dto.Re
 	return response, nil
 }
 
+func (r UserService) GetDetail(userID int64) (*dto.ResponseData, *errs.AppError) {
+	// get detail user
+	userDetail, appErr := r.repo.FindOneById(userID)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	if userDetail.UserID == 0 {
+		return nil, errs.NewAuthenticationError("user not found")
+	}
+
+	response := dto.NewGetUserDetailResponse("Successfully get data", userDetail)
+
+	return response, nil
+}
+
 func (r UserService) Update(userID int64, req *dto.UpdateUserRequest) (*dto.ResponseData, *errs.AppError) {
 
 	appErr := req.Validate()
