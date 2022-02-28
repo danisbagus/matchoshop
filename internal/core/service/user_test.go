@@ -35,7 +35,10 @@ func TestUser_Login_NotFound(t *testing.T) {
 		Password: "test12",
 	}
 
-	mockUserRepo.Mock.On("FindOne", req.Email).Return(nil, errs.NewAuthenticationError("invalid credentials"))
+	resultFindOne := domain.User{
+		UserID: 0,
+	}
+	mockUserRepo.Mock.On("FindOne", req.Email).Return(&resultFindOne, nil)
 
 	login, appErr := userService.Login(req)
 
@@ -87,5 +90,152 @@ func TestUser_Login_Success(t *testing.T) {
 	login, appErr := userService.Login(req)
 
 	assert.NotNil(t, login)
+	assert.Nil(t, appErr)
+}
+
+func TestUser_Register_Not_Validated(t *testing.T) {
+
+	req := dto.RegisterCustomerRequest{
+		Email:           "matcho@live.com",
+		Name:            "customer 1",
+		Password:        "test12345",
+		ConfirmPassword: "test123456",
+	}
+
+	register, appErr := userService.RegisterCustomer(&req)
+
+	assert.Nil(t, register)
+	assert.NotNil(t, appErr)
+}
+
+func TestUser_Register_Email_Already_Used(t *testing.T) {
+
+	req := dto.RegisterCustomerRequest{
+		Email:           "matcho@live.com",
+		Name:            "customer 1",
+		Password:        "test12345",
+		ConfirmPassword: "test123456",
+	}
+
+	resultFindOne := domain.User{
+		UserID: 1,
+	}
+	mockUserRepo.Mock.On("FindOne", req.Email).Return(&resultFindOne, nil)
+
+	register, appErr := userService.RegisterCustomer(&req)
+
+	assert.Nil(t, register)
+	assert.NotNil(t, appErr)
+}
+
+func TestUser_Update_Not_Validated(t *testing.T) {
+
+	req := dto.UpdateUserRequest{}
+	userID := 2
+
+	update, appErr := userService.Update(int64(userID), &req)
+
+	assert.Nil(t, update)
+	assert.NotNil(t, appErr)
+}
+
+func TestUser_Update_User_Not_Found(t *testing.T) {
+
+	req := dto.UpdateUserRequest{
+		Name: "Customer 3",
+	}
+	userID := 2
+
+	resFindOneByID := domain.User{
+		UserID: 0,
+	}
+
+	mockUserRepo.Mock.On("FindOneById", int64(userID)).Return(&resFindOneByID, nil)
+
+	update, appErr := userService.Update(int64(userID), &req)
+
+	assert.Nil(t, update)
+	assert.NotNil(t, appErr)
+}
+
+func TestUser_Update_Unexpected_Error_Update(t *testing.T) {
+
+	req := dto.UpdateUserRequest{
+		Name: "Customer 112345678901234567890123456789012345678901234567890234567890",
+	}
+	userID := 1
+
+	resFindOneByID := domain.User{
+		UserID: 1,
+		Name:   "Customer 3",
+	}
+
+	mockUserRepo.Mock.On("FindOneById", int64(userID)).Return(&resFindOneByID, nil)
+
+	formUpdate := domain.User{
+		Name: req.Name,
+	}
+
+	mockUserRepo.Mock.On("Update", int64(userID), &formUpdate).Return(errs.NewUnexpectedError("Unexpected database error"))
+
+	update, appErr := userService.Update(int64(userID), &req)
+
+	assert.Nil(t, update)
+	assert.NotNil(t, appErr)
+}
+
+func TestUser_Update_Success(t *testing.T) {
+
+	req := dto.UpdateUserRequest{
+		Name: "Customer 4",
+	}
+	userID := 1
+
+	resFindOneByID := domain.User{
+		UserID: 1,
+		Name:   "Customer 3",
+	}
+
+	mockUserRepo.Mock.On("FindOneById", int64(userID)).Return(&resFindOneByID, nil)
+
+	formUpdate := domain.User{
+		Name: req.Name,
+	}
+
+	mockUserRepo.Mock.On("Update", int64(userID), &formUpdate).Return(nil)
+
+	update, appErr := userService.Update(int64(userID), &req)
+
+	assert.NotNil(t, update)
+	assert.Nil(t, appErr)
+}
+
+func TestUser_GetDetail_UserNotFound(t *testing.T) {
+	userID := 2
+
+	resFindOneByID := &domain.User{
+		UserID: 0,
+	}
+
+	mockUserRepo.Mock.On("FindOneById", int64(userID)).Return(resFindOneByID, nil)
+
+	userDetail, appErr := userService.GetDetail(int64(userID))
+
+	assert.Nil(t, userDetail)
+	assert.NotNil(t, appErr)
+}
+
+func TestUser_GetDetail_Success(t *testing.T) {
+	userID := 2
+
+	resFindOneByID := &domain.User{
+		UserID: 2,
+	}
+
+	mockUserRepo.Mock.On("FindOneById", int64(userID)).Return(resFindOneByID, nil)
+
+	userDetail, appErr := userService.GetDetail(int64(userID))
+
+	assert.NotNil(t, userDetail)
 	assert.Nil(t, appErr)
 }

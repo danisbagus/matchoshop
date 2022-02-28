@@ -54,6 +54,64 @@ func (rc UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	response.Write(w, http.StatusOK, *token)
 }
 
+func (rc UserHandler) RegisterCustomer(w http.ResponseWriter, r *http.Request) {
+	var registerRequest dto.RegisterCustomerRequest
+	if err := json.NewDecoder(r.Body).Decode(&registerRequest); err != nil {
+		logger.Error("Error while decoding register customer request: " + err.Error())
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	token, appErr := rc.Service.RegisterCustomer(&registerRequest)
+	if appErr != nil {
+		response.Write(w, appErr.Code, appErr.AsMessage())
+		return
+	}
+
+	response.Write(w, http.StatusOK, *token)
+}
+
+func (rc UserHandler) GetUserDetail(w http.ResponseWriter, r *http.Request) {
+
+	claimData, appErr := GetClaimData(r)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	userData, appErr := rc.Service.GetDetail(claimData.UserID)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	response.Write(w, http.StatusOK, userData)
+}
+
+func (rc UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+
+	claimData, appErr := GetClaimData(r)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+	var request dto.UpdateUserRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		logger.Error("Error while decoding update user request: " + err.Error())
+		response.Error(w, http.StatusBadRequest, "Failed create user category")
+		return
+	}
+
+	updateData, appErr := rc.Service.Update(claimData.UserID, &request)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	response.Write(w, http.StatusOK, updateData)
+}
+
 func GetClaimData(r *http.Request) (*domain.AccessTokenClaims, *errs.AppError) {
 	authHeader := r.Header.Get("Authorization")
 	splitToken := strings.Split(authHeader, "Bearer")

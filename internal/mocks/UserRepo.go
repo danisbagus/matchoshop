@@ -14,6 +14,31 @@ type UserRepo struct {
 	mock.Mock
 }
 
+// CreateUserCustomer provides a mock function with given fields: data
+func (_m *UserRepo) CreateUserCustomer(data *domain.User) (*domain.User, *errs.AppError) {
+	ret := _m.Called(data)
+
+	var r0 *domain.User
+	if rf, ok := ret.Get(0).(func(*domain.User) *domain.User); ok {
+		r0 = rf(data)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.User)
+		}
+	}
+
+	var r1 *errs.AppError
+	if rf, ok := ret.Get(1).(func(*domain.User) *errs.AppError); ok {
+		r1 = rf(data)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*errs.AppError)
+		}
+	}
+
+	return r0, r1
+}
+
 // FindOne provides a mock function with given fields: email
 func (_m *UserRepo) FindOne(email string) (*domain.User, *errs.AppError) {
 	ret := _m.Called(email)
@@ -30,6 +55,31 @@ func (_m *UserRepo) FindOne(email string) (*domain.User, *errs.AppError) {
 	var r1 *errs.AppError
 	if rf, ok := ret.Get(1).(func(string) *errs.AppError); ok {
 		r1 = rf(email)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*errs.AppError)
+		}
+	}
+
+	return r0, r1
+}
+
+// FindOneById provides a mock function with given fields: userID
+func (_m *UserRepo) FindOneById(userID int64) (*domain.User, *errs.AppError) {
+	ret := _m.Called(userID)
+
+	var r0 *domain.User
+	if rf, ok := ret.Get(0).(func(int64) *domain.User); ok {
+		r0 = rf(userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*domain.User)
+		}
+	}
+
+	var r1 *errs.AppError
+	if rf, ok := ret.Get(1).(func(int64) *errs.AppError); ok {
+		r1 = rf(userID)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(*errs.AppError)
@@ -67,6 +117,23 @@ func (_m *UserRepo) GenerateAccessTokenAndRefreshToken(data *domain.User) (strin
 	}
 
 	return r0, r1, r2
+}
+
+// Update provides a mock function with given fields: userID, data
+func (_m *UserRepo) Update(userID int64, data *domain.User) *errs.AppError {
+
+	ret := _m.Called(userID, data)
+
+	var r0 *errs.AppError
+	if rf, ok := ret.Get(0).(func(int64, *domain.User) *errs.AppError); ok {
+		r0 = rf(userID, data)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*errs.AppError)
+		}
+	}
+
+	return r0
 }
 
 // Verify provides a mock function with given fields: token
