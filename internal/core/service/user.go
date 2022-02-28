@@ -190,7 +190,7 @@ func (r UserService) Update(userID int64, req *dto.UpdateUserRequest) (*dto.Resp
 		return nil, appErr
 	}
 
-	response := dto.GenerateResponseData("Successfully update data", map[string]string{})
+	response := dto.NewGetUserDetailResponse("Successfully update data", user)
 
 	return response, nil
 }
