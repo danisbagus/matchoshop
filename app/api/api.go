@@ -70,6 +70,9 @@ func StartApp() {
 
 	apiRouter.HandleFunc("/hello", SayHello)
 
+	// testing proxy
+	router.HandleFunc("/v1/product", productHandlerV1.GetProductList).Methods(http.MethodGet)
+
 	// middleware
 	// authMiddleware := middleware.AuthMiddleware{UserRepo: repo.NewUserRepo(client)}
 	// apiRouter.Use(authMiddleware.AuthorizationHandler())
