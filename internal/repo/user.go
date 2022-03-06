@@ -50,37 +50,6 @@ func (r UserRepo) FindOneById(userID int64) (*domain.User, *errs.AppError) {
 	return &login, nil
 }
 
-func (r UserRepo) Verify(token string) *errs.AppError {
-	jwtToken, err := domain.JwtTokenFromString(token)
-	if err != nil {
-		return errs.NewAuthorizationError(err.Error())
-	}
-
-	if !jwtToken.Valid {
-		return errs.NewAuthorizationError("Invalid token")
-	}
-	return nil
-}
-
-func (r UserRepo) GenerateAccessTokenAndRefreshToken(data *domain.User) (string, string, *errs.AppError) {
-
-	claims := data.ClaimsForAccessToken()
-
-	authToken := domain.NewAuthToken(claims)
-
-	accessToken, appErr := authToken.NewAccessToken()
-	if appErr != nil {
-		return "", "", appErr
-	}
-
-	refreshToken, appErr := authToken.NewRefreshToken()
-	if appErr != nil {
-		return "", "", appErr
-	}
-
-	return accessToken, refreshToken, nil
-}
-
 func (r UserRepo) CreateUserCustomer(data *domain.User) (*domain.User, *errs.AppError) {
 
 	tx, err := r.db.Begin()

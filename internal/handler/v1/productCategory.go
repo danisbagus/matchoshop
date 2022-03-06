@@ -17,23 +17,11 @@ type ProductCategoryHandler struct {
 }
 
 func (rc ProductCategoryHandler) CrateProductCategory(w http.ResponseWriter, r *http.Request) {
-
-	claimData, appErr := GetClaimData(r)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
-	}
 	var request dto.CreateProductCategoryRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		logger.Error("Error while decoding create product category request: " + err.Error())
 		response.Error(w, http.StatusBadRequest, "Failed create product category")
-		return
-	}
-
-	appErr = checkAuthorizeByRoleID(claimData.RoleID)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 
@@ -58,7 +46,6 @@ func (rc ProductCategoryHandler) GetProductCategoryList(w http.ResponseWriter, r
 }
 
 func (rc ProductCategoryHandler) GetProductCategoryDetail(w http.ResponseWriter, r *http.Request) {
-
 	vars := mux.Vars(r)
 	productCategoryID, _ := strconv.Atoi(vars["product_category_id"])
 
@@ -72,26 +59,14 @@ func (rc ProductCategoryHandler) GetProductCategoryDetail(w http.ResponseWriter,
 }
 
 func (rc ProductCategoryHandler) UpdateProductCategory(w http.ResponseWriter, r *http.Request) {
-
 	vars := mux.Vars(r)
 	productCategoryID, _ := strconv.Atoi(vars["product_category_id"])
 
-	claimData, appErr := GetClaimData(r)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
-	}
 	var request dto.CreateProductCategoryRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		logger.Error("Error while decoding update product category request: " + err.Error())
 		response.Error(w, http.StatusBadRequest, "Failed create product category")
-		return
-	}
-
-	appErr = checkAuthorizeByRoleID(claimData.RoleID)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 
@@ -105,21 +80,8 @@ func (rc ProductCategoryHandler) UpdateProductCategory(w http.ResponseWriter, r 
 }
 
 func (rc ProductCategoryHandler) Delete(w http.ResponseWriter, r *http.Request) {
-
 	vars := mux.Vars(r)
 	productCategoryID, _ := strconv.Atoi(vars["product_category_id"])
-
-	claimData, appErr := GetClaimData(r)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
-	}
-
-	appErr = checkAuthorizeByRoleID(claimData.RoleID)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
-	}
 
 	deleteData, appErr := rc.Service.Delete(int64(productCategoryID))
 	if appErr != nil {

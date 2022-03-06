@@ -1,12 +1,8 @@
 package dto
 
 import (
-	"errors"
-
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
-	"github.com/dgrijalva/jwt-go"
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
@@ -153,23 +149,5 @@ func (r UpdateUserRequest) Validate() *errs.AppError {
 	if err := validation.Validate(r.Name, validation.Required); err != nil {
 		return errs.NewBadRequestError("name is required")
 	}
-	return nil
-}
-
-func (r RefreshTokenRequest) IsAccessTokenValid() *jwt.ValidationError {
-
-	_, err := jwt.Parse(r.AccessToken, func(token *jwt.Token) (interface{}, error) {
-		return []byte(domain.HMAC_SAMPLE_SECRET), nil
-
-	})
-
-	if err != nil {
-		var validationErr *jwt.ValidationError
-		if errors.As(err, &validationErr) {
-			logger.Error("Error while parsing token: " + err.Error())
-			return validationErr
-		}
-	}
-
 	return nil
 }

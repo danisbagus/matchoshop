@@ -3,15 +3,12 @@ package v1
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 
-	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/http/response"
 	"github.com/danisbagus/go-common-packages/logger"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/dto"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/danisbagus/matchoshop/utils/auth"
 )
 
 type UserHandler struct {
@@ -73,13 +70,9 @@ func (rc UserHandler) RegisterCustomer(w http.ResponseWriter, r *http.Request) {
 
 func (rc UserHandler) GetUserDetail(w http.ResponseWriter, r *http.Request) {
 
-	claimData, appErr := GetClaimData(r)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
-	}
+	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
 
-	userData, appErr := rc.Service.GetDetail(claimData.UserID)
+	userData, appErr := rc.Service.GetDetail(userInfo.UserID)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -90,11 +83,8 @@ func (rc UserHandler) GetUserDetail(w http.ResponseWriter, r *http.Request) {
 
 func (rc UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
-	claimData, appErr := GetClaimData(r)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
-	}
+	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
+
 	var request dto.UpdateUserRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -103,48 +93,11 @@ func (rc UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updateData, appErr := rc.Service.Update(claimData.UserID, &request)
+	updateData, appErr := rc.Service.Update(userInfo.UserID, &request)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 
 	response.Write(w, http.StatusOK, updateData)
-}
-
-func GetClaimData(r *http.Request) (*domain.AccessTokenClaims, *errs.AppError) {
-	authHeader := r.Header.Get("Authorization")
-	splitToken := strings.Split(authHeader, "Bearer")
-	var token string
-
-	if len(splitToken) == 2 {
-		token = strings.TrimSpace(splitToken[1])
-	} else {
-		logger.Error("Error while split token")
-		return nil, errs.NewAuthorizationError("Invalid token")
-	}
-
-	jwtToken, err := jwt.ParseWithClaims(token, &domain.AccessTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(domain.HMAC_SAMPLE_SECRET), nil
-	})
-	if err != nil {
-		logger.Error("Error while parsing token: " + err.Error())
-		return nil, errs.NewAuthorizationError(err.Error())
-	}
-
-	if !jwtToken.Valid {
-		return nil, errs.NewAuthorizationError("Invalid token")
-	}
-
-	claims := jwtToken.Claims.(*domain.AccessTokenClaims)
-	return claims, nil
-}
-
-func checkAuthorizeByRoleID(RoleID int64) *errs.AppError {
-
-	if RoleID != 1 && RoleID != 2 {
-		return errs.NewAuthorizationError("Not authorized")
-	}
-
-	return nil
 }
