@@ -89,60 +89,13 @@ func (_m *UserRepo) FindOneById(userID int64) (*domain.User, *errs.AppError) {
 	return r0, r1
 }
 
-// GenerateAccessTokenAndRefreshToken provides a mock function with given fields: data
-func (_m *UserRepo) GenerateAccessTokenAndRefreshToken(data *domain.User) (string, string, *errs.AppError) {
-	ret := _m.Called(data)
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func(*domain.User) string); ok {
-		r0 = rf(data)
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	var r1 string
-	if rf, ok := ret.Get(1).(func(*domain.User) string); ok {
-		r1 = rf(data)
-	} else {
-		r1 = ret.Get(1).(string)
-	}
-
-	var r2 *errs.AppError
-	if rf, ok := ret.Get(2).(func(*domain.User) *errs.AppError); ok {
-		r2 = rf(data)
-	} else {
-		if ret.Get(2) != nil {
-			r2 = ret.Get(2).(*errs.AppError)
-		}
-	}
-
-	return r0, r1, r2
-}
-
 // Update provides a mock function with given fields: userID, data
 func (_m *UserRepo) Update(userID int64, data *domain.User) *errs.AppError {
-
 	ret := _m.Called(userID, data)
 
 	var r0 *errs.AppError
 	if rf, ok := ret.Get(0).(func(int64, *domain.User) *errs.AppError); ok {
 		r0 = rf(userID, data)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*errs.AppError)
-		}
-	}
-
-	return r0
-}
-
-// Verify provides a mock function with given fields: token
-func (_m *UserRepo) Verify(token string) *errs.AppError {
-	ret := _m.Called(token)
-
-	var r0 *errs.AppError
-	if rf, ok := ret.Get(0).(func(string) *errs.AppError); ok {
-		r0 = rf(token)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*errs.AppError)

@@ -14,6 +14,31 @@ type UserService struct {
 	mock.Mock
 }
 
+// GetDetail provides a mock function with given fields: userID
+func (_m *UserService) GetDetail(userID int64) (*dto.ResponseData, *errs.AppError) {
+	ret := _m.Called(userID)
+
+	var r0 *dto.ResponseData
+	if rf, ok := ret.Get(0).(func(int64) *dto.ResponseData); ok {
+		r0 = rf(userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*dto.ResponseData)
+		}
+	}
+
+	var r1 *errs.AppError
+	if rf, ok := ret.Get(1).(func(int64) *errs.AppError); ok {
+		r1 = rf(userID)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*errs.AppError)
+		}
+	}
+
+	return r0, r1
+}
+
 // Login provides a mock function with given fields: req
 func (_m *UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppError) {
 	ret := _m.Called(req)

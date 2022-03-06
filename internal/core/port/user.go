@@ -9,8 +9,6 @@ import (
 type UserRepo interface {
 	FindOne(email string) (*domain.User, *errs.AppError)
 	FindOneById(userID int64) (*domain.User, *errs.AppError)
-	Verify(token string) *errs.AppError
-	GenerateAccessTokenAndRefreshToken(data *domain.User) (string, string, *errs.AppError)
 	CreateUserCustomer(data *domain.User) (*domain.User, *errs.AppError)
 	Update(userID int64, data *domain.User) *errs.AppError
 }

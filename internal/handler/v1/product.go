@@ -17,23 +17,11 @@ type ProductHandler struct {
 }
 
 func (rc ProductHandler) CrateProduct(w http.ResponseWriter, r *http.Request) {
-
-	claimData, appErr := GetClaimData(r)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
-	}
 	var request dto.CreateProductRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		logger.Error("Error while decoding create product request: " + err.Error())
 		response.Error(w, http.StatusBadRequest, "Failed create product")
-		return
-	}
-
-	appErr = checkAuthorizeByRoleID(claimData.RoleID)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 
@@ -47,7 +35,6 @@ func (rc ProductHandler) CrateProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rc ProductHandler) GetProductList(w http.ResponseWriter, r *http.Request) {
-
 	products, appErr := rc.Service.GetList()
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
@@ -58,7 +45,6 @@ func (rc ProductHandler) GetProductList(w http.ResponseWriter, r *http.Request) 
 }
 
 func (rc ProductHandler) GetProductDetail(w http.ResponseWriter, r *http.Request) {
-
 	vars := mux.Vars(r)
 	productID, _ := strconv.Atoi(vars["product_id"])
 
@@ -72,26 +58,14 @@ func (rc ProductHandler) GetProductDetail(w http.ResponseWriter, r *http.Request
 }
 
 func (rc ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
-
 	vars := mux.Vars(r)
 	productID, _ := strconv.Atoi(vars["product_id"])
 
-	claimData, appErr := GetClaimData(r)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
-	}
 	var request dto.CreateProductRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		logger.Error("Error while decoding update product request: " + err.Error())
 		response.Error(w, http.StatusBadRequest, "Failed create product category")
-		return
-	}
-
-	appErr = checkAuthorizeByRoleID(claimData.RoleID)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 
@@ -105,21 +79,8 @@ func (rc ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rc ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
-
 	vars := mux.Vars(r)
 	productID, _ := strconv.Atoi(vars["product_id"])
-
-	claimData, appErr := GetClaimData(r)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
-	}
-
-	appErr = checkAuthorizeByRoleID(claimData.RoleID)
-	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
-	}
 
 	deleteData, appErr := rc.Service.Delete(int64(productID))
 	if appErr != nil {

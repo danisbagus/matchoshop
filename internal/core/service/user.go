@@ -4,9 +4,12 @@ import (
 	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
+	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/dto"
+	"github.com/danisbagus/matchoshop/utils/auth"
+
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -49,8 +52,9 @@ func (r UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppEr
 		return nil, errs.NewAuthenticationError("invalid credentials")
 	}
 
-	accessToken, refreshToken, appErr := r.repo.GenerateAccessTokenAndRefreshToken(login)
+	accessToken, refreshToken, appErr := auth.GenerateAccessTokenAndRefreshToken(login.UserID, login.RoleID)
 	if appErr != nil {
+		logger.Error("Failed while generate access and refresh token: " + appErr.Message)
 		return nil, appErr
 	}
 
@@ -67,7 +71,8 @@ func (r UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppEr
 func (r UserService) Refresh(request dto.RefreshTokenRequest) (*dto.ResponseData, *errs.AppError) {
 
 	// check token is valid or not
-	if validationErr := request.IsAccessTokenValid(); validationErr != nil {
+	validationErr := auth.IsTokenValid(request.AccessToken)
+	if validationErr != nil {
 
 		// check token is expired or not
 		if validationErr.Errors == jwt.ValidationErrorExpired {
@@ -85,7 +90,7 @@ func (r UserService) Refresh(request dto.RefreshTokenRequest) (*dto.ResponseData
 
 			// generate a access token from refresh token.
 			var accessToken string
-			if accessToken, appErr = domain.NewAccessTokenFromRefreshToken(request.RefreshToken); appErr != nil {
+			if accessToken, appErr = auth.NewAccessTokenFromRefreshToken(request.RefreshToken); appErr != nil {
 				return nil, appErr
 			}
 
@@ -96,6 +101,7 @@ func (r UserService) Refresh(request dto.RefreshTokenRequest) (*dto.ResponseData
 		return nil, errs.NewAuthenticationError("invalid token")
 	}
 
+	logger.Error("Error while validate token: " + validationErr.Error())
 	return nil, errs.NewAuthenticationError("cannot generate a new access token until the current one expires")
 }
 
@@ -133,9 +139,11 @@ func (r UserService) RegisterCustomer(req *dto.RegisterCustomerRequest) (*dto.Re
 	}
 
 	// generate access token and refresh token
-	accessToken, refreshToken, appErr := r.repo.GenerateAccessTokenAndRefreshToken(newData)
+	accessToken, refreshToken, appErr := auth.GenerateAccessTokenAndRefreshToken(newData.UserID, newData.RoleID)
 	if appErr != nil {
+		logger.Error("Failed while generate access and refresh token: " + appErr.Message)
 		return nil, appErr
+
 	}
 
 	// insert refresh token
