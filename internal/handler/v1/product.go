@@ -16,7 +16,7 @@ type ProductHandler struct {
 	Service port.ProductService
 }
 
-func (rc ProductHandler) CrateProduct(w http.ResponseWriter, r *http.Request) {
+func (rc ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var request dto.CreateProductRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
@@ -31,7 +31,7 @@ func (rc ProductHandler) CrateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.Write(w, http.StatusOK, createData)
+	response.Write(w, http.StatusCreated, createData)
 }
 
 func (rc ProductHandler) GetProductList(w http.ResponseWriter, r *http.Request) {
