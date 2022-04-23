@@ -98,6 +98,14 @@ func StartApp() {
 	orderV1Route.HandleFunc("/{order_id}", orderHandlerV1.GetDetail).Methods(http.MethodGet)
 	orderV1Route.HandleFunc("/{order_id}/pay", orderHandlerV1.UpdatePaid).Methods(http.MethodPut)
 
+	// product admin v1 routes
+	userAdminV1Route := router.PathPrefix("/api/v1/admin/user").Subrouter()
+	userAdminV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.AdminPermission))
+	userAdminV1Route.HandleFunc("", userHandlerV1.GetUserList).Methods(http.MethodGet)
+	userAdminV1Route.HandleFunc("/{user_id}", userHandlerV1.GetUserDetailAdmin).Methods(http.MethodGet)
+	userAdminV1Route.HandleFunc("/{user_id}", userHandlerV1.DeleteUser).Methods(http.MethodDelete)
+	userAdminV1Route.HandleFunc("/{user_id}", userHandlerV1.UpdateUserAdmin).Methods(http.MethodPatch)
+
 	// config routes
 	configRoute := router.PathPrefix("/api/v1/config").Subrouter()
 	configRoute.HandleFunc("/paypal", configHandlerV1.GetPaypalConfig).Methods(http.MethodGet)
