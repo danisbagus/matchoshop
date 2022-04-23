@@ -12,4 +12,7 @@ var (
 		SuperAdminRoleID: true,
 		AdminRoleID:      true,
 	}
+	CustomerPermission = map[int]bool{
+		CustomerRoleID: true,
+	}
 )

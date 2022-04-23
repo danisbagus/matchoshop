@@ -17,7 +17,7 @@ func AuthorizationHandler() func(http.Handler) http.Handler {
 				response.Write(w, appErr.Code, appErr.AsMessage())
 				return
 			} else {
-				ctx := context.WithValue(context.Background(), "userInfo", claims)
+				ctx := context.WithValue(r.Context(), "userInfo", claims)
 				r = r.WithContext(ctx)
 				next.ServeHTTP(w, r)
 			}

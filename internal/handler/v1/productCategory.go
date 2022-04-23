@@ -16,7 +16,7 @@ type ProductCategoryHandler struct {
 	Service port.ProductCategoryService
 }
 
-func (rc ProductCategoryHandler) CrateProductCategory(w http.ResponseWriter, r *http.Request) {
+func (rc ProductCategoryHandler) CreateProductCategory(w http.ResponseWriter, r *http.Request) {
 	var request dto.CreateProductCategoryRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
