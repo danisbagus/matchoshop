@@ -19,10 +19,6 @@ type ProductCategoryResponse struct {
 	Name              string `json:"name"`
 }
 
-type ProductCategoryListResponse struct {
-	ProductCategories []ProductCategoryResponse `json:"data"`
-}
-
 type UpdateroductCategoryRequest struct {
 	Name string `json:"name"`
 }
@@ -46,10 +42,7 @@ func NewGetProductCategoryListResponse(message string, data []domain.ProductCate
 			Name:              valData.Name,
 		}
 	}
-
-	productCategoryListResponse := &ProductCategoryListResponse{ProductCategories: productCategories}
-
-	return GenerateResponseData(message, productCategoryListResponse)
+	return GenerateResponseData(message, productCategories)
 }
 
 func NewGetProductCategoryDetailResponse(message string, data *domain.ProductCategory) *ResponseData {

@@ -1,30 +1,29 @@
 package domain
 
+type ProductModel struct {
+	ProductID   int64
+	Name        string
+	Sku         string
+	Brand       string
+	Image       string
+	Description string
+	Price       int64
+	CreatedAt   string
+	UpdatedAt   string
+}
+
 type Product struct {
-	ProductID   int64  `db:"product_id"`
-	Name        string `db:"name"`
-	Sku         string `db:"sku"`
-	Description string `db:"description"`
-	Price       int64  `db:"price"`
-	CreatedAt   string `db:"created_at"`
-	UpdatedAt   string `db:"updated_at"`
+	ProductModel
+	ProductCategoryIDs []int64
 }
 
 type ProductList struct {
-	ProductID           int64  `db:"product_id"`
-	Name                string `db:"name"`
-	Sku                 string `db:"sku"`
-	Price               int64  `db:"price"`
-	ProductCategoryName string `db:"product_category_name"`
+	ProductModel
+	ProductCategoryID   int64
+	ProductCategoryName string
 }
 
 type ProductDetail struct {
-	ProductID         int64  `db:"product_id"`
-	Name              string `db:"name"`
-	Sku               string `db:"sku"`
-	Price             int64  `db:"price"`
-	Description       string `db:"description"`
-	CreatedAt         string `db:"created_at"`
-	UpdatedAt         string `db:"updated_at"`
+	ProductModel
 	ProductCategories []ProductCategory
 }

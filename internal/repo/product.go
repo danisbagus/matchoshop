@@ -2,6 +2,8 @@ package repo
 
 import (
 	"database/sql"
+	"encoding/json"
+	"fmt"
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
@@ -22,18 +24,21 @@ func NewProductRepo(db *sqlx.DB) port.ProductRepo {
 
 func (r ProductRepo) Insert(data *domain.Product) (*domain.Product, *errs.AppError) {
 
+	dataq, _ := json.Marshal(data)
+	fmt.Println(string(dataq))
+
 	tx, err := r.db.Begin()
 	if err != nil {
 		logger.Error("Error when starting insert product: " + err.Error())
 		return nil, errs.NewUnexpectedError("Unexpected database error")
 	}
 
-	sqlInsert := `INSERT INTO products(name, sku, description, price, created_at, updated_at) 
-					  VALUES($1, $2, $3, $4, $5, $6)
+	sqlInsert := `INSERT INTO products(name, sku, brand, image, description, price, created_at, updated_at) 
+					  VALUES($1, $2, $3, $4, $5, $6, $7, $8)
 					  RETURNING product_id`
 
 	var productID int64
-	err = tx.QueryRow(sqlInsert, data.Name, data.Sku, data.Description, data.Price, data.CreatedAt, data.UpdatedAt).Scan(&productID)
+	err = tx.QueryRow(sqlInsert, data.Name, data.Sku, data.Brand, data.Image, data.Description, data.Price, data.CreatedAt, data.UpdatedAt).Scan(&productID)
 
 	if err != nil {
 		tx.Rollback()
@@ -109,7 +114,10 @@ func (r ProductRepo) GetAll() ([]domain.ProductList, *errs.AppError) {
 		p.product_id, 
 		p.name, 
 		p.sku, 
+		p.brand, 
+		p.image, 
 		p.price, 
+		pc.product_category_id,
 		pc.name as product_category_name
 	FROM products p
 	JOIN product_product_categories ppc ON ppc.product_id = p.product_id
@@ -128,7 +136,7 @@ func (r ProductRepo) GetAll() ([]domain.ProductList, *errs.AppError) {
 
 	for rows.Next() {
 		var product domain.ProductList
-		if err := rows.Scan(&product.ProductID, &product.Name, &product.Sku, &product.Price, &product.ProductCategoryName); err != nil {
+		if err := rows.Scan(&product.ProductID, &product.Name, &product.Sku, &product.Brand, &product.Image, &product.Price, &product.ProductCategoryID, &product.ProductCategoryName); err != nil {
 			logger.Error("Error while scanning product category from database: " + err.Error())
 			return nil, errs.NewUnexpectedError("Unexpected database error")
 		}
@@ -148,13 +156,15 @@ func (r ProductRepo) GetOneByID(productID int64) (*domain.ProductDetail, *errs.A
 		p.product_id, 
 		p.name, 
 		p.sku, 
+		p.brand, 
+		p.image, 
 		p.price, 
 		p.description
 	FROM products p
 	WHERE p.product_id = $1
 	LIMIT 1`
 
-	err := r.db.QueryRow(sqlGetProduct, productID).Scan(&product.ProductID, &product.Name, &product.Sku, &product.Price, &product.Description)
+	err := r.db.QueryRow(sqlGetProduct, productID).Scan(&product.ProductID, &product.Name, &product.Sku, &product.Brand, &product.Image, &product.Price, &product.Description)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errs.NewNotFoundError("Product not found!")
@@ -179,13 +189,14 @@ func (r ProductRepo) Update(productID int64, data *domain.Product) *errs.AppErro
 	UPDATE products 
 	SET name = $2, 
 		sku = $3,
-		price = $4,
-		description = $5,
-		created_at = $6, 
-		updated_at = $7
+		brand = $4,
+		image = $5,
+		price = $6,
+		description = $7,
+		updated_at = $8
 	WHERE product_id = $1`
 
-	_, err = tx.Exec(sqlUpdate, productID, data.Name, data.Sku, data.Price, data.Description, data.CreatedAt, data.UpdatedAt)
+	_, err = tx.Exec(sqlUpdate, productID, data.Name, data.Sku, data.Brand, data.Image, data.Price, data.Description, data.UpdatedAt)
 	if err != nil {
 		tx.Rollback()
 		logger.Error("Error while update product: " + err.Error())

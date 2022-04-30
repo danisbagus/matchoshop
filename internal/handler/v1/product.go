@@ -7,6 +7,7 @@ import (
 
 	"github.com/danisbagus/go-common-packages/http/response"
 	"github.com/danisbagus/go-common-packages/logger"
+	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/dto"
 	"github.com/gorilla/mux"
@@ -17,21 +18,36 @@ type ProductHandler struct {
 }
 
 func (rc ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
-	var request dto.CreateProductRequest
-
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	var req dto.ProductRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Error("Error while decoding create product request: " + err.Error())
 		response.Error(w, http.StatusBadRequest, "Failed create product")
 		return
 	}
 
-	createData, appErr := rc.Service.Create(&request)
+	appErr := req.Validate()
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 
-	response.Write(w, http.StatusCreated, createData)
+	form := new(domain.Product)
+	form.Name = req.Name
+	form.Sku = req.Sku
+	form.Brand = req.Brand
+	form.Image = req.Image
+	form.Description = req.Description
+	form.Price = req.Price
+	form.ProductCategoryIDs = req.ProductCategoryIDs
+
+	appErr = rc.Service.Create(form)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	res := dto.GenerateResponseData("Successfully create data", nil)
+	response.Write(w, http.StatusCreated, res)
 }
 
 func (rc ProductHandler) GetProductList(w http.ResponseWriter, r *http.Request) {
@@ -41,52 +57,68 @@ func (rc ProductHandler) GetProductList(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	response.Write(w, http.StatusOK, products)
+	res := dto.NewGetProductListResponse("Successfully get data", products)
+	response.Write(w, http.StatusOK, res)
 }
 
 func (rc ProductHandler) GetProductDetail(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	productID, _ := strconv.Atoi(vars["product_id"])
 
-	productCategory, appErr := rc.Service.GetDetail(int64(productID))
+	product, appErr := rc.Service.GetDetail(int64(productID))
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 
-	response.Write(w, http.StatusOK, productCategory)
+	res := dto.NewGetProductDetailResponse("Successfully get data", product)
+	response.Write(w, http.StatusOK, res)
 }
 
 func (rc ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	productID, _ := strconv.Atoi(vars["product_id"])
+	var req dto.ProductRequest
 
-	var request dto.CreateProductRequest
-
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Error("Error while decoding update product request: " + err.Error())
 		response.Error(w, http.StatusBadRequest, "Failed create product category")
 		return
 	}
 
-	updateData, appErr := rc.Service.Update(int64(productID), &request)
+	appErr := req.Validate()
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 
-	response.Write(w, http.StatusOK, updateData)
+	form := new(domain.Product)
+	form.Name = req.Name
+	form.Sku = req.Sku
+	form.Price = req.Price
+	form.Brand = req.Brand
+	form.Image = req.Image
+	form.Description = req.Description
+	form.ProductCategoryIDs = req.ProductCategoryIDs
+
+	appErr = rc.Service.Update(int64(productID), form)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	res := dto.GenerateResponseData("Successfully update data", nil)
+	response.Write(w, http.StatusOK, res)
 }
 
 func (rc ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	productID, _ := strconv.Atoi(vars["product_id"])
-
-	deleteData, appErr := rc.Service.Delete(int64(productID))
+	appErr := rc.Service.Delete(int64(productID))
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
-
-	response.Write(w, http.StatusOK, deleteData)
+	res := dto.GenerateResponseData("Successfully delete data", nil)
+	response.Write(w, http.StatusOK, res)
 }

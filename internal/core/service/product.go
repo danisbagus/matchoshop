@@ -8,7 +8,6 @@ import (
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
-	"github.com/danisbagus/matchoshop/internal/dto"
 )
 
 type ProductService struct {
@@ -25,51 +24,40 @@ func NewProductService(repo port.ProductRepo, productCategoryRepo port.ProductCa
 	}
 }
 
-func (r ProductService) Create(req *dto.CreateProductRequest) (*dto.ResponseData, *errs.AppError) {
+func (r ProductService) Create(form *domain.Product) *errs.AppError {
 
-	appErr := req.Validate()
+	checkProduct, appErr := r.repo.CheckBySKU(form.Sku)
 	if appErr != nil {
-		return nil, appErr
-	}
-
-	checkProduct, appErr := r.repo.CheckBySKU(req.Sku)
-	if appErr != nil {
-		return nil, appErr
+		return appErr
 	}
 
 	if checkProduct {
-		errorMessage := fmt.Sprintf("SKU %s is already used", req.Sku)
-		return nil, errs.NewBadRequestError(errorMessage)
+		errorMessage := fmt.Sprintf("SKU %s is already used", form.Sku)
+		return errs.NewBadRequestError(errorMessage)
 	}
 
-	for _, productCategoryID := range req.ProductCategoryID {
+	for _, productCategoryID := range form.ProductCategoryIDs {
 		checkProductCategory, appErr := r.productCategoryRepo.CheckByID(productCategoryID)
 		if appErr != nil {
-			return nil, appErr
+			return appErr
 		}
 
 		if !checkProductCategory {
-			return nil, errs.NewBadRequestError("Product category not found")
+			return errs.NewBadRequestError("Product category not found")
 		}
 	}
 
-	formProduct := domain.Product{
-		Name:        req.Name,
-		Sku:         req.Sku,
-		Description: req.Description,
-		Price:       req.Price,
-		CreatedAt:   time.Now().Format(dbTSLayout),
-		UpdatedAt:   time.Now().Format(dbTSLayout),
-	}
+	form.CreatedAt = time.Now().Format(dbTSLayout)
+	form.UpdatedAt = time.Now().Format(dbTSLayout)
 
-	newProductData, appErr := r.repo.Insert(&formProduct)
+	newProductData, appErr := r.repo.Insert(form)
 	if appErr != nil {
-		return nil, appErr
+		return appErr
 	}
 
 	formProductProductCategory := make([]domain.ProductProductCategory, 0)
 
-	for _, productCategoryID := range req.ProductCategoryID {
+	for _, productCategoryID := range form.ProductCategoryIDs {
 		formProductProductCategory = append(formProductProductCategory, domain.ProductProductCategory{
 			ProductID:         newProductData.ProductID,
 			ProductCategoryID: productCategoryID,
@@ -78,26 +66,51 @@ func (r ProductService) Create(req *dto.CreateProductRequest) (*dto.ResponseData
 
 	appErr = r.productProductCategoryRepo.BulkInsert(formProductProductCategory)
 	if appErr != nil {
-		return nil, appErr
+		return appErr
 	}
 
-	response := dto.NewCreateProductResponse("Sucessfully create data", newProductData)
-	return response, nil
+	return nil
 }
 
-func (r ProductService) GetList() (*dto.ResponseData, *errs.AppError) {
+func (r ProductService) GetList() ([]domain.ProductDetail, *errs.AppError) {
 
 	products, appErr := r.repo.GetAll()
 	if appErr != nil {
 		return nil, appErr
 	}
 
-	response := dto.NewGetProductListResponse("Successfully get data", products)
+	result := make([]domain.ProductDetail, 0)
+	mapProduct := make(map[int64]domain.ProductDetail)
 
-	return response, nil
+	for _, value := range products {
+		var productCategory domain.ProductCategory
+		productCategory.ProductCategoryID = value.ProductCategoryID
+		productCategory.Name = value.ProductCategoryName
+
+		if mapValue, ok := mapProduct[value.ProductID]; ok {
+			mapValue.ProductCategories = append(mapValue.ProductCategories, productCategory)
+			mapProduct[value.ProductID] = mapValue
+		} else {
+			var product domain.ProductDetail
+			product.ProductID = value.ProductID
+			product.Name = value.Name
+			product.Sku = value.Sku
+			product.Image = value.Image
+			product.Brand = value.Brand
+			product.Price = value.Price
+			product.ProductCategories = append(product.ProductCategories, productCategory)
+			mapProduct[value.ProductID] = product
+		}
+	}
+
+	for _, valData := range mapProduct {
+		result = append(result, valData)
+	}
+
+	return result, nil
 }
 
-func (r ProductService) GetDetail(productID int64) (*dto.ResponseData, *errs.AppError) {
+func (r ProductService) GetDetail(productID int64) (*domain.ProductDetail, *errs.AppError) {
 
 	var product *domain.ProductDetail
 	var productCategories []domain.ProductCategory
@@ -156,65 +169,50 @@ func (r ProductService) GetDetail(productID int64) (*dto.ResponseData, *errs.App
 
 	product.ProductCategories = productCategories
 
-	response := dto.NewGetProductDetailResponse("Successfully get data", product)
-
-	return response, nil
+	return product, nil
 }
 
-func (r ProductService) Update(productID int64, req *dto.CreateProductRequest) (*dto.ResponseData, *errs.AppError) {
-
-	appErr := req.Validate()
-	if appErr != nil {
-		return nil, appErr
-	}
+func (r ProductService) Update(productID int64, form *domain.Product) *errs.AppError {
 
 	checkProduct, appErr := r.repo.CheckByID(productID)
 	if appErr != nil {
-		return nil, appErr
+		return appErr
 	}
 
 	if !checkProduct {
-		return nil, errs.NewBadRequestError("Product not found")
+		return errs.NewBadRequestError("Product not found")
 	}
 
-	checkProductSKU, appErr := r.repo.CheckByIDAndSKU(productID, req.Sku)
+	checkProductSKU, appErr := r.repo.CheckByIDAndSKU(productID, form.Sku)
 	if appErr != nil {
-		return nil, appErr
+		return appErr
 	}
 
 	if checkProductSKU {
-		errorMessage := fmt.Sprintf("SKU %s is already used", req.Sku)
-		return nil, errs.NewBadRequestError(errorMessage)
+		errorMessage := fmt.Sprintf("SKU %s is already used", form.Sku)
+		return errs.NewBadRequestError(errorMessage)
 	}
 
-	for _, productCategoryID := range req.ProductCategoryID {
+	for _, productCategoryID := range form.ProductCategoryIDs {
 		checkProductCategory, appErr := r.productCategoryRepo.CheckByID(productCategoryID)
 		if appErr != nil {
-			return nil, appErr
+			return appErr
 		}
 
 		if !checkProductCategory {
-			return nil, errs.NewBadRequestError("Product category not found")
+			return errs.NewBadRequestError("Product category not found")
 		}
 	}
 
-	formProduct := domain.Product{
-		Name:        req.Name,
-		Sku:         req.Sku,
-		Description: req.Description,
-		Price:       req.Price,
-		CreatedAt:   time.Now().Format(dbTSLayout),
-		UpdatedAt:   time.Now().Format(dbTSLayout),
-	}
-
-	appErr = r.repo.Update(productID, &formProduct)
+	form.UpdatedAt = time.Now().Format(dbTSLayout)
+	appErr = r.repo.Update(productID, form)
 	if appErr != nil {
-		return nil, appErr
+		return appErr
 	}
 
 	formProductProductCategory := make([]domain.ProductProductCategory, 0)
 
-	for _, productCategoryID := range req.ProductCategoryID {
+	for _, productCategoryID := range form.ProductCategoryIDs {
 		formProductProductCategory = append(formProductProductCategory, domain.ProductProductCategory{
 			ProductID:         productID,
 			ProductCategoryID: productCategoryID,
@@ -223,41 +221,36 @@ func (r ProductService) Update(productID int64, req *dto.CreateProductRequest) (
 
 	appErr = r.productProductCategoryRepo.DeleteAll(productID)
 	if appErr != nil {
-		return nil, appErr
+		return appErr
 	}
 
 	appErr = r.productProductCategoryRepo.BulkInsert(formProductProductCategory)
 	if appErr != nil {
-		return nil, appErr
+		return appErr
 	}
 
-	response := dto.GenerateResponseData("Successfully update data", map[string]string{})
-
-	return response, nil
+	return nil
 }
 
-func (r ProductService) Delete(productID int64) (*dto.ResponseData, *errs.AppError) {
+func (r ProductService) Delete(productID int64) *errs.AppError {
 
 	checkProduct, appErr := r.repo.CheckByID(productID)
 	if appErr != nil {
-		return nil, appErr
+		return appErr
 	}
-
 	if !checkProduct {
-		return nil, errs.NewBadRequestError("Product not found")
+		return errs.NewBadRequestError("Product not found")
 	}
 
 	appErr = r.repo.Delete(productID)
 	if appErr != nil {
-		return nil, appErr
+		return appErr
 	}
 
 	appErr = r.productProductCategoryRepo.DeleteAll(productID)
 	if appErr != nil {
-		return nil, appErr
+		return appErr
 	}
 
-	response := dto.GenerateResponseData("Successfully delete data", map[string]string{})
-
-	return response, nil
+	return nil
 }
