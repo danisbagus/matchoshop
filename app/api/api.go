@@ -46,12 +46,14 @@ func StartApp() {
 	productService := service.NewProductService(productRepo, productCategoryRepo, productProductCategoryRepo)
 	productCategoryService := service.NewProductCategoryService(productCategoryRepo)
 	orderService := service.NewOrderService(orderRepo, orderProductRepo, paymentResultRepo, userRepo)
+	uploadService := service.NewUploadService()
 
 	userHandlerV1 := handlerV1.UserHandler{Service: userService}
 	productHandlerV1 := handlerV1.ProductHandler{Service: productService}
 	productCategoryHandlerV1 := handlerV1.ProductCategoryHandler{Service: productCategoryService}
 	orderHandlerV1 := handlerV1.OrderHandler{Service: orderService}
 	configHandlerV1 := handlerV1.ConfigHandler{}
+	uploadHandlerV1 := handlerV1.UploadHandler{Service: uploadService}
 
 	// auth v1 routes
 	authV1Route := router.PathPrefix("/api/v1/auth").Subrouter()
@@ -109,6 +111,10 @@ func StartApp() {
 	// config routes
 	configRoute := router.PathPrefix("/api/v1/config").Subrouter()
 	configRoute.HandleFunc("/paypal", configHandlerV1.GetPaypalConfig).Methods(http.MethodGet)
+
+	// upload
+	uploadRoute := router.PathPrefix("/api/v1/upload").Subrouter()
+	uploadRoute.HandleFunc("/image", uploadHandlerV1.UploadImage).Methods(http.MethodPost)
 
 	router.HandleFunc("/health-check", healthCheck)
 
