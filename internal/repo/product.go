@@ -2,6 +2,7 @@ package repo
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
@@ -28,12 +29,12 @@ func (r ProductRepo) Insert(data *domain.Product) (*domain.Product, *errs.AppErr
 		return nil, errs.NewUnexpectedError("Unexpected database error")
 	}
 
-	sqlInsert := `INSERT INTO products(name, sku, brand, image, description, price, created_at, updated_at) 
-					  VALUES($1, $2, $3, $4, $5, $6, $7, $8)
+	sqlInsert := `INSERT INTO products(name, sku, brand, image, description, price, stock, created_at, updated_at) 
+					  VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
 					  RETURNING product_id`
 
 	var productID int64
-	err = tx.QueryRow(sqlInsert, data.Name, data.Sku, data.Brand, data.Image, data.Description, data.Price, data.CreatedAt, data.UpdatedAt).Scan(&productID)
+	err = tx.QueryRow(sqlInsert, data.Name, data.Sku, data.Brand, data.Image, data.Description, data.Price, data.Stock, data.CreatedAt, data.UpdatedAt).Scan(&productID)
 
 	if err != nil {
 		tx.Rollback()
@@ -154,12 +155,13 @@ func (r ProductRepo) GetOneByID(productID int64) (*domain.ProductDetail, *errs.A
 		p.brand, 
 		p.image, 
 		p.price, 
-		p.description
+		p.description,
+		p.stock
 	FROM products p
 	WHERE p.product_id = $1
 	LIMIT 1`
 
-	err := r.db.QueryRow(sqlGetProduct, productID).Scan(&product.ProductID, &product.Name, &product.Sku, &product.Brand, &product.Image, &product.Price, &product.Description)
+	err := r.db.QueryRow(sqlGetProduct, productID).Scan(&product.ProductID, &product.Name, &product.Sku, &product.Brand, &product.Image, &product.Price, &product.Description, &product.Stock)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errs.NewNotFoundError("Product not found!")
@@ -188,10 +190,41 @@ func (r ProductRepo) Update(productID int64, data *domain.Product) *errs.AppErro
 		image = $5,
 		price = $6,
 		description = $7,
-		updated_at = $8
+		stock = $8,
+		updated_at = $9
 	WHERE product_id = $1`
 
-	_, err = tx.Exec(sqlUpdate, productID, data.Name, data.Sku, data.Brand, data.Image, data.Price, data.Description, data.UpdatedAt)
+	_, err = tx.Exec(sqlUpdate, productID, data.Name, data.Sku, data.Brand, data.Image, data.Price, data.Description, data.Stock, data.UpdatedAt)
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while update product: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while commiting transaction: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return nil
+}
+
+func (r ProductRepo) UpdateStock(productID, quantity int64) *errs.AppError {
+	tx, err := r.db.Begin()
+	if err != nil {
+		logger.Error("Error when starting update stock: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	sqlUpdate := `
+	UPDATE products 
+	SET stock = stock - $2,
+		updated_at = $3
+	WHERE product_id = $1`
+
+	_, err = tx.Exec(sqlUpdate, productID, quantity, time.Now())
 	if err != nil {
 		tx.Rollback()
 		logger.Error("Error while update product: " + err.Error())

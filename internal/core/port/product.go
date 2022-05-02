@@ -13,6 +13,7 @@ type ProductRepo interface {
 	GetAll() ([]domain.ProductList, *errs.AppError)
 	GetOneByID(productID int64) (*domain.ProductDetail, *errs.AppError)
 	Update(productID int64, data *domain.Product) *errs.AppError
+	UpdateStock(productID, quantity int64) *errs.AppError
 	Delete(productID int64) *errs.AppError
 }
 

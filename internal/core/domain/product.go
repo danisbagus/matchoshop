@@ -8,6 +8,7 @@ type ProductModel struct {
 	Image       string
 	Description string
 	Price       int64
+	Stock       int64
 	CreatedAt   string
 	UpdatedAt   string
 }

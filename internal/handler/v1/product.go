@@ -38,6 +38,7 @@ func (rc ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	form.Image = req.Image
 	form.Description = req.Description
 	form.Price = req.Price
+	form.Stock = req.Stock
 	form.ProductCategoryIDs = req.ProductCategoryIDs
 
 	appErr = rc.Service.Create(form)
@@ -98,6 +99,7 @@ func (rc ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	form.Price = req.Price
 	form.Brand = req.Brand
 	form.Image = req.Image
+	form.Stock = req.Stock
 	form.Description = req.Description
 	form.ProductCategoryIDs = req.ProductCategoryIDs
 

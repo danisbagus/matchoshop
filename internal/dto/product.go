@@ -14,6 +14,7 @@ type ProductRequest struct {
 	Description        string  `json:"description"`
 	ProductCategoryIDs []int64 `json:"product_category_id"`
 	Price              int64   `json:"price"`
+	Stock              int64   `json:"stock"`
 }
 
 type ProductResponse struct {
@@ -79,7 +80,7 @@ func NewGetProductDetailResponse(message string, data *domain.ProductDetail) *Re
 	product.Price = data.Price
 	product.Rating = 4.2
 	product.NumbReviews = 175
-	product.Stock = 44
+	product.Stock = data.Stock
 
 	productCategories := make([]ProductCategoryResponse, 0)
 	for _, valData := range data.ProductCategories {

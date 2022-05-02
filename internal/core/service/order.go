@@ -15,20 +15,33 @@ type (
 		repo              port.OrderRepo
 		repoOrderProduct  port.OrderProductRepo
 		repoPaymentResult port.PaymentResultRepo
-		repoUser          port.UserRepo
+		repoProduct       port.ProductRepo
 	}
 )
 
-func NewOrderService(repo port.OrderRepo, repoOrderProduct port.OrderProductRepo, repoPaymentResult port.PaymentResultRepo, repoUser port.UserRepo) port.OrderService {
+func NewOrderService(repo port.OrderRepo, repoOrderProduct port.OrderProductRepo, repoPaymentResult port.PaymentResultRepo, repoProduct port.ProductRepo) port.OrderService {
 	return &OrderService{
 		repo:              repo,
 		repoOrderProduct:  repoOrderProduct,
 		repoPaymentResult: repoPaymentResult,
-		repoUser:          repoUser,
+		repoProduct:       repoProduct,
 	}
 }
 
 func (s OrderService) Create(form *domain.OrderDetail) (*domain.OrderDetail, *errs.AppError) {
+
+	// validate stock
+	for _, orderProduct := range form.OrderProducts {
+		product, appErr := s.repoProduct.GetOneByID(orderProduct.ProductID)
+		if appErr != nil {
+			return nil, appErr
+		}
+
+		if product.Stock < orderProduct.Quantity {
+			logger.Error("Failed while create order: insufficient product stock")
+			return nil, errs.NewBadRequestError("Insufficient product stock")
+		}
+	}
 
 	form.CreatedAt = time.Now()
 	form.UpdatedAt = time.Now()
@@ -144,6 +157,20 @@ func (s OrderService) UpdatePaid(form *domain.PaymentResult) *errs.AppError {
 	appErr = s.repo.UpdatePaid(form)
 	if appErr != nil {
 		return appErr
+	}
+
+	// update stock
+	orderProducts, appErr := s.repoOrderProduct.GetAllByOrderID(form.OrderID)
+	if appErr != nil {
+		return appErr
+	}
+
+	for _, orderProduct := range orderProducts {
+		appErr := s.repoProduct.UpdateStock(orderProduct.ProductID, orderProduct.Quantity)
+		if appErr != nil {
+			return appErr
+		}
+
 	}
 
 	return nil

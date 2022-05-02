@@ -45,7 +45,7 @@ func StartApp() {
 	userService := service.NewUserService(userRepo, refreshTokenStoreRepo)
 	productService := service.NewProductService(productRepo, productCategoryRepo, productProductCategoryRepo)
 	productCategoryService := service.NewProductCategoryService(productCategoryRepo)
-	orderService := service.NewOrderService(orderRepo, orderProductRepo, paymentResultRepo, userRepo)
+	orderService := service.NewOrderService(orderRepo, orderProductRepo, paymentResultRepo, productRepo)
 	uploadService := service.NewUploadService()
 
 	userHandlerV1 := handlerV1.UserHandler{Service: userService}
