@@ -4,9 +4,9 @@ type ProductModel struct {
 	ProductID   int64
 	Name        string
 	Sku         string
-	Brand       string
-	Image       string
-	Description string
+	Brand       *string
+	Image       *string
+	Description *string
 	Price       int64
 	Stock       int64
 	CreatedAt   string

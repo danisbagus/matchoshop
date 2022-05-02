@@ -9,21 +9,21 @@ import (
 type ProductRequest struct {
 	Name               string  `json:"name"`
 	Sku                string  `json:"sku"`
-	Brand              string  `json:"brand"`
-	Image              string  `json:"Image"`
-	Description        string  `json:"description"`
+	Brand              *string `json:"brand"`
+	Image              *string `json:"Image"`
+	Description        *string `json:"description"`
 	ProductCategoryIDs []int64 `json:"product_category_id"`
 	Price              int64   `json:"price"`
 	Stock              int64   `json:"stock"`
 }
 
 type ProductResponse struct {
-	ProductID int64  `json:"product_id"`
-	Name      string `json:"name"`
-	Sku       string `json:"sku"`
-	Brand     string `json:"brand"`
-	Image     string `json:"image"`
-	Price     int64  `json:"price"`
+	ProductID int64   `json:"product_id"`
+	Name      string  `json:"name"`
+	Sku       string  `json:"sku"`
+	Brand     *string `json:"brand"`
+	Image     *string `json:"image"`
+	Price     int64   `json:"price"`
 }
 
 type ProductListResponse struct {
@@ -35,7 +35,7 @@ type ProductListResponse struct {
 
 type ProductDetailtResponse struct {
 	ProductResponse
-	Description       string                    `json:"description"`
+	Description       *string                   `json:"description"`
 	Stock             int64                     `json:"stock"`
 	Rating            float32                   `json:"rating"`
 	NumbReviews       int64                     `json:"numb_reviews"`
