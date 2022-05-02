@@ -21,7 +21,8 @@ func NewUploadService() port.UploadService {
 
 func (s UploadService) UploadImage(file multipart.File) (string, *errs.AppError) {
 	//create cloudinary instance
-	cld, err := cloudinary.NewFromParams(helper.EnvCloudName(), helper.EnvCloudAPIKey(), helper.EnvCloudAPISecret())
+	cld, err := cloudinary.NewFromURL(helper.EnvCloudURL())
+
 	if err != nil {
 		return "", errs.NewUnexpectedError(err.Error())
 	}
