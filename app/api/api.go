@@ -96,7 +96,7 @@ func StartApp() {
 	orderV1Route := router.PathPrefix("/api/v1/order").Subrouter()
 	orderV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.CustomerPermission))
 	orderV1Route.HandleFunc("", orderHandlerV1.Create).Methods(http.MethodPost)
-	orderV1Route.HandleFunc("/me", orderHandlerV1.GetList).Methods(http.MethodGet)
+	orderV1Route.HandleFunc("", orderHandlerV1.GetList).Methods(http.MethodGet)
 	orderV1Route.HandleFunc("/{order_id}", orderHandlerV1.GetDetail).Methods(http.MethodGet)
 	orderV1Route.HandleFunc("/{order_id}/pay", orderHandlerV1.UpdatePaid).Methods(http.MethodPut)
 
@@ -115,6 +115,12 @@ func StartApp() {
 	// upload
 	uploadRoute := router.PathPrefix("/api/v1/upload").Subrouter()
 	uploadRoute.HandleFunc("/image", uploadHandlerV1.UploadImage).Methods(http.MethodPost)
+
+	orderAdminV1Route := router.PathPrefix("/api/v1/admin/order").Subrouter()
+	orderAdminV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.AdminPermission))
+	orderAdminV1Route.HandleFunc("", orderHandlerV1.GetListAdmin).Methods(http.MethodGet)
+	orderAdminV1Route.HandleFunc("/{order_id}", orderHandlerV1.GetDetail).Methods(http.MethodGet)
+	orderAdminV1Route.HandleFunc("/{order_id}/deliver", orderHandlerV1.UpdateDelivered).Methods(http.MethodPut)
 
 	router.HandleFunc("/health-check", healthCheck)
 

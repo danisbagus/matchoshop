@@ -42,7 +42,16 @@ func (s OrderService) Create(form *domain.OrderDetail) (*domain.OrderDetail, *er
 	return form, nil
 }
 
-func (s OrderService) GetList(userID int64) ([]domain.OrderDetail, *errs.AppError) {
+func (s OrderService) GetList() ([]domain.OrderDetail, *errs.AppError) {
+	orders, appErr := s.repo.GetAll()
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	return orders, nil
+}
+
+func (s OrderService) GetListByUser(userID int64) ([]domain.OrderDetail, *errs.AppError) {
 	orders, appErr := s.repo.GetAllByUserID(userID)
 	if appErr != nil {
 		return nil, appErr
@@ -133,6 +142,30 @@ func (s OrderService) UpdatePaid(form *domain.PaymentResult) *errs.AppError {
 	}
 
 	appErr = s.repo.UpdatePaid(form)
+	if appErr != nil {
+		return appErr
+	}
+
+	return nil
+}
+
+func (s OrderService) UpdateDelivered(ID int64) *errs.AppError {
+	order, appErr := s.repo.GetOneByID(ID)
+	if appErr != nil {
+		return appErr
+	}
+
+	if !order.IsPaid {
+		logger.Error("Failed while update order delivered: order has not been paid")
+		return errs.NewBadRequestError("order has not been paid")
+	}
+
+	if order.IsDelivered {
+		logger.Error("Failed while update order delivered: order already deliverd")
+		return errs.NewBadRequestError("order already deliverd")
+	}
+
+	appErr = s.repo.UpdateDelivered(ID)
 	if appErr != nil {
 		return appErr
 	}
