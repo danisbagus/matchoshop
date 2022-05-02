@@ -42,7 +42,8 @@ func (rc ProductCategoryHandler) GetProductCategoryList(w http.ResponseWriter, r
 		return
 	}
 
-	response.Write(w, http.StatusOK, productCategories)
+	res := dto.NewGetProductCategoryListResponse("Successfully get data", productCategories)
+	response.Write(w, http.StatusOK, res)
 }
 
 func (rc ProductCategoryHandler) GetProductCategoryDetail(w http.ResponseWriter, r *http.Request) {

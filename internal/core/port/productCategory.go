@@ -20,7 +20,7 @@ type ProductCategoryRepo interface {
 
 type ProductCategoryService interface {
 	Create(data *dto.CreateProductCategoryRequest) (*dto.ResponseData, *errs.AppError)
-	GetList() (*dto.ResponseData, *errs.AppError)
+	GetList() ([]domain.ProductCategory, *errs.AppError)
 	GetDetail(productCategoryID int64) (*dto.ResponseData, *errs.AppError)
 	Update(productCategoryID int64, data *dto.CreateProductCategoryRequest) (*dto.ResponseData, *errs.AppError)
 	Delete(productCategoryID int64) (*dto.ResponseData, *errs.AppError)

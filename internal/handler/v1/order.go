@@ -72,7 +72,7 @@ func (h OrderHandler) GetList(w http.ResponseWriter, r *http.Request) {
 	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
 	userID := userInfo.UserID
 
-	orders, appErr := h.Service.GetList(userID)
+	orders, appErr := h.Service.GetListByUser(userID)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -131,5 +131,31 @@ func (h OrderHandler) UpdatePaid(w http.ResponseWriter, r *http.Request) {
 	resData := dto.NewUpdatePaidResponse(constants.SuccessCreate, form)
 
 	response.Write(w, http.StatusOK, resData)
+}
 
+func (h OrderHandler) UpdateDelivered(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	orderID := helper.StringToInt64(vars["order_id"], 0)
+
+	appErr := h.Service.UpdateDelivered(orderID)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	resData := map[string]string{
+		"message": constants.SuccessUpdate,
+	}
+
+	response.Write(w, http.StatusOK, resData)
+}
+
+func (h OrderHandler) GetListAdmin(w http.ResponseWriter, r *http.Request) {
+	orders, appErr := h.Service.GetList()
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+	resData := dto.NewGetOrderListResponse(constants.SuccesGet, orders)
+	response.Write(w, http.StatusOK, resData)
 }

@@ -28,6 +28,7 @@ func (r *OrderProductRepo) GetAllByOrderID(orderID int64) ([]domain.OrderProduct
 		op.product_id, 
 		p.name, 
 		p.price, 
+		p.image,
 		op.quantity 
 	FROM 
 		order_products op 
@@ -46,7 +47,7 @@ func (r *OrderProductRepo) GetAllByOrderID(orderID int64) ([]domain.OrderProduct
 	orderProducts := make([]domain.OrderProduct, 0)
 	for rows.Next() {
 		var orderProduct domain.OrderProduct
-		if err := rows.Scan(&orderProduct.OrderID, &orderProduct.ProductID, &orderProduct.Name, &orderProduct.Price, &orderProduct.Quantity); err != nil {
+		if err := rows.Scan(&orderProduct.OrderID, &orderProduct.ProductID, &orderProduct.Name, &orderProduct.Price, &orderProduct.Image, &orderProduct.Quantity); err != nil {
 			logger.Error("Error while scanning porder productfrom database: " + err.Error())
 			return nil, errs.NewUnexpectedError("Unexpected database error")
 		}

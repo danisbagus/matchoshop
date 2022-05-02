@@ -39,6 +39,22 @@ func (_m *UserRepo) CreateUserCustomer(data *domain.User) (*domain.User, *errs.A
 	return r0, r1
 }
 
+// Delete provides a mock function with given fields: userID
+func (_m *UserRepo) Delete(userID int64) *errs.AppError {
+	ret := _m.Called(userID)
+
+	var r0 *errs.AppError
+	if rf, ok := ret.Get(0).(func(int64) *errs.AppError); ok {
+		r0 = rf(userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*errs.AppError)
+		}
+	}
+
+	return r0
+}
+
 // FindOne provides a mock function with given fields: email
 func (_m *UserRepo) FindOne(email string) (*domain.User, *errs.AppError) {
 	ret := _m.Called(email)
@@ -80,6 +96,31 @@ func (_m *UserRepo) FindOneById(userID int64) (*domain.User, *errs.AppError) {
 	var r1 *errs.AppError
 	if rf, ok := ret.Get(1).(func(int64) *errs.AppError); ok {
 		r1 = rf(userID)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*errs.AppError)
+		}
+	}
+
+	return r0, r1
+}
+
+// GetAll provides a mock function with given fields:
+func (_m *UserRepo) GetAll() ([]domain.UserDetail, *errs.AppError) {
+	ret := _m.Called()
+
+	var r0 []domain.UserDetail
+	if rf, ok := ret.Get(0).(func() []domain.UserDetail); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]domain.UserDetail)
+		}
+	}
+
+	var r1 *errs.AppError
+	if rf, ok := ret.Get(1).(func() *errs.AppError); ok {
+		r1 = rf()
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(*errs.AppError)

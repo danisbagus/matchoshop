@@ -53,16 +53,12 @@ func (r ProductCategoryService) Create(req *dto.CreateProductCategoryRequest) (*
 	return response, nil
 }
 
-func (r ProductCategoryService) GetList() (*dto.ResponseData, *errs.AppError) {
-
+func (r ProductCategoryService) GetList() ([]domain.ProductCategory, *errs.AppError) {
 	productCategories, appErr := r.repo.GetAll()
 	if appErr != nil {
 		return nil, appErr
 	}
-
-	response := dto.NewGetProductCategoryListResponse("Successfully get data", productCategories)
-
-	return response, nil
+	return productCategories, nil
 }
 
 func (r ProductCategoryService) GetDetail(productCategoryID int64) (*dto.ResponseData, *errs.AppError) {

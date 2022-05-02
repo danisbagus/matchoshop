@@ -9,6 +9,7 @@ import (
 	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/dto"
 	"github.com/danisbagus/matchoshop/utils/auth"
+	"github.com/danisbagus/matchoshop/utils/constants"
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
@@ -173,34 +174,73 @@ func (r UserService) GetDetail(userID int64) (*dto.ResponseData, *errs.AppError)
 	return response, nil
 }
 
-func (r UserService) Update(userID int64, req *dto.UpdateUserRequest) (*dto.ResponseData, *errs.AppError) {
+func (r UserService) Update(form *domain.User) *errs.AppError {
 
-	appErr := req.Validate()
+	user, appErr := r.repo.FindOneById(form.UserID)
+	if appErr != nil {
+		return appErr
+	}
+	if user.UserID == 0 {
+		return errs.NewBadRequestError("User not found")
+	}
+
+	form.UpdatedAt = time.Now().Format(dbTSLayout)
+	appErr = r.repo.Update(form.UserID, form)
+	if appErr != nil {
+		return appErr
+	}
+
+	form.RoleID = user.RoleID
+	form.Email = user.Email
+	return nil
+}
+
+func (r UserService) GetList(roleID int64) ([]domain.UserDetail, *errs.AppError) {
+	result := make([]domain.UserDetail, 0)
+	userList, appErr := r.repo.GetAll()
 	if appErr != nil {
 		return nil, appErr
 	}
+
+	if roleID == constants.SuperAdminRoleID {
+		result = userList
+	} else {
+		for _, value := range userList {
+			if value.RoleID == constants.SuperAdminRoleID {
+				continue
+			}
+			var user domain.UserDetail
+			user.UserID = value.UserID
+			user.Name = value.Name
+			user.Email = value.Email
+			user.RoleID = value.RoleID
+			user.RoleName = value.RoleName
+		}
+	}
+
+	return result, nil
+}
+
+func (r UserService) Delete(userID, roleID int64) *errs.AppError {
 
 	user, appErr := r.repo.FindOneById(userID)
 	if appErr != nil {
-		return nil, appErr
+		return appErr
 	}
-
 	if user.UserID == 0 {
-		return nil, errs.NewBadRequestError("User not found")
+		return errs.NewBadRequestError("user not found")
 	}
 
-	formUpdate := domain.User{
-		Name: req.Name,
+	if roleID >= user.RoleID {
+		return errs.NewBadRequestError("not allowed delete this user")
 	}
 
-	appErr = r.repo.Update(userID, &formUpdate)
+	appErr = r.repo.Delete(userID)
 	if appErr != nil {
-		return nil, appErr
+		return appErr
 	}
 
-	response := dto.NewGetUserDetailResponse("Successfully update data", user)
-
-	return response, nil
+	return nil
 }
 
 func hashPassword(password string) (string, error) {

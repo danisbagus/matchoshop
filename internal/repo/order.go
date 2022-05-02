@@ -23,6 +23,50 @@ func NewOrderRepo(db *sqlx.DB) port.OrderRepo {
 	}
 }
 
+func (r OrderRepo) GetAll() ([]domain.OrderDetail, *errs.AppError) {
+	sqlGet := `
+	SELECT 
+		o.order_id, 
+		o.user_id, 
+		o.payment_method_id, 
+		o.product_price, 
+		o.tax_price, 
+		o.shipping_price, 
+		o.total_price, 
+		o.is_paid, 
+		o.paid_at, 
+		o.is_delivered,
+		o.delivered_at,
+		o.created_at,
+		u.name AS user_name
+	FROM 
+		orders o
+	INNER JOIN users u ON u.user_id = o.user_id
+	`
+
+	rows, err := r.db.Query(sqlGet)
+	if err != nil && err != sql.ErrNoRows {
+		logger.Error("Error while get all order from database: " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	defer rows.Close()
+
+	orders := make([]domain.OrderDetail, 0)
+	for rows.Next() {
+		var order domain.OrderDetail
+		err := rows.Scan(&order.Order.OrderID, &order.UserID, &order.PaymentMethodID, &order.ProductPrice, &order.TaxPrice, &order.ShippingPrice,
+			&order.TotalPrice, &order.IsPaid, &order.PaidAt, &order.IsDelivered, &order.DeliveredAt, &order.CreatedAt, &order.UserName)
+		if err != nil && err != sql.ErrNoRows {
+			logger.Error("Error while get all order from database: " + err.Error())
+			return nil, errs.NewUnexpectedError("Unexpected database error")
+		}
+		orders = append(orders, order)
+	}
+
+	return orders, nil
+}
+
 func (r OrderRepo) GetAllByUserID(userID int64) ([]domain.OrderDetail, *errs.AppError) {
 	sqlGet := `
 	SELECT 
@@ -78,6 +122,8 @@ func (r OrderRepo) GetOneByID(OrderID int64) (*domain.OrderDetail, *errs.AppErro
 		o.total_price, 
 		o.is_paid, 
 		o.paid_at, 
+		o.is_delivered, 
+		o.delivered_at, 
 		sa.address, 
 		sa.city, 
 		sa.postal_code, 
@@ -95,7 +141,7 @@ func (r OrderRepo) GetOneByID(OrderID int64) (*domain.OrderDetail, *errs.AppErro
 
 	var order domain.OrderDetail
 	err := r.db.QueryRow(sqlGet, OrderID).Scan(&order.Order.OrderID, &order.UserID, &order.PaymentMethodID, &order.ProductPrice, &order.TaxPrice, &order.ShippingPrice,
-		&order.TotalPrice, &order.IsPaid, &order.PaidAt, &order.Address, &order.City, &order.PostalCode, &order.Country, &order.PaymentMethodName, &order.UserName, &order.UserEmail)
+		&order.TotalPrice, &order.IsPaid, &order.PaidAt, &order.IsDelivered, &order.DeliveredAt, &order.Address, &order.City, &order.PostalCode, &order.Country, &order.PaymentMethodName, &order.UserName, &order.UserEmail)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errs.NewNotFoundError("Order not found!")
@@ -188,6 +234,37 @@ func (r OrderRepo) UpdatePaid(form *domain.PaymentResult) *errs.AppError {
 
 	return nil
 
+}
+
+func (r OrderRepo) UpdateDelivered(ID int64) *errs.AppError {
+	tx, err := r.db.Begin()
+	if err != nil {
+		logger.Error("Error when starting update order paid: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	sqlUpdate := `
+	UPDATE orders 
+	SET is_delivered = $2,
+		delivered_at = $3,
+		updated_at = $3
+	WHERE order_id = $1`
+
+	_, err = tx.Exec(sqlUpdate, ID, 1, time.Now())
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while update product: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		logger.Error("Error while commiting transaction: " + err.Error())
+		return errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	return nil
 }
 
 func (r OrderRepo) bulkInsertOrderProduct(tx *sql.Tx, orderID int64, form []domain.OrderProduct) error {

@@ -47,6 +47,11 @@ type UserDetailResponse struct {
 	Email  string `json:"email"`
 	RoleID int64  `json:"role_id"`
 }
+
+type UserListResponse struct {
+	UserDetailResponse
+	RoleName string `json:"role_name"`
+}
 type RefreshTokenResponse struct {
 	AccessToken string `json:"access_token"`
 }
@@ -114,6 +119,23 @@ func NewGetUserDetailResponse(message string, data *domain.User) *ResponseData {
 	}
 
 	return GenerateResponseData(message, userDetailResponse)
+}
+
+func NewGetUserListResponse(message string, data []domain.UserDetail) *ResponseData {
+	users := make([]UserListResponse, 0)
+
+	for _, value := range data {
+		var user UserListResponse
+		user.UserID = value.UserID
+		user.Name = value.Name
+		user.Email = value.Email
+		user.RoleID = value.RoleID
+		user.RoleName = value.RoleName
+
+		users = append(users, user)
+	}
+
+	return GenerateResponseData(message, users)
 }
 
 func (r LoginRequest) Validate() *errs.AppError {

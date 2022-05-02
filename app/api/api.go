@@ -45,13 +45,15 @@ func StartApp() {
 	userService := service.NewUserService(userRepo, refreshTokenStoreRepo)
 	productService := service.NewProductService(productRepo, productCategoryRepo, productProductCategoryRepo)
 	productCategoryService := service.NewProductCategoryService(productCategoryRepo)
-	orderService := service.NewOrderService(orderRepo, orderProductRepo, paymentResultRepo, userRepo)
+	orderService := service.NewOrderService(orderRepo, orderProductRepo, paymentResultRepo, productRepo)
+	uploadService := service.NewUploadService()
 
 	userHandlerV1 := handlerV1.UserHandler{Service: userService}
 	productHandlerV1 := handlerV1.ProductHandler{Service: productService}
 	productCategoryHandlerV1 := handlerV1.ProductCategoryHandler{Service: productCategoryService}
 	orderHandlerV1 := handlerV1.OrderHandler{Service: orderService}
 	configHandlerV1 := handlerV1.ConfigHandler{}
+	uploadHandlerV1 := handlerV1.UploadHandler{Service: uploadService}
 
 	// auth v1 routes
 	authV1Route := router.PathPrefix("/api/v1/auth").Subrouter()
@@ -94,13 +96,31 @@ func StartApp() {
 	orderV1Route := router.PathPrefix("/api/v1/order").Subrouter()
 	orderV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.CustomerPermission))
 	orderV1Route.HandleFunc("", orderHandlerV1.Create).Methods(http.MethodPost)
-	orderV1Route.HandleFunc("/me", orderHandlerV1.GetList).Methods(http.MethodGet)
+	orderV1Route.HandleFunc("", orderHandlerV1.GetList).Methods(http.MethodGet)
 	orderV1Route.HandleFunc("/{order_id}", orderHandlerV1.GetDetail).Methods(http.MethodGet)
 	orderV1Route.HandleFunc("/{order_id}/pay", orderHandlerV1.UpdatePaid).Methods(http.MethodPut)
+
+	// product admin v1 routes
+	userAdminV1Route := router.PathPrefix("/api/v1/admin/user").Subrouter()
+	userAdminV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.AdminPermission))
+	userAdminV1Route.HandleFunc("", userHandlerV1.GetUserList).Methods(http.MethodGet)
+	userAdminV1Route.HandleFunc("/{user_id}", userHandlerV1.GetUserDetailAdmin).Methods(http.MethodGet)
+	userAdminV1Route.HandleFunc("/{user_id}", userHandlerV1.DeleteUser).Methods(http.MethodDelete)
+	userAdminV1Route.HandleFunc("/{user_id}", userHandlerV1.UpdateUserAdmin).Methods(http.MethodPatch)
 
 	// config routes
 	configRoute := router.PathPrefix("/api/v1/config").Subrouter()
 	configRoute.HandleFunc("/paypal", configHandlerV1.GetPaypalConfig).Methods(http.MethodGet)
+
+	// upload
+	uploadRoute := router.PathPrefix("/api/v1/upload").Subrouter()
+	uploadRoute.HandleFunc("/image", uploadHandlerV1.UploadImage).Methods(http.MethodPost)
+
+	orderAdminV1Route := router.PathPrefix("/api/v1/admin/order").Subrouter()
+	orderAdminV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.AdminPermission))
+	orderAdminV1Route.HandleFunc("", orderHandlerV1.GetListAdmin).Methods(http.MethodGet)
+	orderAdminV1Route.HandleFunc("/{order_id}", orderHandlerV1.GetDetail).Methods(http.MethodGet)
+	orderAdminV1Route.HandleFunc("/{order_id}/deliver", orderHandlerV1.UpdateDelivered).Methods(http.MethodPut)
 
 	router.HandleFunc("/health-check", healthCheck)
 

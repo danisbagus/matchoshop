@@ -9,3 +9,8 @@ type User struct {
 	CreatedAt string `db:"created_at"`
 	UpdatedAt string `db:"updated_at"`
 }
+
+type UserDetail struct {
+	User
+	RoleName string `db:"role_name"`
+}

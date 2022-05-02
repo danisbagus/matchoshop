@@ -66,20 +66,18 @@ type (
 	}
 
 	OrderListResponse struct {
-		OrderID           int64  `json:"order_id"`
-		PaymentMethodID   int64  `json:"payment_method_id"`
-		PaymentMethodName string `json:"payment_method_name"`
-		ProductPrice      int64  `json:"product_price"`
-		TaxPrice          int64  `json:"tax_price"`
-		ShippingPrice     int64  `json:"shipping_price"`
-		TotalPrice        int64  `json:"total_price"`
-		UserName          string `json:"user_name"`
-		UserEmail         string `json:"user_email"`
-		IsPaid            bool   `json:"is_paid"`
-		PaidAt            string `json:"paid_at"`
-		IsDelivered       bool   `json:"is_delivered"`
-		DeliveredAt       string `json:"deliverd_at"`
-		CreatedAt         string `json:"created_at"`
+		OrderID         int64  `json:"order_id"`
+		PaymentMethodID int64  `json:"payment_method_id"`
+		ProductPrice    int64  `json:"product_price"`
+		TaxPrice        int64  `json:"tax_price"`
+		ShippingPrice   int64  `json:"shipping_price"`
+		TotalPrice      int64  `json:"total_price"`
+		UserName        string `json:"user_name"`
+		IsPaid          bool   `json:"is_paid"`
+		PaidAt          string `json:"paid_at"`
+		IsDelivered     bool   `json:"is_delivered"`
+		DeliveredAt     string `json:"deliverd_at"`
+		CreatedAt       string `json:"created_at"`
 	}
 
 	UpdateOrderPaidResponse struct {
@@ -102,13 +100,11 @@ func NewGetOrderListResponse(message string, data []domain.OrderDetail) *Respons
 		var resOrderList OrderListResponse
 		resOrderList.OrderID = orderDetail.Order.OrderID
 		resOrderList.PaymentMethodID = orderDetail.PaymentMethodID
-		resOrderList.PaymentMethodName = orderDetail.PaymentMethodName
 		resOrderList.ProductPrice = orderDetail.ProductPrice
 		resOrderList.TaxPrice = orderDetail.TaxPrice
 		resOrderList.ShippingPrice = orderDetail.ShippingPrice
 		resOrderList.TotalPrice = orderDetail.TotalPrice
 		resOrderList.UserName = orderDetail.UserName
-		resOrderList.UserEmail = orderDetail.UserEmail
 		resOrderList.IsPaid = orderDetail.IsPaid
 		resOrderList.PaidAt = helper.PointDateToString(orderDetail.PaidAt, constants.DATE_FORMAT)
 		resOrderList.IsDelivered = orderDetail.IsDelivered
@@ -147,7 +143,7 @@ func NewGetOrderDetailResponse(message string, data *domain.OrderDetail) *Respon
 		orderProduct.ProductID = value.ProductID
 		orderProduct.Price = value.Price
 		orderProduct.Name = value.Name
-		orderProduct.Image = "https://i.picsum.photos/id/167/300/300.jpg?hmac=pUvtrq_DnPmk3ui2smKHRtf7_EqebkD3wjh_9pE22d0"
+		orderProduct.Image = value.Image
 		orderProduct.Quantity = value.Quantity
 
 		orderProducts = append(orderProducts, orderProduct)

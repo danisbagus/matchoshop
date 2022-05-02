@@ -102,84 +102,71 @@ func TestUser_Register_Email_Already_Used(t *testing.T) {
 }
 
 func TestUser_Update_Not_Validated(t *testing.T) {
+	form := new(domain.User)
+	form.UserID = 2
 
-	req := dto.UpdateUserRequest{}
-	userID := 2
+	appErr := userService.Update(form)
 
-	update, appErr := userService.Update(int64(userID), &req)
-
-	assert.Nil(t, update)
 	assert.NotNil(t, appErr)
 }
 
 func TestUser_Update_User_Not_Found(t *testing.T) {
-
-	req := dto.UpdateUserRequest{
-		Name: "Customer 3",
-	}
-	userID := 2
+	form := new(domain.User)
+	form.Name = "Customer 3"
+	form.UserID = 2
 
 	resFindOneByID := domain.User{
 		UserID: 0,
 	}
 
-	mockUserRepo.Mock.On("FindOneById", int64(userID)).Return(&resFindOneByID, nil)
+	mockUserRepo.Mock.On("FindOneById", form.UserID).Return(&resFindOneByID, nil)
 
-	update, appErr := userService.Update(int64(userID), &req)
+	appErr := userService.Update(form)
 
-	assert.Nil(t, update)
 	assert.NotNil(t, appErr)
 }
 
 func TestUser_Update_Unexpected_Error_Update(t *testing.T) {
-
-	req := dto.UpdateUserRequest{
-		Name: "Customer 112345678901234567890123456789012345678901234567890234567890",
-	}
-	userID := 1
+	form := new(domain.User)
+	form.Name = "Customer 112345678901234567890123456789012345678901234567890234567890"
+	form.UserID = 1
 
 	resFindOneByID := domain.User{
 		UserID: 1,
 		Name:   "Customer 3",
 	}
 
-	mockUserRepo.Mock.On("FindOneById", int64(userID)).Return(&resFindOneByID, nil)
+	mockUserRepo.Mock.On("FindOneById", form.UserID).Return(&resFindOneByID, nil)
 
 	formUpdate := domain.User{
-		Name: req.Name,
+		Name: form.Name,
 	}
 
-	mockUserRepo.Mock.On("Update", int64(userID), &formUpdate).Return(errs.NewUnexpectedError("Unexpected database error"))
+	mockUserRepo.Mock.On("Update", form.UserID, &formUpdate).Return(errs.NewUnexpectedError("Unexpected database error"))
+	appErr := userService.Update(form)
 
-	update, appErr := userService.Update(int64(userID), &req)
-
-	assert.Nil(t, update)
 	assert.NotNil(t, appErr)
 }
 
 func TestUser_Update_Success(t *testing.T) {
-
-	req := dto.UpdateUserRequest{
-		Name: "Customer 4",
-	}
-	userID := 1
+	form := new(domain.User)
+	form.Name = "Customer 4"
+	form.UserID = 1
 
 	resFindOneByID := domain.User{
 		UserID: 1,
-		Name:   "Customer 3",
+		Name:   "Customer 4",
 	}
 
-	mockUserRepo.Mock.On("FindOneById", int64(userID)).Return(&resFindOneByID, nil)
+	mockUserRepo.Mock.On("FindOneById", form.UserID).Return(&resFindOneByID, nil)
 
 	formUpdate := domain.User{
-		Name: req.Name,
+		Name: form.Name,
 	}
 
-	mockUserRepo.Mock.On("Update", int64(userID), &formUpdate).Return(nil)
+	mockUserRepo.Mock.On("Update", form.UserID, &formUpdate).Return(nil)
+	appErr := userService.Update(form)
 
-	update, appErr := userService.Update(int64(userID), &req)
-
-	assert.NotNil(t, update)
 	assert.Nil(t, appErr)
 }
 
