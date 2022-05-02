@@ -1,5 +1,5 @@
 # matchoshop
-E-commerce for men's products
+E-commerce for men's product
 
 ## Requirements
 
