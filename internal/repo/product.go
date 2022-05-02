@@ -2,8 +2,6 @@ package repo
 
 import (
 	"database/sql"
-	"encoding/json"
-	"fmt"
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
@@ -23,9 +21,6 @@ func NewProductRepo(db *sqlx.DB) port.ProductRepo {
 }
 
 func (r ProductRepo) Insert(data *domain.Product) (*domain.Product, *errs.AppError) {
-
-	dataq, _ := json.Marshal(data)
-	fmt.Println(string(dataq))
 
 	tx, err := r.db.Begin()
 	if err != nil {
