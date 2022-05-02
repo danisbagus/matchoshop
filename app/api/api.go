@@ -112,6 +112,10 @@ func StartApp() {
 	configRoute := router.PathPrefix("/api/v1/config").Subrouter()
 	configRoute.HandleFunc("/paypal", configHandlerV1.GetPaypalConfig).Methods(http.MethodGet)
 
+	// admin config routes
+	adminConfigRoute := router.PathPrefix("/api/v1/admin/config").Subrouter()
+	adminConfigRoute.HandleFunc("", configHandlerV1.GetConfig).Methods(http.MethodGet)
+
 	// upload
 	uploadRoute := router.PathPrefix("/api/v1/upload").Subrouter()
 	uploadRoute.HandleFunc("/image", uploadHandlerV1.UploadImage).Methods(http.MethodPost)
@@ -142,7 +146,7 @@ func GetClient() *sqlx.DB {
 
 	connection := fmt.Sprintf("%s?sslmode=%s", dbURL, dbSSLMode)
 
-	log.Printf("DB url connections: %s", connection)
+	// log.Printf("DB url connections: %s", connection)
 
 	client, err := sqlx.Open("postgres", connection)
 	if err != nil {
