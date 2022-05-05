@@ -80,6 +80,7 @@ func StartApp() {
 	productAdminV1Route := router.PathPrefix("/api/v1/admin/product").Subrouter()
 	productAdminV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.AdminPermission))
 	productAdminV1Route.HandleFunc("", productHandlerV1.CreateProduct).Methods(http.MethodPost)
+	productAdminV1Route.HandleFunc("", productHandlerV1.GetProductListPaginate).Methods(http.MethodGet)
 	productAdminV1Route.HandleFunc("/{product_id}", productHandlerV1.UpdateProduct).Methods(http.MethodPut)
 	productAdminV1Route.HandleFunc("/{product_id}", productHandlerV1.Delete).Methods(http.MethodDelete)
 	productAdminV1Route.HandleFunc("/{product_id}", productHandlerV1.GetProductDetail).Methods(http.MethodGet)
