@@ -14,13 +14,15 @@ type ProductService struct {
 	repo                       port.ProductRepo
 	productCategoryRepo        port.ProductCategoryRepo
 	productProductCategoryRepo port.ProductProductCategoryRepo
+	reviewRepo                 port.ReviewRepo
 }
 
-func NewProductService(repo port.ProductRepo, productCategoryRepo port.ProductCategoryRepo, productProductCategoryRepo port.ProductProductCategoryRepo) port.ProductService {
+func NewProductService(repo port.ProductRepo, productCategoryRepo port.ProductCategoryRepo, productProductCategoryRepo port.ProductProductCategoryRepo, reviewRepo port.ReviewRepo) port.ProductService {
 	return &ProductService{
 		repo:                       repo,
 		productCategoryRepo:        productCategoryRepo,
 		productProductCategoryRepo: productProductCategoryRepo,
+		reviewRepo:                 reviewRepo,
 	}
 }
 
@@ -72,55 +74,73 @@ func (r ProductService) Create(form *domain.Product) *errs.AppError {
 	return nil
 }
 
-func (r ProductService) GetList() ([]domain.ProductDetail, *errs.AppError) {
+func (r ProductService) GetList(criteria *domain.ProductListCriteria) ([]domain.ProductDetail, *errs.AppError) {
 
-	products, appErr := r.repo.GetAll()
+	products, appErr := r.repo.GetAll(criteria)
 	if appErr != nil {
 		return nil, appErr
 	}
-
 	result := make([]domain.ProductDetail, 0)
-	mapProduct := make(map[int64]domain.ProductDetail)
-
 	for _, value := range products {
-		var productCategory domain.ProductCategory
-		productCategory.ProductCategoryID = value.ProductCategoryID
-		productCategory.Name = value.ProductCategoryName
-
-		if mapValue, ok := mapProduct[value.ProductID]; ok {
-			mapValue.ProductCategories = append(mapValue.ProductCategories, productCategory)
-			mapProduct[value.ProductID] = mapValue
-		} else {
-			var product domain.ProductDetail
-			product.ProductID = value.ProductID
-			product.Name = value.Name
-			product.Sku = value.Sku
-			product.Image = value.Image
-			product.Brand = value.Brand
-			product.Price = value.Price
-			product.ProductCategories = append(product.ProductCategories, productCategory)
-			mapProduct[value.ProductID] = product
-		}
-	}
-
-	for _, valData := range mapProduct {
-		result = append(result, valData)
+		var product domain.ProductDetail
+		product.ProductID = value.ProductID
+		product.Name = value.Name
+		product.Sku = value.Sku
+		product.Image = value.Image
+		product.Brand = value.Brand
+		product.Price = value.Price
+		product.NumbReviews = value.NumbReviews
+		product.Rating = value.Rating
+		result = append(result, product)
 	}
 
 	return result, nil
+}
+
+func (r ProductService) GetListPaginate(criteria *domain.ProductListCriteria) ([]domain.ProductDetail, int64, *errs.AppError) {
+
+	products, total, appErr := r.repo.GetAllPaginate(criteria)
+	if appErr != nil {
+		return nil, 0, appErr
+	}
+
+	result := make([]domain.ProductDetail, 0)
+	for _, value := range products {
+		var product domain.ProductDetail
+		product.ProductID = value.ProductID
+		product.Name = value.Name
+		product.Sku = value.Sku
+		product.Image = value.Image
+		product.Brand = value.Brand
+		product.Price = value.Price
+		product.NumbReviews = value.NumbReviews
+		product.Rating = value.Rating
+
+		productCategories, appErr := r.productCategoryRepo.GetAllByProductID(value.ProductID)
+		if appErr != nil {
+			return nil, 0, appErr
+		}
+
+		product.ProductCategories = productCategories
+		result = append(result, product)
+	}
+
+	return result, total, nil
 }
 
 func (r ProductService) GetDetail(productID int64) (*domain.ProductDetail, *errs.AppError) {
 
 	var product *domain.ProductDetail
 	var productCategories []domain.ProductCategory
+	var productReviews []domain.Review
 
 	productChan := make(chan *domain.ProductDetail, 1)
 	productCategoriesChan := make(chan []domain.ProductCategory, 1)
-	errorChan := make(chan *errs.AppError, 2)
+	productReviewsChan := make(chan []domain.Review, 1)
+	errorChan := make(chan *errs.AppError, 3)
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 
 	// get detail product
 	go func() {
@@ -147,11 +167,25 @@ func (r ProductService) GetDetail(productID int64) (*domain.ProductDetail, *errs
 
 	}()
 
+	// get list review
+	go func() {
+		defer wg.Done()
+
+		reviews, appErr := r.reviewRepo.GetAllByProductID(productID)
+		if appErr != nil {
+			errorChan <- appErr
+		}
+
+		productReviewsChan <- reviews
+
+	}()
+
 	wg.Wait()
 
 	close(errorChan)
 	close(productChan)
 	close(productCategoriesChan)
+	close(productReviewsChan)
 
 	for appErr := range errorChan {
 		if appErr != nil {
@@ -168,6 +202,24 @@ func (r ProductService) GetDetail(productID int64) (*domain.ProductDetail, *errs
 	}
 
 	product.ProductCategories = productCategories
+
+	for dataChan := range productReviewsChan {
+		productReviews = dataChan
+	}
+
+	product.Review = productReviews
+
+	var totalRating int64
+	var averageRating float32
+	for _, value := range productReviews {
+		totalRating += int64(value.Rating)
+	}
+
+	if totalRating > 0 {
+		averageRating = (float32(totalRating)) / (float32(len(productReviews)))
+	}
+	product.Rating = averageRating
+	product.NumbReviews = int64(len(productReviews))
 
 	return product, nil
 }

@@ -22,9 +22,22 @@ type ProductList struct {
 	ProductModel
 	ProductCategoryID   int64
 	ProductCategoryName string
+	Rating              float32
+	NumbReviews         int64
 }
 
 type ProductDetail struct {
 	ProductModel
+	Rating            float32
+	NumbReviews       int64
 	ProductCategories []ProductCategory
+	Review            []Review
+}
+
+type ProductListCriteria struct {
+	Keyword string
+	Page    int64
+	Limit   int64
+	Sort    string
+	Order   string
 }

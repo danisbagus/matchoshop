@@ -3,6 +3,7 @@ package dto
 import (
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
+	"github.com/danisbagus/matchoshop/utils/helper"
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
@@ -40,9 +41,24 @@ type ProductDetailtResponse struct {
 	Rating            float32                   `json:"rating"`
 	NumbReviews       int64                     `json:"numb_reviews"`
 	ProductCategories []ProductCategoryResponse `json:"product_categories"`
+	Review            []ReviewResponse          `json:"reviews"`
 }
 
-func NewGetProductListResponse(message string, data []domain.ProductDetail) *ResponseData {
+type ResponsePaginateData struct {
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
+	Meta    interface{} `json:"meta"`
+}
+
+func GenerateResponsePaginateData(message string, data interface{}, meta interface{}) *ResponsePaginateData {
+	return &ResponsePaginateData{
+		Message: message,
+		Data:    data,
+		Meta:    meta,
+	}
+}
+
+func NewGetProductListResponse(message string, data []domain.ProductDetail, meta *helper.Meta) *ResponsePaginateData {
 	products := make([]ProductListResponse, 0)
 	for _, value := range data {
 		var product ProductListResponse
@@ -52,8 +68,8 @@ func NewGetProductListResponse(message string, data []domain.ProductDetail) *Res
 		product.Image = value.Image
 		product.Brand = value.Brand
 		product.Price = value.Price
-		product.Rating = 4.2
-		product.NumbReviews = 175
+		product.Rating = value.Rating
+		product.NumbReviews = value.NumbReviews
 
 		productCategories := make([]ProductCategoryResponse, 0)
 		for _, valueCategory := range value.ProductCategories {
@@ -66,7 +82,7 @@ func NewGetProductListResponse(message string, data []domain.ProductDetail) *Res
 		product.ProductCategories = productCategories
 		products = append(products, product)
 	}
-	return GenerateResponseData(message, products)
+	return GenerateResponsePaginateData(message, products, meta)
 }
 
 func NewGetProductDetailResponse(message string, data *domain.ProductDetail) *ResponseData {
@@ -78,8 +94,8 @@ func NewGetProductDetailResponse(message string, data *domain.ProductDetail) *Re
 	product.Description = data.Description
 	product.Brand = data.Brand
 	product.Price = data.Price
-	product.Rating = 4.2
-	product.NumbReviews = 175
+	product.Rating = data.Rating
+	product.NumbReviews = data.NumbReviews
 	product.Stock = data.Stock
 
 	productCategories := make([]ProductCategoryResponse, 0)
@@ -90,8 +106,24 @@ func NewGetProductDetailResponse(message string, data *domain.ProductDetail) *Re
 		}
 		productCategories = append(productCategories, productCategory)
 	}
-
 	product.ProductCategories = productCategories
+
+	productReviews := make([]ReviewResponse, 0)
+	for _, valData := range data.Review {
+		productReview := ReviewResponse{
+			ReviewID:  valData.ReviewID,
+			UserID:    valData.UserID,
+			UserName:  valData.UserName,
+			ProductID: valData.ProductID,
+			Rating:    valData.Rating,
+			Comment:   valData.Comment,
+			CreatedAt: valData.CreatedAt,
+		}
+		productReviews = append(productReviews, productReview)
+	}
+
+	product.Review = productReviews
+
 	return GenerateResponseData(message, product)
 }
 
