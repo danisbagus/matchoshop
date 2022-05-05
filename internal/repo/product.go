@@ -2,6 +2,8 @@ package repo
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
@@ -103,7 +105,78 @@ func (r ProductRepo) CheckByIDAndSKU(productID int64, sku string) (bool, *errs.A
 	return totalData > 0, nil
 }
 
-func (r ProductRepo) GetAll() ([]domain.ProductList, *errs.AppError) {
+func (r ProductRepo) GetAll(criteria *domain.ProductListCriteria) ([]domain.ProductList, *errs.AppError) {
+	sort := getSortProduct(criteria.Sort, criteria.Order)
+
+	sqlGetProduct := fmt.Sprintf(`
+	SELECT 
+		p.product_id, 
+		p.name, 
+		p.sku, 
+		p.brand, 
+		p.image, 
+		p.price, 
+		pc.product_category_id,
+		pc.name as product_category_name,
+		COALESCE(r.numb_reviews, 0) AS numb_reviews,
+		COALESCE(r.rating, 0) AS rating
+	FROM products p
+	JOIN product_product_categories ppc ON ppc.product_id = p.product_id
+	JOIN product_categories pc ON pc.product_category_id = ppc.product_category_id
+	LEFT JOIN (
+		SELECT 
+			product_id,
+			COUNT(review_id) AS numb_reviews, 
+			AVG(rating)  AS rating
+		FROM reviews 
+		GROUP BY product_id
+	) r ON r.product_id = p.product_id
+	ORDER BY %s
+	LIMIT $1`, sort)
+
+	rows, err := r.db.Query(sqlGetProduct, criteria.Limit)
+
+	if err != nil && err != sql.ErrNoRows {
+		logger.Error("Error while get all product from database: " + err.Error())
+		return nil, errs.NewUnexpectedError("Unexpected database error")
+	}
+
+	defer rows.Close()
+
+	products := make([]domain.ProductList, 0)
+	for rows.Next() {
+		var product domain.ProductList
+		if err := rows.Scan(&product.ProductID, &product.Name, &product.Sku, &product.Brand, &product.Image, &product.Price, &product.ProductCategoryID,
+			&product.ProductCategoryName, &product.NumbReviews, &product.Rating); err != nil {
+			logger.Error("Error while scanning product category from database: " + err.Error())
+			return nil, errs.NewUnexpectedError("Unexpected database error")
+		}
+		products = append(products, product)
+	}
+
+	return products, nil
+}
+
+func (r ProductRepo) GetAllPaginate(criteria *domain.ProductListCriteria) ([]domain.ProductList, int64, *errs.AppError) {
+	var totalData int64
+	var offset int64
+	if criteria.Page > 0 {
+		offset = (criteria.Page - 1) * criteria.Limit
+	}
+
+	searchName := fmt.Sprintf("%%%s%%", criteria.Keyword)
+
+	sqlCountProduct := `
+	SELECT 
+		COUNT(p.product_id)
+	FROM products p
+	WHERE p.name ILIKE $1`
+
+	err := r.db.QueryRow(sqlCountProduct, searchName).Scan(&totalData)
+	if err != nil && err != sql.ErrNoRows {
+		logger.Error("Error while count all product from database: " + err.Error())
+		return nil, 0, errs.NewUnexpectedError("Unexpected database error")
+	}
 
 	sqlGetProduct := `
 	SELECT 
@@ -113,17 +186,26 @@ func (r ProductRepo) GetAll() ([]domain.ProductList, *errs.AppError) {
 		p.brand, 
 		p.image, 
 		p.price, 
-		pc.product_category_id,
-		pc.name as product_category_name
+		COALESCE(r.numb_reviews, 0) AS numb_reviews,
+		COALESCE(r.rating, 0) AS rating
 	FROM products p
-	JOIN product_product_categories ppc ON ppc.product_id = p.product_id
-	JOIN product_categories pc ON pc.product_category_id = ppc.product_category_id
-	ORDER BY p.name ASC`
+	LEFT JOIN (
+		SELECT 
+			product_id,
+			COUNT(review_id) AS numb_reviews, 
+			AVG(rating)  AS rating
+		FROM reviews 
+		GROUP BY product_id
+	) r ON r.product_id = p.product_id
+	WHERE p.name ILIKE $1
+	ORDER BY p.product_id ASC
+	LIMIT $2
+	OFFSET $3`
 
-	rows, err := r.db.Query(sqlGetProduct)
+	rows, err := r.db.Query(sqlGetProduct, searchName, criteria.Limit, offset)
 	if err != nil && err != sql.ErrNoRows {
 		logger.Error("Error while get all product from database: " + err.Error())
-		return nil, errs.NewUnexpectedError("Unexpected database error")
+		return nil, 0, errs.NewUnexpectedError("Unexpected database error")
 	}
 
 	defer rows.Close()
@@ -132,15 +214,14 @@ func (r ProductRepo) GetAll() ([]domain.ProductList, *errs.AppError) {
 
 	for rows.Next() {
 		var product domain.ProductList
-		if err := rows.Scan(&product.ProductID, &product.Name, &product.Sku, &product.Brand, &product.Image, &product.Price, &product.ProductCategoryID, &product.ProductCategoryName); err != nil {
-			logger.Error("Error while scanning product category from database: " + err.Error())
-			return nil, errs.NewUnexpectedError("Unexpected database error")
+		if err := rows.Scan(&product.ProductID, &product.Name, &product.Sku, &product.Brand, &product.Image, &product.Price, &product.NumbReviews, &product.Rating); err != nil {
+			logger.Error("Error while scanning get product from database: " + err.Error())
+			return nil, 0, errs.NewUnexpectedError("Unexpected database error")
 		}
-
 		products = append(products, product)
 	}
 
-	return products, nil
+	return products, totalData, nil
 }
 
 func (r ProductRepo) GetOneByID(productID int64) (*domain.ProductDetail, *errs.AppError) {
@@ -161,7 +242,8 @@ func (r ProductRepo) GetOneByID(productID int64) (*domain.ProductDetail, *errs.A
 	WHERE p.product_id = $1
 	LIMIT 1`
 
-	err := r.db.QueryRow(sqlGetProduct, productID).Scan(&product.ProductID, &product.Name, &product.Sku, &product.Brand, &product.Image, &product.Price, &product.Description, &product.Stock)
+	err := r.db.QueryRow(sqlGetProduct, productID).Scan(&product.ProductID, &product.Name, &product.Sku, &product.Brand, &product.Image, &product.Price,
+		&product.Description, &product.Stock)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errs.NewNotFoundError("Product not found!")
@@ -268,4 +350,26 @@ func (r ProductRepo) Delete(productID int64) *errs.AppError {
 	}
 
 	return nil
+}
+
+func getSortProduct(sort string, order string) string {
+	var sortResult, orderResult string
+	sort = strings.ToLower(sort)
+	order = strings.ToLower(order)
+
+	switch sort {
+	case "numb_reviews":
+		sortResult = "numb_reviews"
+	default:
+		sortResult = "product_id"
+	}
+
+	switch order {
+	case "desc":
+		orderResult = "desc"
+	default:
+		orderResult = "asc"
+	}
+
+	return fmt.Sprintf("%s %s", sortResult, orderResult)
 }
