@@ -10,6 +10,7 @@ import (
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/dto"
+	"github.com/danisbagus/matchoshop/utils/helper"
 	"github.com/gorilla/mux"
 )
 
@@ -51,14 +52,40 @@ func (rc ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	response.Write(w, http.StatusCreated, res)
 }
 
-func (rc ProductHandler) GetProductList(w http.ResponseWriter, r *http.Request) {
-	products, appErr := rc.Service.GetList()
+func (rc ProductHandler) GetTopProduct(w http.ResponseWriter, r *http.Request) {
+	criteria := new(domain.ProductListCriteria)
+	criteria.Limit = 3
+	criteria.Sort = "numb_reviews"
+	criteria.Order = "DESC"
+
+	products, appErr := rc.Service.GetList(criteria)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
 
-	res := dto.NewGetProductListResponse("Successfully get data", products)
+	res := dto.NewGetProductListResponse("Successfully get data", products, nil)
+	response.Write(w, http.StatusOK, res)
+}
+
+func (rc ProductHandler) GetProductListPaginate(w http.ResponseWriter, r *http.Request) {
+	keyword := r.URL.Query().Get("keyword")
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+
+	criteria := new(domain.ProductListCriteria)
+	criteria.Keyword = keyword
+	criteria.Page, criteria.Limit = helper.SetPaginationParameter(int64(page), int64(limit))
+	products, total, appErr := rc.Service.GetListPaginate(criteria)
+	if appErr != nil {
+		response.Error(w, appErr.Code, appErr.Message)
+		return
+	}
+
+	meta := new(helper.Meta)
+	meta.SetPaginationData(criteria.Page, criteria.Limit, total)
+
+	res := dto.NewGetProductListResponse("Successfully get data", products, meta)
 	response.Write(w, http.StatusOK, res)
 }
 
