@@ -102,7 +102,7 @@ func (r UserService) Refresh(request dto.RefreshTokenRequest) (*dto.ResponseData
 		return nil, errs.NewAuthenticationError("invalid token")
 	}
 
-	logger.Error("Error while validate token: " + validationErr.Error())
+	logger.Error("Error while validate token")
 	return nil, errs.NewAuthenticationError("cannot generate a new access token until the current one expires")
 }
 
