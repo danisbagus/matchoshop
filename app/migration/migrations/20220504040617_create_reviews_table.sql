@@ -1,7 +1,7 @@
 -- +goose Up
--- SQL in section 'Up' is executed when this migration is applied
+-- +goose StatementBegin
 CREATE TABLE reviews (
-    review_id   SERIAL NOT NULL,
+    review_id   INTEGER NOT NULL,
     user_id     INT NOT NULL,
     product_id  INT NOT NULL,
     rating      SMALLINT NOT NULL DEFAULT 0,
@@ -10,9 +10,11 @@ CREATE TABLE reviews (
     updated_at  TIMESTAMP NOT NULL,
     PRIMARY KEY (review_id)
 );
+-- +goose StatementEnd
 
 -- +goose Down
--- SQL section 'Down' is executed when this migration is rolled back
+-- +goose StatementBegin
 DROP TABLE reviews;
+-- +goose StatementEnd
 
 

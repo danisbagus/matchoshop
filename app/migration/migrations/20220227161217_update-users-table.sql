@@ -1,9 +1,13 @@
 -- +goose Up
--- SQL in section 'Up' is executed when this migration is applied
+-- +goose StatementBegin
 ALTER TABLE users ADD COLUMN name VARCHAR(50) NULL;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
 UPDATE users SET name = 'Admin 1' WHERE user_id = 1;
+-- +goose StatementEnd
 
 -- +goose Down
--- SQL section 'Down' is executed when this migration is rolled back
+-- +goose StatementBegin
 ALTER TABLE users DROP COLUMN name;
-
+-- +goose StatementEnd

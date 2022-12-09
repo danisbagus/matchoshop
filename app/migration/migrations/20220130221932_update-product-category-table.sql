@@ -1,8 +1,9 @@
 -- +goose Up
--- SQL in section 'Up' is executed when this migration is applied
+-- +goose StatementBegin
 ALTER TABLE product_categories DROP COLUMN merchant_id;
+-- +goose StatementEnd
 
 -- +goose Down
--- SQL section 'Down' is executed when this migration is rolled back
+-- +goose StatementBegin
 ALTER TABLE product_categories ADD COLUMN merchant_id INT NULL;
-
+-- +goose StatementEnd
