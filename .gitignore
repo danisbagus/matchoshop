@@ -20,3 +20,5 @@ bin/
 export-env.sh
 note
 
+# sqlite db
+*.sqlite
