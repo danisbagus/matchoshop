@@ -10,14 +10,13 @@ import (
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
-	"github.com/jmoiron/sqlx"
 )
 
 type ProductRepo struct {
-	db *sqlx.DB
+	db *sql.DB
 }
 
-func NewProductRepo(db *sqlx.DB) port.ProductRepo {
+func NewProductRepo(db *sql.DB) port.ProductRepo {
 	return &ProductRepo{
 		db: db,
 	}
@@ -170,7 +169,7 @@ func (r ProductRepo) GetAllPaginate(criteria *domain.ProductListCriteria) ([]dom
 	SELECT 
 		COUNT(p.product_id)
 	FROM products p
-	WHERE p.name ILIKE $1`
+	WHERE p.name LIKE $1`
 
 	err := r.db.QueryRow(sqlCountProduct, searchName).Scan(&totalData)
 	if err != nil && err != sql.ErrNoRows {
@@ -197,7 +196,7 @@ func (r ProductRepo) GetAllPaginate(criteria *domain.ProductListCriteria) ([]dom
 		FROM reviews 
 		GROUP BY product_id
 	) r ON r.product_id = p.product_id
-	WHERE p.name ILIKE $1
+	WHERE p.name LIKE $1
 	ORDER BY p.product_id ASC
 	LIMIT $2
 	OFFSET $3`

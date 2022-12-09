@@ -7,14 +7,14 @@ import (
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/port"
-	"github.com/jmoiron/sqlx"
+	"github.com/danisbagus/matchoshop/utils/constants"
 )
 
 type RefreshTokenStoreRepo struct {
-	db *sqlx.DB
+	db *sql.DB
 }
 
-func NewRefreshTokenStoreRepo(db *sqlx.DB) port.RefreshTokenStoreRepo {
+func NewRefreshTokenStoreRepo(db *sql.DB) port.RefreshTokenStoreRepo {
 	return &RefreshTokenStoreRepo{
 		db: db,
 	}
@@ -25,7 +25,7 @@ func (r RefreshTokenStoreRepo) Insert(refreshToken string) *errs.AppError {
 	sqlInsert := `INSERT INTO refresh_token_stores(refresh_token, created_at) 
 		VALUES($1, $2)`
 
-	currentTime := time.Now().Format(dbTSLayout)
+	currentTime := time.Now().Format(constants.DATE_TIME_FORMAT)
 
 	_, err := r.db.Exec(sqlInsert, refreshToken, currentTime)
 	if err != nil {

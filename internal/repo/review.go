@@ -8,14 +8,13 @@ import (
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
-	"github.com/jmoiron/sqlx"
 )
 
 type ReviewRepo struct {
-	db *sqlx.DB
+	db *sql.DB
 }
 
-func NewReviewRepo(db *sqlx.DB) port.ReviewRepo {
+func NewReviewRepo(db *sql.DB) port.ReviewRepo {
 	return &ReviewRepo{
 		db: db,
 	}

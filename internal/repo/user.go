@@ -2,23 +2,18 @@ package repo
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
-	"github.com/jmoiron/sqlx"
 )
 
-const ACCESS_TOKEN_DURATION = time.Hour
-const dbTSLayout = "2006-01-02 15:04:05"
-
 type UserRepo struct {
-	db *sqlx.DB
+	db *sql.DB
 }
 
-func NewUserRepo(db *sqlx.DB) port.UserRepo {
+func NewUserRepo(db *sql.DB) port.UserRepo {
 	return &UserRepo{
 		db: db,
 	}
