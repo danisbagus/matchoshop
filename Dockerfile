@@ -5,11 +5,13 @@ WORKDIR /app
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
-RUN go get github.com/steinbacher/goose/cmd/goose
 COPY . .
 RUN go mod vendor
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-w" -a -o /main .
+RUN go build main.go
+RUN cd app/migration && go build main.go
 
-FROM scratch
-COPY --from=builder /main ./
-ENTRYPOINT ["./main"]
+FROM alpine:latest
+WORKDIR /root/
+COPY --from=builder app/app/migration/ /root/app/migration/
+COPY --from=builder app/main /root/main
+CMD ["sh", "-c", "/root/app/migration/main up & /root/main"]
