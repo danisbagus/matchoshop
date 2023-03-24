@@ -9,24 +9,26 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 
 	"github.com/danisbagus/matchoshop/app/api/middleware"
 	"github.com/danisbagus/matchoshop/internal/core/service"
 	handlerV1 "github.com/danisbagus/matchoshop/internal/handler/v1"
 	"github.com/danisbagus/matchoshop/internal/repo"
-	"github.com/danisbagus/matchoshop/utils/config"
 	"github.com/danisbagus/matchoshop/utils/constants"
 
 	_ "github.com/lib/pq"
 )
 
 func StartApp() {
-	config.LoadConfig()
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Failed loading .env file")
+	}
 
 	client := GetClient()
 	defer client.Close()
-
-	// sqliteDB := config.GetSqliteDB()
 
 	router := mux.NewRouter()
 
@@ -139,10 +141,16 @@ func StartApp() {
 
 	router.HandleFunc("/health-check", healthCheck)
 
-	port := config.GetPort()
-	addr := fmt.Sprintf(":%v", port)
-	fmt.Println("Starting the application at:", port)
-	log.Fatal(http.ListenAndServe(addr, router))
+	PORT := os.Getenv("PORT")
+	if PORT == "" {
+		log.Fatal("$PORT must be set")
+	}
+
+	HOST := os.Getenv("HOST")
+
+	appPort := fmt.Sprintf("%v:%v", HOST, PORT)
+	fmt.Println("Starting the application at:", appPort)
+	log.Fatal(http.ListenAndServe(appPort, router))
 }
 
 func GetClient() *sqlx.DB {
