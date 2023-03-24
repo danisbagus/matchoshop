@@ -1,7 +1,11 @@
 -- +goose Up
 -- +goose StatementBegin
+SELECT 'up SQL query';
+-- +goose StatementEnd
+
+-- order table
 CREATE TABLE orders (
-    order_id            INTEGER NOT NULL,
+    order_id            SERIAL NOT NULL,
     user_id             INT NOT NULL,
     payment_method_id   INT NOT NULL,
     product_price       INT NOT NULL,
@@ -16,25 +20,22 @@ CREATE TABLE orders (
     updated_at          TIMESTAMP NOT NULL,
     PRIMARY KEY (order_id)    
 );
--- +goose StatementEnd
 
--- +goose StatementBegin
+-- payment method table
 CREATE TABLE payment_methods (
-    payment_method_id   INTEGER NOT NULL,
+    payment_method_id   SERIAL NOT NULL,
     name                VARCHAR(50) NOT NULL,
     PRIMARY KEY (payment_method_id)    
 );
--- +goose StatementEnd
 
--- +goose StatementBegin
+-- order product category table
 CREATE TABLE order_products (
     order_id            INT NOT NULL,
     product_id          INT NOT NULL,
     quantity            INT NOT NULL
 );
--- +goose StatementEnd
 
--- +goose StatementBegin
+-- payment result table
 CREATE TABLE payment_results (
     payment_result_id   VARCHAR(20) NOT NULL,
     order_id            INT NOT NULL,
@@ -43,11 +44,10 @@ CREATE TABLE payment_results (
     email               VARCHAR(100) NOT NULL,
     PRIMARY KEY (payment_result_id)
 );
--- +goose StatementEnd
 
--- +goose StatementBegin
+-- shipment address table
 CREATE TABLE shipment_address (
-    shipment_address_id   INTEGER NOT NULL,
+    shipment_address_id   SERIAL NOT NULL,
     order_id              INT NOT NULL,
     address               VARCHAR(100) NOT NULL,
     city                  VARCHAR(20) NOT NULL,
@@ -55,25 +55,18 @@ CREATE TABLE shipment_address (
     country               VARCHAR(20) NOT NULL,
     PRIMARY KEY (shipment_address_id)
 );
--- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
+SELECT 'down SQL query';
+-- +goose StatementEnd
+
 DROP TABLE IF EXISTS orders;
--- +goose StatementEnd
 
--- +goose StatementBegin
 DROP TABLE IF EXISTS payment_methods;
--- +goose StatementEnd
 
--- +goose StatementBegin
 DROP TABLE IF EXISTS order_products;
--- +goose StatementEnd
 
--- +goose StatementBegin
 DROP TABLE IF EXISTS payment_results;
--- +goose StatementEnd
 
--- +goose StatementBegin
 DROP TABLE IF EXISTS shipment_address;
--- +goose StatementEnd

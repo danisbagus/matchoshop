@@ -1,12 +1,11 @@
 -- +goose Up
--- +goose StatementBegin
+-- SQL in section 'Up' is executed when this migration is applied
 DROP TABLE merchants;
--- +goose StatementEnd
 
 -- +goose Down
--- +goose StatementBegin
+-- SQL section 'Down' is executed when this migration is rolled back
 CREATE TABLE merchants (
-    merchant_id INTEGER NOT NULL,
+    merchant_id SERIAL NOT NULL,
     user_id     INT NOT NULL,
     name        VARCHAR(50) NOT NULL,
     identifier  VARCHAR(50) NOT NULL UNIQUE,
@@ -14,4 +13,3 @@ CREATE TABLE merchants (
     updated_at  TIMESTAMP NOT NULL,
     PRIMARY KEY (merchant_id)
 );
--- +goose StatementEnd
