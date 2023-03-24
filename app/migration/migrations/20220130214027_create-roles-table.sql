@@ -1,17 +1,15 @@
 -- +goose Up
--- +goose StatementBegin
+-- SQL in section 'Up' is executed when this migration is applied
 CREATE TABLE roles (
-    role_id  INTEGER NOT NULL,
+    role_id  SERIAL NOT NULL,
     name        VARCHAR(50) NOT NULL,
     created_at  TIMESTAMP NOT NULL,
     updated_at  TIMESTAMP NOT NULL,
     PRIMARY KEY (role_id)
 );
--- +goose StatementEnd
 
 -- +goose Down
--- +goose StatementBegin
+-- SQL section 'Down' is executed when this migration is rolled back
 DROP TABLE roles;
--- +goose StatementEnd
 
 

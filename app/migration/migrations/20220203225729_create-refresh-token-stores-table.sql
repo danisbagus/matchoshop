@@ -1,15 +1,13 @@
 -- +goose Up
--- +goose StatementBegin
+-- SQL in section 'Up' is executed when this migration is applied
 CREATE TABLE refresh_token_stores (
     refresh_token   VARCHAR(300) NOT NULL,
     created_at      TIMESTAMP NOT NULL,
     PRIMARY KEY (refresh_token)
 );
--- +goose StatementEnd
 
 -- +goose Down
--- +goose StatementBegin
+-- SQL section 'Down' is executed when this migration is rolled back
 DROP TABLE refresh_token_stores;
--- +goose StatementEnd
 
 

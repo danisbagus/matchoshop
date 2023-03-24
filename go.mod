@@ -14,7 +14,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/lib/pq v1.10.4
-	github.com/mattn/go-sqlite3 v1.14.16
+	github.com/mattn/go-sqlite3 v1.14.10
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pressly/goose v2.7.0+incompatible
 	github.com/spf13/cobra v1.6.1

@@ -4,36 +4,41 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 
 	"github.com/danisbagus/matchoshop/app/api/middleware"
 	"github.com/danisbagus/matchoshop/internal/core/service"
 	handlerV1 "github.com/danisbagus/matchoshop/internal/handler/v1"
 	"github.com/danisbagus/matchoshop/internal/repo"
-	"github.com/danisbagus/matchoshop/utils/config"
 	"github.com/danisbagus/matchoshop/utils/constants"
-
-	_ "github.com/lib/pq"
+	"github.com/danisbagus/matchoshop/utils/modules"
 )
 
 func StartApp() {
-	config.LoadConfig()
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Failed loading .env file")
+	}
 
-	sqliteDB := config.GetSqliteDB()
+	client := modules.GetPostgresClient()
+
+	defer client.Close()
 
 	router := mux.NewRouter()
 
 	// wiring
-	userRepo := repo.NewUserRepo(sqliteDB)
-	productRepo := repo.NewProductRepo(sqliteDB)
-	productCategoryRepo := repo.NewProductCategoryRepo(sqliteDB)
-	productProductCategoryRepo := repo.NewProductProductCategoryRepo(sqliteDB)
-	refreshTokenStoreRepo := repo.NewRefreshTokenStoreRepo(sqliteDB)
-	orderRepo := repo.NewOrderRepo(sqliteDB)
-	orderProductRepo := repo.NewOrderProductRepo(sqliteDB)
-	paymentResultRepo := repo.NewPaymentResult(sqliteDB)
-	reviewRepo := repo.NewReviewRepo(sqliteDB)
+	userRepo := repo.NewUserRepo(client)
+	productRepo := repo.NewProductRepo(client)
+	productCategoryRepo := repo.NewProductCategoryRepo(client)
+	productProductCategoryRepo := repo.NewProductProductCategoryRepo(client)
+	refreshTokenStoreRepo := repo.NewRefreshTokenStoreRepo(client)
+	orderRepo := repo.NewOrderRepo(client)
+	orderProductRepo := repo.NewOrderProductRepo(client)
+	paymentResultRepo := repo.NewPaymentResult(client)
+	reviewRepo := repo.NewReviewRepo(client)
 
 	userService := service.NewUserService(userRepo, refreshTokenStoreRepo)
 	productService := service.NewProductService(productRepo, productCategoryRepo, productProductCategoryRepo, reviewRepo)
@@ -133,10 +138,16 @@ func StartApp() {
 
 	router.HandleFunc("/health-check", healthCheck)
 
-	port := config.GetPort()
-	addr := fmt.Sprintf(":%v", port)
-	fmt.Println("Starting the application at:", port)
-	log.Fatal(http.ListenAndServe(addr, router))
+	PORT := os.Getenv("PORT")
+	if PORT == "" {
+		log.Fatal("$PORT must be set")
+	}
+
+	HOST := os.Getenv("HOST")
+
+	appPort := fmt.Sprintf("%v:%v", HOST, PORT)
+	fmt.Println("Starting the application at:", appPort)
+	log.Fatal(http.ListenAndServe(appPort, router))
 }
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {

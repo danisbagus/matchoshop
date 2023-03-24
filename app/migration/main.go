@@ -6,21 +6,18 @@ import (
 	"log"
 	"os"
 
-	"github.com/danisbagus/matchoshop/utils/config"
 	"github.com/joho/godotenv"
 	"github.com/pressly/goose"
 	"github.com/spf13/cobra"
 
 	//driver
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
 var usageCommands = `
 Run database migrations & seeder
-
 Usage:
     [command]
-
 Available Migration Commands:
     up                   Migrate the DB to the most recent version available
     up-to VERSION        Migrate the DB to a specific VERSION
@@ -30,14 +27,13 @@ Available Migration Commands:
     status               Dump the migration status for the current DB
     version              Print the current version of the database
     create NAME [sql|go] Creates new migration file with next version
-
 `
 
 func main() {
 	godotenv.Load()
 	var rootCmd = &cobra.Command{
 		Use:   "migrate",
-		Short: "sqlite Migration Service",
+		Short: "MySql Migration Service",
 
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
@@ -45,24 +41,14 @@ func main() {
 				os.Exit(0)
 			}
 
-			file := config.GetDBFile()
+			dbURL := os.Getenv("DATABASE_URL")
+			dbSSLMode := os.Getenv("DB_SSL_MODE")
 
-			_, err := os.Stat(file)
-			if os.IsNotExist(err) {
-				fmt.Println("file not exits")
-				var file, err = os.Create(file)
-				if err != nil {
-					fmt.Println("error create file")
-					panic(err)
-				}
+			connection := fmt.Sprintf("%s?sslmode=%s", dbURL, dbSSLMode)
 
-				defer file.Close()
-			}
-
-			goose.SetDialect("sqlite3")
-			db, err := sql.Open("sqlite3", file)
+			db, err := sql.Open("postgres", connection)
 			if err != nil {
-				log.Fatalf("failed connect to sqlite: %v", err)
+				panic(err)
 			}
 
 			appPath, _ := os.Getwd()

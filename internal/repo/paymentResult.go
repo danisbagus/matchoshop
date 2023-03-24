@@ -6,13 +6,14 @@ import (
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/jmoiron/sqlx"
 )
 
 type PaymentResult struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
-func NewPaymentResult(db *sql.DB) port.PaymentResultRepo {
+func NewPaymentResult(db *sqlx.DB) port.PaymentResultRepo {
 	return &PaymentResult{
 		db: db,
 	}

@@ -7,13 +7,14 @@ import (
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/jmoiron/sqlx"
 )
 
 type OrderProductRepo struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
-func NewOrderProductRepo(db *sql.DB) port.OrderProductRepo {
+func NewOrderProductRepo(db *sqlx.DB) port.OrderProductRepo {
 	return &OrderProductRepo{
 		db: db,
 	}

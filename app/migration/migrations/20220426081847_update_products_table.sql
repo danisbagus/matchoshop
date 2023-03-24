@@ -1,17 +1,11 @@
 -- +goose Up
--- +goose StatementBegin
+-- SQL in section 'Up' is executed when this migration is applied
 ALTER TABLE products ADD COLUMN brand VARCHAR(50) NULL;
--- +goose StatementEnd
 
--- +goose StatementBegin
 ALTER TABLE products ADD COLUMN image text NULL;
--- +goose StatementEnd
 
 -- +goose Down
--- +goose StatementBegin
+-- SQL section 'Down' is executed when this migration is rolled back
 ALTER TABLE products DROP COLUMN brand;
--- +goose StatementEnd
 
--- +goose StatementBegin
 ALTER TABLE products DROP COLUMN image;
--- +goose StatementEnd
