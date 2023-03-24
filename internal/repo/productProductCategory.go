@@ -1,7 +1,6 @@
 package repo
 
 import (
-	"database/sql"
 	"fmt"
 	"strings"
 
@@ -9,13 +8,14 @@ import (
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/jmoiron/sqlx"
 )
 
 type ProductProductCategoryRepo struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
-func NewProductProductCategoryRepo(db *sql.DB) port.ProductProductCategoryRepo {
+func NewProductProductCategoryRepo(db *sqlx.DB) port.ProductProductCategoryRepo {
 	return &ProductProductCategoryRepo{
 		db: db,
 	}

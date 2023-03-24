@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/jmoiron/sqlx"
 
 	"github.com/danisbagus/matchoshop/app/api/middleware"
 	"github.com/danisbagus/matchoshop/internal/core/service"
@@ -20,20 +23,23 @@ import (
 func StartApp() {
 	config.LoadConfig()
 
-	sqliteDB := config.GetSqliteDB()
+	client := GetClient()
+	defer client.Close()
+
+	// sqliteDB := config.GetSqliteDB()
 
 	router := mux.NewRouter()
 
 	// wiring
-	userRepo := repo.NewUserRepo(sqliteDB)
-	productRepo := repo.NewProductRepo(sqliteDB)
-	productCategoryRepo := repo.NewProductCategoryRepo(sqliteDB)
-	productProductCategoryRepo := repo.NewProductProductCategoryRepo(sqliteDB)
-	refreshTokenStoreRepo := repo.NewRefreshTokenStoreRepo(sqliteDB)
-	orderRepo := repo.NewOrderRepo(sqliteDB)
-	orderProductRepo := repo.NewOrderProductRepo(sqliteDB)
-	paymentResultRepo := repo.NewPaymentResult(sqliteDB)
-	reviewRepo := repo.NewReviewRepo(sqliteDB)
+	userRepo := repo.NewUserRepo(client)
+	productRepo := repo.NewProductRepo(client)
+	productCategoryRepo := repo.NewProductCategoryRepo(client)
+	productProductCategoryRepo := repo.NewProductProductCategoryRepo(client)
+	refreshTokenStoreRepo := repo.NewRefreshTokenStoreRepo(client)
+	orderRepo := repo.NewOrderRepo(client)
+	orderProductRepo := repo.NewOrderProductRepo(client)
+	paymentResultRepo := repo.NewPaymentResult(client)
+	reviewRepo := repo.NewReviewRepo(client)
 
 	userService := service.NewUserService(userRepo, refreshTokenStoreRepo)
 	productService := service.NewProductService(productRepo, productCategoryRepo, productProductCategoryRepo, reviewRepo)
@@ -137,6 +143,26 @@ func StartApp() {
 	addr := fmt.Sprintf(":%v", port)
 	fmt.Println("Starting the application at:", port)
 	log.Fatal(http.ListenAndServe(addr, router))
+}
+
+func GetClient() *sqlx.DB {
+	dbURL := os.Getenv("DATABASE_URL")
+	dbSSLMode := os.Getenv("DB_SSL_MODE")
+
+	connection := fmt.Sprintf("%s?sslmode=%s", dbURL, dbSSLMode)
+
+	// log.Printf("DB url connections: %s", connection)
+
+	client, err := sqlx.Open("postgres", connection)
+	if err != nil {
+		panic(err)
+	}
+
+	client.SetConnMaxLifetime(time.Minute * 3)
+	client.SetMaxOpenConns(10)
+	client.SetMaxIdleConns(10)
+
+	return client
 }
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {

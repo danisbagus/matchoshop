@@ -11,7 +11,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-const ACCESS_TOKEN_DURATION = time.Hour
+const ACCESS_TOKEN_DURATION = time.Minute
 const REFRESH_TOKEN_DURATION = time.Hour * 24 * 30
 const HMAC_SAMPLE_SECRET = "machoshop-secret"
 
