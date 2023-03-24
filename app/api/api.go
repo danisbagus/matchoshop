@@ -5,10 +5,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 
 	"github.com/danisbagus/matchoshop/app/api/middleware"
@@ -16,18 +14,17 @@ import (
 	handlerV1 "github.com/danisbagus/matchoshop/internal/handler/v1"
 	"github.com/danisbagus/matchoshop/internal/repo"
 	"github.com/danisbagus/matchoshop/utils/constants"
-
-	_ "github.com/lib/pq"
+	"github.com/danisbagus/matchoshop/utils/modules"
 )
 
 func StartApp() {
-
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Failed loading .env file")
 	}
 
-	client := GetClient()
+	client := modules.GetPostgresClient()
+
 	defer client.Close()
 
 	router := mux.NewRouter()
@@ -151,26 +148,6 @@ func StartApp() {
 	appPort := fmt.Sprintf("%v:%v", HOST, PORT)
 	fmt.Println("Starting the application at:", appPort)
 	log.Fatal(http.ListenAndServe(appPort, router))
-}
-
-func GetClient() *sqlx.DB {
-	dbURL := os.Getenv("DATABASE_URL")
-	dbSSLMode := os.Getenv("DB_SSL_MODE")
-
-	connection := fmt.Sprintf("%s?sslmode=%s", dbURL, dbSSLMode)
-
-	// log.Printf("DB url connections: %s", connection)
-
-	client, err := sqlx.Open("postgres", connection)
-	if err != nil {
-		panic(err)
-	}
-
-	client.SetConnMaxLifetime(time.Minute * 3)
-	client.SetMaxOpenConns(10)
-	client.SetMaxIdleConns(10)
-
-	return client
 }
 
 func healthCheck(w http.ResponseWriter, r *http.Request) {
