@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+
 	"github.com/joho/godotenv"
 
 	"github.com/danisbagus/matchoshop/app/api/middleware"
@@ -151,8 +153,14 @@ func StartApp() {
 	}
 
 	HOST := os.Getenv("HOST")
-
 	appPort := fmt.Sprintf("%v:%v", HOST, PORT)
+	originAllowed := fmt.Sprintf("http://localhost:%s", appPort)
+
+	// allow cors
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
+	originsOk := handlers.AllowedOrigins([]string{originAllowed})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+
 	fmt.Println("Starting the application at:", appPort)
-	log.Fatal(http.ListenAndServe(appPort, router))
+	log.Fatal(http.ListenAndServe(appPort, handlers.CORS(originsOk, headersOk, methodsOk)(router)))
 }
