@@ -145,7 +145,12 @@ func StartApp() {
 	healthRoute.HandleFunc("", healthCheckHandlerV1.Get).Methods(http.MethodGet)
 
 	routerTest := mux.NewRouter()
-	routerTest.HandleFunc("/", MethodPost1).Methods("POST")
+
+	// IMPORTANT: you must specify an OPTIONS method matcher for the middleware to set CORS headers
+	routerTest.HandleFunc("/foo", fooHandler).Methods(http.MethodGet, http.MethodPut, http.MethodPatch, http.MethodOptions)
+	routerTest.Use(mux.CORSMethodMiddleware(routerTest))
+
+	// log.Fatal(http.ListenAndServe(":9000", routerTest))
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
@@ -162,4 +167,13 @@ func StartApp() {
 func MethodPost1(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Hello world!"))
+}
+
+func fooHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if r.Method == http.MethodOptions {
+		return
+	}
+
+	w.Write([]byte("foo"))
 }
