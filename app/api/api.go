@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
 	"github.com/joho/godotenv"
@@ -17,6 +16,8 @@ import (
 	"github.com/danisbagus/matchoshop/internal/repo"
 	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/modules"
+	"github.com/labstack/echo/v4"
+	md "github.com/labstack/echo/v4/middleware"
 )
 
 func StartApp() {
@@ -30,8 +31,6 @@ func StartApp() {
 	defer client.Close()
 
 	router := mux.NewRouter()
-
-	router.Use(mux.CORSMethodMiddleware(router))
 
 	// wiring
 	userRepo := repo.NewUserRepo(client)
@@ -96,7 +95,7 @@ func StartApp() {
 
 	// product category admin v1 routes
 	productCategoryAdminV1Route := router.PathPrefix("/api/v1/admin/product-category").Subrouter()
-	productAdminV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.AdminPermission))
+	productCategoryAdminV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.AdminPermission))
 	productCategoryAdminV1Route.HandleFunc("", productCategoryHandlerV1.CreateProductCategory).Methods(http.MethodPost)
 	productCategoryAdminV1Route.HandleFunc("/{product_category_id}", productCategoryHandlerV1.UpdateProductCategory).Methods(http.MethodPut)
 	productCategoryAdminV1Route.HandleFunc("/{product_category_id}", productCategoryHandlerV1.Delete).Methods(http.MethodDelete)
@@ -147,6 +146,17 @@ func StartApp() {
 	healthRoute := router.PathPrefix("/api/v1/health-check").Subrouter()
 	healthRoute.HandleFunc("", healthCheckHandlerV1.Get).Methods(http.MethodGet)
 
+	Test1Route := router.PathPrefix("/test1").Subrouter()
+	Test1Route.HandleFunc("/login", MethodPost1).Methods(http.MethodPost)
+
+	e := echo.New()
+	e.Use(md.CORSWithConfig(md.CORSConfig{
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+	}))
+
+	Test2Route := e.Group("/test2")
+	Test2Route.POST("/login", MethodPost2)
+
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
 		log.Fatal("$PORT must be set")
@@ -154,13 +164,27 @@ func StartApp() {
 
 	HOST := os.Getenv("HOST")
 	appPort := fmt.Sprintf("%v:%v", HOST, PORT)
-	originAllowed := fmt.Sprintf("http://localhost:%s", appPort)
+	// originAllowed := fmt.Sprintf("http://localhost:%s", appPort)
 
 	// allow cors
-	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
-	originsOk := handlers.AllowedOrigins([]string{originAllowed})
-	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+	// headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
+	// originsOk := handlers.AllowedOrigins([]string{originAllowed})
+	// methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	fmt.Println("Starting the application at:", appPort)
-	log.Fatal(http.ListenAndServe(appPort, handlers.CORS(originsOk, headersOk, methodsOk)(router)))
+	// log.Fatal(http.ListenAndServe(appPort, handlers.CORS(originsOk, headersOk, methodsOk)(router)))
+	// log.Fatal(http.ListenAndServe(appPort, router))
+
+	if err := e.Start(appPort); err != nil {
+		e.Logger.Info("Shutting down the server")
+	}
+}
+
+func MethodPost1(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Hello world!"))
+}
+
+func MethodPost2(c echo.Context) error {
+	return c.JSON(http.StatusOK, "method post 2")
 }
