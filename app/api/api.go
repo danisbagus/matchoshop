@@ -147,7 +147,7 @@ func StartApp() {
 	routerTest := mux.NewRouter()
 
 	// IMPORTANT: you must specify an OPTIONS method matcher for the middleware to set CORS headers
-	routerTest.HandleFunc("/foo", userHandlerV1.Login).Methods(http.MethodGet, http.MethodPut, http.MethodPatch, http.MethodOptions, http.MethodPost)
+	routerTest.HandleFunc("/foo", userHandlerV1.Login).Methods(http.MethodPost)
 	routerTest.Use(mux.CORSMethodMiddleware(routerTest))
 
 	// log.Fatal(http.ListenAndServe(":9000", routerTest))

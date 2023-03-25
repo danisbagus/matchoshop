@@ -22,7 +22,7 @@ func (rc UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var loginRequest dto.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
 		logger.Error("Error while decoding login request: " + err.Error())
-		response.Error(w, http.StatusBadRequest, "Failed to login")
+		response.Error(w, http.StatusBadRequest, "Failed to login: "+err.Error())
 		return
 	}
 
