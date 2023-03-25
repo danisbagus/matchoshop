@@ -173,11 +173,11 @@ func StartApp() {
 
 	fmt.Println("Starting the application at:", appPort)
 	// log.Fatal(http.ListenAndServe(appPort, handlers.CORS(originsOk, headersOk, methodsOk)(router)))
-	// log.Fatal(http.ListenAndServe(appPort, router))
+	log.Fatal(http.ListenAndServe(appPort, router))
 
-	if err := e.Start(appPort); err != nil {
-		e.Logger.Info("Shutting down the server")
-	}
+	// if err := e.Start(appPort); err != nil {
+	// 	e.Logger.Info("Shutting down the server")
+	// }
 }
 
 func MethodPost1(w http.ResponseWriter, r *http.Request) {
