@@ -30,7 +30,7 @@ func StartApp() {
 	defer client.Close()
 
 	router := mux.NewRouter()
-	router.Use(middleware.CorsMiddleware())
+	router.Use(cors.Default().Handler)
 
 	// wiring
 	userRepo := repo.NewUserRepo(client)
@@ -63,7 +63,7 @@ func StartApp() {
 
 	// auth v1 routes
 	authV1Route := router.PathPrefix("/api/v1/auth").Subrouter()
-	authV1Route.HandleFunc("/login", userHandlerV1.Login).Methods(http.MethodPost)
+	authV1Route.HandleFunc("/login/", userHandlerV1.Login).Methods(http.MethodPost)
 	authV1Route.HandleFunc("/refresh", userHandlerV1.Refresh).Methods(http.MethodPost)
 	authV1Route.HandleFunc("/register/customer", userHandlerV1.RegisterCustomer).Methods(http.MethodPost)
 
@@ -146,21 +146,6 @@ func StartApp() {
 	healthRoute := router.PathPrefix("/api/v1/health-check").Subrouter()
 	healthRoute.HandleFunc("", healthCheckHandlerV1.Get).Methods(http.MethodGet)
 
-	// routerTest := mux.NewRouter()
-
-	// // IMPORTANT: you must specify an OPTIONS method matcher for the middleware to set CORS headers
-	// routerTest.HandleFunc("/foo", userHandlerV1.Login).Methods(http.MethodPost)
-	// routerTest.Use(mux.CORSMethodMiddleware(routerTest))
-
-	// log.Fatal(http.ListenAndServe(":9000", routerTest))
-
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:9000"},
-		AllowCredentials: true,
-	})
-
-	handler := c.Handler(router)
-
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
 		log.Fatal("$PORT must be set")
@@ -170,7 +155,7 @@ func StartApp() {
 	appPort := fmt.Sprintf("%v:%v", HOST, PORT)
 
 	fmt.Println("Starting the application at:", appPort)
-	log.Fatal(http.ListenAndServe(appPort, handler))
+	log.Fatal(http.ListenAndServe(appPort, router))
 }
 
 func MethodPost1(w http.ResponseWriter, r *http.Request) {
