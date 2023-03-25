@@ -145,6 +145,7 @@ func StartApp() {
 	healthRoute.HandleFunc("", healthCheckHandlerV1.Get).Methods(http.MethodGet)
 
 	// handling CORS request
+	router.HandleFunc("/login", userHandlerV1.Login).Methods(http.MethodPost)
 	router.Use(mux.CORSMethodMiddleware(router))
 
 	PORT := os.Getenv("PORT")
