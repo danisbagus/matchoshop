@@ -29,6 +29,7 @@ func StartApp() {
 	defer client.Close()
 
 	router := mux.NewRouter()
+	router.Use(middleware.CorsMiddleware())
 
 	// wiring
 	userRepo := repo.NewUserRepo(client)
@@ -144,11 +145,11 @@ func StartApp() {
 	healthRoute := router.PathPrefix("/api/v1/health-check").Subrouter()
 	healthRoute.HandleFunc("", healthCheckHandlerV1.Get).Methods(http.MethodGet)
 
-	routerTest := mux.NewRouter()
+	// routerTest := mux.NewRouter()
 
-	// IMPORTANT: you must specify an OPTIONS method matcher for the middleware to set CORS headers
-	routerTest.HandleFunc("/foo", userHandlerV1.Login).Methods(http.MethodPost)
-	routerTest.Use(mux.CORSMethodMiddleware(routerTest))
+	// // IMPORTANT: you must specify an OPTIONS method matcher for the middleware to set CORS headers
+	// routerTest.HandleFunc("/foo", userHandlerV1.Login).Methods(http.MethodPost)
+	// routerTest.Use(mux.CORSMethodMiddleware(routerTest))
 
 	// log.Fatal(http.ListenAndServe(":9000", routerTest))
 
@@ -161,7 +162,7 @@ func StartApp() {
 	appPort := fmt.Sprintf("%v:%v", HOST, PORT)
 
 	fmt.Println("Starting the application at:", appPort)
-	log.Fatal(http.ListenAndServe(appPort, routerTest))
+	log.Fatal(http.ListenAndServe(appPort, router))
 }
 
 func MethodPost1(w http.ResponseWriter, r *http.Request) {
