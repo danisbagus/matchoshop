@@ -29,6 +29,8 @@ func StartApp() {
 
 	router := mux.NewRouter()
 
+	router.Use(mux.CORSMethodMiddleware(router))
+
 	// wiring
 	userRepo := repo.NewUserRepo(client)
 	productRepo := repo.NewProductRepo(client)
