@@ -154,10 +154,14 @@ func StartApp() {
 		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
 	}))
 
+	e.GET("", MethodTest)
+	e.POST("", MethodPost2)
+
 	Test2Route := e.Group("/test2")
 	Test2Route.POST("/login", MethodPost2)
 
 	PORT := os.Getenv("PORT")
+	PORT = "9000"
 	if PORT == "" {
 		log.Fatal("$PORT must be set")
 	}
@@ -173,11 +177,11 @@ func StartApp() {
 
 	fmt.Println("Starting the application at:", appPort)
 	// log.Fatal(http.ListenAndServe(appPort, handlers.CORS(originsOk, headersOk, methodsOk)(router)))
-	log.Fatal(http.ListenAndServe(appPort, router))
+	// log.Fatal(http.ListenAndServe(appPort, router))
 
-	// if err := e.Start(appPort); err != nil {
-	// 	e.Logger.Info("Shutting down the server")
-	// }
+	if err := e.Start(":" + "9000"); err != nil {
+		e.Logger.Info("Shutting down the server")
+	}
 }
 
 func MethodPost1(w http.ResponseWriter, r *http.Request) {
@@ -187,4 +191,8 @@ func MethodPost1(w http.ResponseWriter, r *http.Request) {
 
 func MethodPost2(c echo.Context) error {
 	return c.JSON(http.StatusOK, "method post 2")
+}
+
+func MethodTest(c echo.Context) error {
+	return c.JSON(http.StatusOK, "method test")
 }
