@@ -63,7 +63,7 @@ func StartApp() {
 
 	// auth v1 routes
 	authV1Route := router.PathPrefix("/api/v1/auth").Subrouter()
-	authV1Route.HandleFunc("/login/", userHandlerV1.Login).Methods(http.MethodPost)
+	authV1Route.HandleFunc("/login", userHandlerV1.Login).Methods(http.MethodPost)
 	authV1Route.HandleFunc("/refresh", userHandlerV1.Refresh).Methods(http.MethodPost)
 	authV1Route.HandleFunc("/register/customer", userHandlerV1.RegisterCustomer).Methods(http.MethodPost)
 
