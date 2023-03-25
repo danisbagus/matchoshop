@@ -16,8 +16,6 @@ import (
 	"github.com/danisbagus/matchoshop/internal/repo"
 	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/modules"
-	"github.com/labstack/echo/v4"
-	md "github.com/labstack/echo/v4/middleware"
 )
 
 func StartApp() {
@@ -56,7 +54,7 @@ func StartApp() {
 	productHandlerV1 := handlerV1.ProductHandler{Service: productService}
 	productCategoryHandlerV1 := handlerV1.ProductCategoryHandler{Service: productCategoryService}
 	orderHandlerV1 := handlerV1.OrderHandler{Service: orderService}
-	configHandlerV1 := handlerV1.ConfigHandler{}
+	// configHandlerV1 := handlerV1.ConfigHandler{}
 	uploadHandlerV1 := handlerV1.UploadHandler{Service: uploadService}
 	reviewHandlerV1 := handlerV1.ReviewHandler{Service: reviewService}
 	healthCheckHandlerV1 := handlerV1.NewHealthCheckHandlerHandler(healthCheckService)
@@ -117,8 +115,8 @@ func StartApp() {
 	userAdminV1Route.HandleFunc("/{user_id}", userHandlerV1.UpdateUserAdmin).Methods(http.MethodPatch)
 
 	// config v1 routes
-	configRoute := router.PathPrefix("/api/v1/config").Subrouter()
-	configRoute.HandleFunc("/paypal", configHandlerV1.GetPaypalConfig).Methods(http.MethodGet)
+	// configRoute := router.PathPrefix("/api/v1/config").Subrouter()
+	// configRoute.HandleFunc("/paypal", configHandlerV1.GetPaypalConfig).Methods(http.MethodGet)
 
 	// admin config v1 routes
 	// adminConfigRoute := router.PathPrefix("/api/v1/admin/config").Subrouter()
@@ -146,53 +144,22 @@ func StartApp() {
 	healthRoute := router.PathPrefix("/api/v1/health-check").Subrouter()
 	healthRoute.HandleFunc("", healthCheckHandlerV1.Get).Methods(http.MethodGet)
 
-	Test1Route := router.PathPrefix("/test1").Subrouter()
-	Test1Route.HandleFunc("/login", MethodPost1).Methods(http.MethodPost)
-
-	e := echo.New()
-	e.Use(md.CORSWithConfig(md.CORSConfig{
-		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
-	}))
-
-	e.GET("", MethodTest)
-	e.POST("", MethodPost2)
-
-	Test2Route := e.Group("/test2")
-	Test2Route.POST("/login", MethodPost2)
+	routerTest := mux.NewRouter()
+	routerTest.HandleFunc("/", MethodPost1).Methods("POST")
 
 	PORT := os.Getenv("PORT")
-	PORT = "9000"
 	if PORT == "" {
 		log.Fatal("$PORT must be set")
 	}
 
 	HOST := os.Getenv("HOST")
 	appPort := fmt.Sprintf("%v:%v", HOST, PORT)
-	// originAllowed := fmt.Sprintf("http://localhost:%s", appPort)
-
-	// allow cors
-	// headersOk := handlers.AllowedHeaders([]string{"X-Requested-With"})
-	// originsOk := handlers.AllowedOrigins([]string{originAllowed})
-	// methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	fmt.Println("Starting the application at:", appPort)
-	// log.Fatal(http.ListenAndServe(appPort, handlers.CORS(originsOk, headersOk, methodsOk)(router)))
-	// log.Fatal(http.ListenAndServe(appPort, router))
-
-	if err := e.Start(":" + "9000"); err != nil {
-		e.Logger.Info("Shutting down the server")
-	}
+	log.Fatal(http.ListenAndServe(appPort, routerTest))
 }
 
 func MethodPost1(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Hello world!"))
-}
-
-func MethodPost2(c echo.Context) error {
-	return c.JSON(http.StatusOK, "method post 2")
-}
-
-func MethodTest(c echo.Context) error {
-	return c.JSON(http.StatusOK, "method test")
 }
