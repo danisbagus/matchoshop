@@ -16,6 +16,7 @@ import (
 	"github.com/danisbagus/matchoshop/internal/repo"
 	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/modules"
+	"github.com/rs/cors"
 )
 
 func StartApp() {
@@ -153,6 +154,13 @@ func StartApp() {
 
 	// log.Fatal(http.ListenAndServe(":9000", routerTest))
 
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:9000"},
+		AllowCredentials: true,
+	})
+
+	handler := c.Handler(router)
+
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
 		log.Fatal("$PORT must be set")
@@ -162,7 +170,7 @@ func StartApp() {
 	appPort := fmt.Sprintf("%v:%v", HOST, PORT)
 
 	fmt.Println("Starting the application at:", appPort)
-	log.Fatal(http.ListenAndServe(appPort, router))
+	log.Fatal(http.ListenAndServe(appPort, handler))
 }
 
 func MethodPost1(w http.ResponseWriter, r *http.Request) {
