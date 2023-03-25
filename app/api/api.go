@@ -39,6 +39,7 @@ func StartApp() {
 	orderProductRepo := repo.NewOrderProductRepo(client)
 	paymentResultRepo := repo.NewPaymentResult(client)
 	reviewRepo := repo.NewReviewRepo(client)
+	healthCheckRepo := repo.NewHealthCheck(client)
 
 	userService := service.NewUserService(userRepo, refreshTokenStoreRepo)
 	productService := service.NewProductService(productRepo, productCategoryRepo, productProductCategoryRepo, reviewRepo)
@@ -46,6 +47,7 @@ func StartApp() {
 	orderService := service.NewOrderService(orderRepo, orderProductRepo, paymentResultRepo, productRepo)
 	uploadService := service.NewUploadService()
 	reviewService := service.NewReviewService(reviewRepo)
+	healthCheckService := service.NewHealthCheckService(healthCheckRepo)
 
 	userHandlerV1 := handlerV1.UserHandler{Service: userService}
 	productHandlerV1 := handlerV1.ProductHandler{Service: productService}
@@ -54,6 +56,7 @@ func StartApp() {
 	configHandlerV1 := handlerV1.ConfigHandler{}
 	uploadHandlerV1 := handlerV1.UploadHandler{Service: uploadService}
 	reviewHandlerV1 := handlerV1.ReviewHandler{Service: reviewService}
+	healthCheckHandlerV1 := handlerV1.NewHealthCheckHandlerHandler(healthCheckService)
 
 	// auth v1 routes
 	authV1Route := router.PathPrefix("/api/v1/auth").Subrouter()
@@ -115,8 +118,8 @@ func StartApp() {
 	configRoute.HandleFunc("/paypal", configHandlerV1.GetPaypalConfig).Methods(http.MethodGet)
 
 	// admin config v1 routes
-	adminConfigRoute := router.PathPrefix("/api/v1/admin/config").Subrouter()
-	adminConfigRoute.HandleFunc("", configHandlerV1.GetConfig).Methods(http.MethodGet)
+	// adminConfigRoute := router.PathPrefix("/api/v1/admin/config").Subrouter()
+	// adminConfigRoute.HandleFunc("", configHandlerV1.GetConfig).Methods(http.MethodGet)
 
 	// upload v1 routes
 	uploadRoute := router.PathPrefix("/api/v1/upload").Subrouter()
@@ -136,7 +139,9 @@ func StartApp() {
 	reviewV1Route.HandleFunc("", reviewHandlerV1.Update).Methods(http.MethodPut)
 	reviewV1Route.HandleFunc("/{product_id}", reviewHandlerV1.GetDetail).Methods(http.MethodGet)
 
-	router.HandleFunc("/health-check", healthCheck)
+	// health-check v1 routes
+	healthRoute := router.PathPrefix("/api/v1/health-check").Subrouter()
+	healthRoute.HandleFunc("", healthCheckHandlerV1.Get).Methods(http.MethodGet)
 
 	PORT := os.Getenv("PORT")
 	if PORT == "" {
@@ -148,9 +153,4 @@ func StartApp() {
 	appPort := fmt.Sprintf("%v:%v", HOST, PORT)
 	fmt.Println("Starting the application at:", appPort)
 	log.Fatal(http.ListenAndServe(appPort, router))
-}
-
-func healthCheck(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("App Up"))
 }
