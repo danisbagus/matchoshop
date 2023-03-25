@@ -16,7 +16,6 @@ import (
 	"github.com/danisbagus/matchoshop/internal/repo"
 	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/modules"
-	"github.com/rs/cors"
 )
 
 func StartApp() {
@@ -30,7 +29,19 @@ func StartApp() {
 	defer client.Close()
 
 	router := mux.NewRouter()
-	router.Use(cors.Default().Handler)
+	// router.Use(cors.Default().Handler)
+
+	// Handle all preflight request
+	router.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// fmt.Printf("OPTIONS")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Access-Control-Request-Headers, Access-Control-Request-Method, Connection, Host, Origin, User-Agent, Referer, Cache-Control, X-header")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	})
+
+	router.StrictSlash(true)
 
 	// wiring
 	userRepo := repo.NewUserRepo(client)
