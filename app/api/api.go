@@ -32,24 +32,11 @@ func StartApp() {
 		echoMid.BodyDumpWithConfig(echoMid.BodyDumpConfig{
 			Handler: logHandler,
 		}),
+		echoMid.Recover(),
+		echoMid.CORSWithConfig(echoMid.CORSConfig{
+			AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		}),
 	)
-
-	// defer client.Close()
-
-	// router := mux.NewRouter()
-	// // router.Use(cors.Default().Handler)
-
-	// // Handle all preflight request
-	// router.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 	// fmt.Printf("OPTIONS")
-	// 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	// 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-	// 	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Access-Control-Request-Headers, Access-Control-Request-Method, Connection, Host, Origin, User-Agent, Referer, Cache-Control, X-header")
-	// 	w.WriteHeader(http.StatusNoContent)
-	// 	return
-	// })
-
-	// router.StrictSlash(true)
 
 	client := modules.GetPostgresClient()
 
@@ -155,7 +142,7 @@ func StartApp() {
 	uploadRoute.POST("/image", uploadHandlerV1.UploadImage)
 
 	// health check v1 router
-	healthCheckRouter := e.Group("/api/v1/health-checl")
+	healthCheckRouter := e.Group("/api/v1/health-check")
 	healthCheckRouter.GET("", healthCheckHandlerV1.Get)
 
 	appPort := os.Getenv("PORT") // todo: move to config
