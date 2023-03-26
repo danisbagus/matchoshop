@@ -1,21 +1,23 @@
 package api
 
 import (
-	"fmt"
 	"log"
-	"net/http"
 	"os"
 
-	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 
 	"github.com/joho/godotenv"
 
+	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/app/api/middleware"
 	"github.com/danisbagus/matchoshop/internal/core/service"
 	handlerV1 "github.com/danisbagus/matchoshop/internal/handler/v1"
 	"github.com/danisbagus/matchoshop/internal/repo"
 	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/modules"
+
+	"github.com/labstack/echo/v4"
+	echoMid "github.com/labstack/echo/v4/middleware"
 )
 
 func StartApp() {
@@ -24,24 +26,32 @@ func StartApp() {
 		log.Println("Failed loading .env file")
 	}
 
+	e := echo.New()
+
+	e.Use(
+		echoMid.BodyDumpWithConfig(echoMid.BodyDumpConfig{
+			Handler: logHandler,
+		}),
+	)
+
+	// defer client.Close()
+
+	// router := mux.NewRouter()
+	// // router.Use(cors.Default().Handler)
+
+	// // Handle all preflight request
+	// router.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 	// fmt.Printf("OPTIONS")
+	// 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	// 	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	// 	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Access-Control-Request-Headers, Access-Control-Request-Method, Connection, Host, Origin, User-Agent, Referer, Cache-Control, X-header")
+	// 	w.WriteHeader(http.StatusNoContent)
+	// 	return
+	// })
+
+	// router.StrictSlash(true)
+
 	client := modules.GetPostgresClient()
-
-	defer client.Close()
-
-	router := mux.NewRouter()
-	// router.Use(cors.Default().Handler)
-
-	// Handle all preflight request
-	router.Methods("OPTIONS").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// fmt.Printf("OPTIONS")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Access-Control-Request-Headers, Access-Control-Request-Method, Connection, Host, Origin, User-Agent, Referer, Cache-Control, X-header")
-		w.WriteHeader(http.StatusNoContent)
-		return
-	})
-
-	router.StrictSlash(true)
 
 	// wiring
 	userRepo := repo.NewUserRepo(client)
@@ -63,122 +73,100 @@ func StartApp() {
 	reviewService := service.NewReviewService(reviewRepo)
 	healthCheckService := service.NewHealthCheckService(healthCheckRepo)
 
-	userHandlerV1 := handlerV1.UserHandler{Service: userService}
-	productHandlerV1 := handlerV1.ProductHandler{Service: productService}
-	productCategoryHandlerV1 := handlerV1.ProductCategoryHandler{Service: productCategoryService}
-	orderHandlerV1 := handlerV1.OrderHandler{Service: orderService}
-	// configHandlerV1 := handlerV1.ConfigHandler{}
-	uploadHandlerV1 := handlerV1.UploadHandler{Service: uploadService}
-	reviewHandlerV1 := handlerV1.ReviewHandler{Service: reviewService}
+	userHandlerV1 := handlerV1.NewUserhandler(userService)
+	productHandlerV1 := handlerV1.NewProductHandler(productService)
+	productCategoryHandlerV1 := handlerV1.NewProductCategoryHandler(productCategoryService)
+	orderHandlerV1 := handlerV1.NewOrderHandler(orderService)
+	reviewHandlerV1 := handlerV1.NewReviewHandler(reviewService)
+	uploadHandlerV1 := handlerV1.NewUploadHandler(uploadService)
 	healthCheckHandlerV1 := handlerV1.NewHealthCheckHandlerHandler(healthCheckService)
 
 	// auth v1 routes
-	authV1Route := router.PathPrefix("/api/v1/auth").Subrouter()
-	authV1Route.HandleFunc("/login", userHandlerV1.Login).Methods(http.MethodPost)
-	authV1Route.HandleFunc("/refresh", userHandlerV1.Refresh).Methods(http.MethodPost)
-	authV1Route.HandleFunc("/register/customer", userHandlerV1.RegisterCustomer).Methods(http.MethodPost)
+	authV1Route := e.Group("/api/v1/auth")
+	authV1Route.POST("/login", userHandlerV1.Login)
+	authV1Route.POST("/refresh", userHandlerV1.Refresh)
+	authV1Route.POST("/register/customer", userHandlerV1.RegisterCustomer)
 
 	// user v1 routes
-	userV1Route := router.PathPrefix("/api/v1/user").Subrouter()
+	userV1Route := e.Group("/api/v1/user")
 	userV1Route.Use(middleware.AuthorizationHandler())
-	userV1Route.HandleFunc("", userHandlerV1.GetUserDetail).Methods(http.MethodGet)
-	userV1Route.HandleFunc("/profile", userHandlerV1.UpdateUser).Methods(http.MethodPatch)
+	userV1Route.GET("", userHandlerV1.GetUserDetail)
+	userV1Route.PATCH("/profile", userHandlerV1.UpdateUser)
+
+	// user admin v1 routes
+	userAdminV1Route := e.Group("/api/v1/admin/user")
+	userAdminV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.AdminPermission))
+	userAdminV1Route.GET("", userHandlerV1.GetUserList)
+	userAdminV1Route.GET("/:user_id", userHandlerV1.GetUserDetailAdmin)
+	userAdminV1Route.DELETE("/:user_id", userHandlerV1.DeleteUser)
+	userAdminV1Route.PATCH("/:user_id", userHandlerV1.UpdateUserAdmin)
 
 	// product v1 routes
-	productV1Route := router.PathPrefix("/api/v1/product").Subrouter()
-	productV1Route.HandleFunc("", productHandlerV1.GetProductListPaginate).Methods(http.MethodGet)
-	productV1Route.HandleFunc("/top", productHandlerV1.GetTopProduct).Methods(http.MethodGet)
-	productV1Route.HandleFunc("/{product_id}", productHandlerV1.GetProductDetail).Methods(http.MethodGet)
+	productV1Route := e.Group("/api/v1/product")
+	productV1Route.GET("", productHandlerV1.GetProductListPaginate)
+	productV1Route.GET("/top", productHandlerV1.GetTopProduct)
+	productV1Route.GET("/:product_id", productHandlerV1.GetProductDetail)
 
 	// product admin v1 routes
-	productAdminV1Route := router.PathPrefix("/api/v1/admin/product").Subrouter()
+	productAdminV1Route := e.Group("/api/v1/admin/product")
 	productAdminV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.AdminPermission))
-	productAdminV1Route.HandleFunc("", productHandlerV1.CreateProduct).Methods(http.MethodPost)
-	productAdminV1Route.HandleFunc("", productHandlerV1.GetProductListPaginate).Methods(http.MethodGet)
-	productAdminV1Route.HandleFunc("/{product_id}", productHandlerV1.UpdateProduct).Methods(http.MethodPut)
-	productAdminV1Route.HandleFunc("/{product_id}", productHandlerV1.Delete).Methods(http.MethodDelete)
-	productAdminV1Route.HandleFunc("/{product_id}", productHandlerV1.GetProductDetail).Methods(http.MethodGet)
+	productAdminV1Route.POST("", productHandlerV1.CreateProduct)
+	productAdminV1Route.GET("", productHandlerV1.GetProductListPaginate)
+	productAdminV1Route.PUT("/:product_id", productHandlerV1.UpdateProduct)
+	productAdminV1Route.DELETE("/:product_id", productHandlerV1.Delete)
+	productAdminV1Route.GET("/:product_id", productHandlerV1.GetProductDetail)
 
 	// product category v1 routes
-	productCategoryV1Route := router.PathPrefix("/api/v1/product-category").Subrouter()
-	productCategoryV1Route.HandleFunc("", productCategoryHandlerV1.GetProductCategoryList).Methods(http.MethodGet)
-	productCategoryV1Route.HandleFunc("/{product_category_id}", productCategoryHandlerV1.GetProductCategoryDetail).Methods(http.MethodGet)
+	productCategoryV1Route := e.Group("/api/v1/product-category")
+	productCategoryV1Route.GET("", productCategoryHandlerV1.GetProductCategoryList)
+	productCategoryV1Route.GET("/:product_category_id", productCategoryHandlerV1.GetProductCategoryDetail)
 
 	// product category admin v1 routes
-	productCategoryAdminV1Route := router.PathPrefix("/api/v1/admin/product-category").Subrouter()
+	productCategoryAdminV1Route := e.Group("/api/v1/admin/product-category")
 	productCategoryAdminV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.AdminPermission))
-	productCategoryAdminV1Route.HandleFunc("", productCategoryHandlerV1.CreateProductCategory).Methods(http.MethodPost)
-	productCategoryAdminV1Route.HandleFunc("/{product_category_id}", productCategoryHandlerV1.UpdateProductCategory).Methods(http.MethodPut)
-	productCategoryAdminV1Route.HandleFunc("/{product_category_id}", productCategoryHandlerV1.Delete).Methods(http.MethodDelete)
+	productCategoryAdminV1Route.POST("", productCategoryHandlerV1.CreateProductCategory)
+	productCategoryAdminV1Route.PUT("/:product_category_id", productCategoryHandlerV1.UpdateProductCategory)
+	productCategoryAdminV1Route.DELETE("/:product_category_id", productCategoryHandlerV1.Delete)
 
 	// order v1 routes
-	orderV1Route := router.PathPrefix("/api/v1/order").Subrouter()
+	orderV1Route := e.Group("/api/v1/order")
 	orderV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.CustomerPermission))
-	orderV1Route.HandleFunc("", orderHandlerV1.Create).Methods(http.MethodPost)
-	orderV1Route.HandleFunc("", orderHandlerV1.GetList).Methods(http.MethodGet)
-	orderV1Route.HandleFunc("/{order_id}", orderHandlerV1.GetDetail).Methods(http.MethodGet)
-	orderV1Route.HandleFunc("/{order_id}/pay", orderHandlerV1.UpdatePaid).Methods(http.MethodPut)
-
-	// product admin v1 routes
-	userAdminV1Route := router.PathPrefix("/api/v1/admin/user").Subrouter()
-	userAdminV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.AdminPermission))
-	userAdminV1Route.HandleFunc("", userHandlerV1.GetUserList).Methods(http.MethodGet)
-	userAdminV1Route.HandleFunc("/{user_id}", userHandlerV1.GetUserDetailAdmin).Methods(http.MethodGet)
-	userAdminV1Route.HandleFunc("/{user_id}", userHandlerV1.DeleteUser).Methods(http.MethodDelete)
-	userAdminV1Route.HandleFunc("/{user_id}", userHandlerV1.UpdateUserAdmin).Methods(http.MethodPatch)
-
-	// config v1 routes
-	// configRoute := router.PathPrefix("/api/v1/config").Subrouter()
-	// configRoute.HandleFunc("/paypal", configHandlerV1.GetPaypalConfig).Methods(http.MethodGet)
-
-	// admin config v1 routes
-	// adminConfigRoute := router.PathPrefix("/api/v1/admin/config").Subrouter()
-	// adminConfigRoute.HandleFunc("", configHandlerV1.GetConfig).Methods(http.MethodGet)
-
-	// upload v1 routes
-	uploadRoute := router.PathPrefix("/api/v1/upload").Subrouter()
-	uploadRoute.HandleFunc("/image", uploadHandlerV1.UploadImage).Methods(http.MethodPost)
+	orderV1Route.POST("", orderHandlerV1.Create)
+	orderV1Route.GET("", orderHandlerV1.GetList)
+	orderV1Route.GET("/:order_id", orderHandlerV1.GetDetail)
+	orderV1Route.PUT("/:order_id/pay", orderHandlerV1.UpdatePaid)
 
 	// order admin v1 routes
-	orderAdminV1Route := router.PathPrefix("/api/v1/admin/order").Subrouter()
+	orderAdminV1Route := e.Group("/api/v1/admin/order")
 	orderAdminV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.AdminPermission))
-	orderAdminV1Route.HandleFunc("", orderHandlerV1.GetListAdmin).Methods(http.MethodGet)
-	orderAdminV1Route.HandleFunc("/{order_id}", orderHandlerV1.GetDetail).Methods(http.MethodGet)
-	orderAdminV1Route.HandleFunc("/{order_id}/deliver", orderHandlerV1.UpdateDelivered).Methods(http.MethodPut)
+	orderV1Route.GET("", orderHandlerV1.GetListAdmin)
+	orderV1Route.GET("/:order_id", orderHandlerV1.GetDetail)
+	orderV1Route.PUT("/:order_id/deliver", orderHandlerV1.UpdateDelivered)
 
 	// review v1 routes
-	reviewV1Route := router.PathPrefix("/api/v1/review").Subrouter()
+	reviewV1Route := e.Group("/api/v1/review")
 	reviewV1Route.Use(middleware.AuthorizationHandler(), middleware.ACL(constants.CustomerPermission))
-	reviewV1Route.HandleFunc("", reviewHandlerV1.Create).Methods(http.MethodPost)
-	reviewV1Route.HandleFunc("", reviewHandlerV1.Update).Methods(http.MethodPut)
-	reviewV1Route.HandleFunc("/{product_id}", reviewHandlerV1.GetDetail).Methods(http.MethodGet)
+	reviewV1Route.POST("", reviewHandlerV1.Create)
+	reviewV1Route.PUT("", reviewHandlerV1.Update)
+	reviewV1Route.GET("/:product_id", reviewHandlerV1.GetDetail)
 
-	// health-check v1 routes
-	healthRoute := router.PathPrefix("/api/v1/health-check").Subrouter()
-	healthRoute.HandleFunc("", healthCheckHandlerV1.Get).Methods(http.MethodGet)
+	// upload v1 routes
+	uploadRoute := e.Group("/api/v1/upload")
+	uploadRoute.POST("/image", uploadHandlerV1.UploadImage)
 
-	PORT := os.Getenv("PORT")
-	if PORT == "" {
-		log.Fatal("$PORT must be set")
-	}
+	// health check v1 router
+	healthCheckRouter := e.Group("/api/v1/health-checl")
+	healthCheckRouter.GET("", healthCheckHandlerV1.Get)
 
-	HOST := os.Getenv("HOST")
-	appPort := fmt.Sprintf("%v:%v", HOST, PORT)
-
-	fmt.Println("Starting the application at:", appPort)
-	log.Fatal(http.ListenAndServe(appPort, router))
+	appPort := os.Getenv("PORT") // todo: move to config
+	e.Logger.Fatal(e.Start(":" + appPort))
 }
 
-func MethodPost1(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Hello world!"))
-}
-
-func fooHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	if r.Method == http.MethodOptions {
-		return
-	}
-
-	w.Write([]byte("foo"))
+func logHandler(c echo.Context, req, res []byte) { // todo: move to utils
+	logger.Info("incoming request",
+		zap.String("request_method", c.Request().Method),
+		zap.String("request_uri", c.Request().RequestURI),
+		zap.String("request_data", string(req)),
+		zap.String("response_data", string(res)),
+	)
 }
