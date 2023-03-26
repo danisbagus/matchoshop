@@ -19,7 +19,14 @@ func NewUploadService() port.UploadService {
 	return &UploadService{}
 }
 
-func (s UploadService) UploadImage(file multipart.File) (string, *errs.AppError) {
+func (s UploadService) UploadImage(file *multipart.FileHeader) (string, *errs.AppError) {
+	src, err := file.Open()
+	if err != nil {
+		return "", errs.NewUnexpectedError(err.Error())
+	}
+
+	defer src.Close()
+
 	//create cloudinary instance
 	cld, err := cloudinary.NewFromURL(helper.EnvCloudURL())
 
@@ -30,7 +37,7 @@ func (s UploadService) UploadImage(file multipart.File) (string, *errs.AppError)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	result, err := cld.Upload.Upload(ctx, file, uploader.UploadParams{
+	result, err := cld.Upload.Upload(ctx, src, uploader.UploadParams{
 		Folder: helper.EnvCloudUploadFolder(),
 	})
 
