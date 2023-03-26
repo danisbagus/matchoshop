@@ -1,94 +1,83 @@
 package v1
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
-	"github.com/danisbagus/go-common-packages/http/response"
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/dto"
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 type ProductCategoryHandler struct {
-	Service port.ProductCategoryService
+	service port.ProductCategoryService
 }
 
-func (rc ProductCategoryHandler) CreateProductCategory(w http.ResponseWriter, r *http.Request) {
+func NewProductCategoryHandler(sevice port.ProductCategoryService) *ProductCategoryHandler {
+	return &ProductCategoryHandler{service: sevice}
+}
+
+func (h ProductCategoryHandler) CreateProductCategory(c echo.Context) error {
 	var request dto.CreateProductCategoryRequest
-
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	if err := c.Bind(&request); err != nil {
 		logger.Error("Error while decoding create product category request: " + err.Error())
-		response.Error(w, http.StatusBadRequest, "Failed create product category")
-		return
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	createData, appErr := rc.Service.Create(&request)
+	createData, appErr := h.service.Create(&request)
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
-	response.Write(w, http.StatusOK, createData)
+	return c.JSON(http.StatusOK, createData)
 }
 
-func (rc ProductCategoryHandler) GetProductCategoryList(w http.ResponseWriter, r *http.Request) {
-
-	productCategories, appErr := rc.Service.GetList()
+func (h ProductCategoryHandler) GetProductCategoryList(c echo.Context) error {
+	productCategories, appErr := h.service.GetList()
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
 	res := dto.NewGetProductCategoryListResponse("Successfully get data", productCategories)
-	response.Write(w, http.StatusOK, res)
+	return c.JSON(http.StatusOK, res)
 }
 
-func (rc ProductCategoryHandler) GetProductCategoryDetail(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	productCategoryID, _ := strconv.Atoi(vars["product_category_id"])
+func (h ProductCategoryHandler) GetProductCategoryDetail(c echo.Context) error {
+	productCategoryID, _ := strconv.Atoi(c.Param("product_category_id"))
 
-	productCategory, appErr := rc.Service.GetDetail(int64(productCategoryID))
+	productCategory, appErr := h.service.GetDetail(int64(productCategoryID))
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
-	response.Write(w, http.StatusOK, productCategory)
+	return c.JSON(http.StatusOK, productCategory)
 }
 
-func (rc ProductCategoryHandler) UpdateProductCategory(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	productCategoryID, _ := strconv.Atoi(vars["product_category_id"])
-
+func (h ProductCategoryHandler) UpdateProductCategory(c echo.Context) error {
+	productCategoryID, _ := strconv.Atoi(c.Param("product_category_id"))
 	var request dto.CreateProductCategoryRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	if err := c.Bind(&request); err != nil {
 		logger.Error("Error while decoding update product category request: " + err.Error())
-		response.Error(w, http.StatusBadRequest, "Failed create product category")
-		return
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	updateData, appErr := rc.Service.Update(int64(productCategoryID), &request)
+	updateData, appErr := h.service.Update(int64(productCategoryID), &request)
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
-	response.Write(w, http.StatusOK, updateData)
+	return c.JSON(http.StatusOK, updateData)
 }
 
-func (rc ProductCategoryHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	productCategoryID, _ := strconv.Atoi(vars["product_category_id"])
+func (h ProductCategoryHandler) Delete(c echo.Context) error {
+	productCategoryID, _ := strconv.Atoi(c.Param("product_category_id"))
 
-	deleteData, appErr := rc.Service.Delete(int64(productCategoryID))
+	deleteData, appErr := h.service.Delete(int64(productCategoryID))
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
-	response.Write(w, http.StatusOK, deleteData)
+	return c.JSON(http.StatusOK, deleteData)
 }

@@ -18,6 +18,12 @@ type ProductRequest struct {
 	Stock              int64   `json:"stock"`
 }
 
+type ProductListRequest struct {
+	Keyword string `query:"keyword"`
+	Page    int64  `query:"page"`
+	Limit   int64  `query:"limit"`
+}
+
 type ProductResponse struct {
 	ProductID int64   `json:"product_id"`
 	Name      string  `json:"name"`

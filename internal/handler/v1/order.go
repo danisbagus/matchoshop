@@ -1,38 +1,40 @@
 package v1
 
 import (
-	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
-	"github.com/danisbagus/go-common-packages/http/response"
+	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/dto"
 	"github.com/danisbagus/matchoshop/utils/auth"
 	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/helper"
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 type OrderHandler struct {
-	Service port.OrderService
+	service port.OrderService
 }
 
-func (h OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
-	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
-	var req dto.CreateOrder
+func NewOrderHandler(sevice port.OrderService) *OrderHandler {
+	return &OrderHandler{service: sevice}
+}
 
-	err := json.NewDecoder(r.Body).Decode(&req)
+func (h OrderHandler) Create(c echo.Context) error {
+	userInfo := auth.GetClaimData(c)
+	var req dto.CreateOrder
+	err := c.Bind(&req)
 	if err != nil {
-		response.Error(w, http.StatusBadRequest, err.Error())
-		return
+		logger.Error("Error while decoding create order request: " + err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	appErr := req.Validate()
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
 	form := new(domain.OrderDetail)
@@ -58,104 +60,93 @@ func (h OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	form.OrderProducts = orderProducts
 
-	createData, appErr := h.Service.Create(form)
+	createData, appErr := h.service.Create(form)
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
 	resData := dto.NewOrderResponse(constants.SuccessCreate, createData)
-	response.Write(w, http.StatusCreated, resData)
+	return c.JSON(http.StatusOK, resData)
 }
 
-func (h OrderHandler) GetList(w http.ResponseWriter, r *http.Request) {
-	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
+func (h OrderHandler) GetList(c echo.Context) error {
+	userInfo := auth.GetClaimData(c)
 	userID := userInfo.UserID
 
-	orders, appErr := h.Service.GetListByUser(userID)
+	orders, appErr := h.service.GetListByUser(userID)
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
+
 	resData := dto.NewGetOrderListResponse(constants.SuccesGet, orders)
-	response.Write(w, http.StatusOK, resData)
+	return c.JSON(http.StatusOK, resData)
 }
 
-func (h OrderHandler) GetDetail(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
+func (h OrderHandler) GetDetail(c echo.Context) error {
+	orderID, _ := strconv.Atoi(c.Param("order_id"))
 
-	OrderID := helper.StringToInt64(vars["order_id"], 0)
-
-	order, appErr := h.Service.GetDetail(int64(OrderID))
+	order, appErr := h.service.GetDetail(int64(orderID))
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
+
 	resData := dto.NewGetOrderDetailResponse(constants.SuccesGet, order)
-	response.Write(w, http.StatusOK, resData)
+	return c.JSON(http.StatusOK, resData)
 }
 
-func (h OrderHandler) UpdatePaid(w http.ResponseWriter, r *http.Request) {
-
-	vars := mux.Vars(r)
-
-	OrderID := helper.StringToInt64(vars["order_id"], 0)
-
+func (h OrderHandler) UpdatePaid(c echo.Context) error {
+	orderID := helper.StringToInt64(c.Param("order_id"), 0)
 	var req dto.UpdateOrderPaid
 
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err := c.Bind(&req)
 	if err != nil {
-		response.Error(w, http.StatusBadRequest, err.Error())
-		return
+		logger.Error("Error while decoding update order paid request: " + err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	appErr := req.Validate()
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
 	form := new(domain.PaymentResult)
-	form.OrderID = OrderID
+	form.OrderID = orderID
 	form.PaymentResultID = req.PaymentMethodID
 	form.Status = req.Status
 	form.UpdateTime = helper.StringToDate(req.UpdateTime, time.RFC3339)
 	form.Email = req.Email
 
-	appErr = h.Service.UpdatePaid(form)
+	appErr = h.service.UpdatePaid(form)
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
 	resData := dto.NewUpdatePaidResponse(constants.SuccessCreate, form)
 
-	response.Write(w, http.StatusOK, resData)
+	return c.JSON(http.StatusOK, resData)
 }
 
-func (h OrderHandler) UpdateDelivered(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	orderID := helper.StringToInt64(vars["order_id"], 0)
+func (h OrderHandler) UpdateDelivered(c echo.Context) error {
+	orderID := helper.StringToInt64(c.Param("order_id"), 0)
 
-	appErr := h.Service.UpdateDelivered(orderID)
+	appErr := h.service.UpdateDelivered(orderID)
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
 	resData := map[string]string{
 		"message": constants.SuccessUpdate,
 	}
 
-	response.Write(w, http.StatusOK, resData)
+	return c.JSON(http.StatusOK, resData)
 }
 
-func (h OrderHandler) GetListAdmin(w http.ResponseWriter, r *http.Request) {
-	orders, appErr := h.Service.GetList()
+func (h OrderHandler) GetListAdmin(c echo.Context) error {
+	orders, appErr := h.service.GetList()
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
+
 	resData := dto.NewGetOrderListResponse(constants.SuccesGet, orders)
-	response.Write(w, http.StatusOK, resData)
+	return c.JSON(http.StatusOK, resData)
 }

@@ -1,186 +1,175 @@
 package v1
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
-	"github.com/danisbagus/go-common-packages/http/response"
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/dto"
 	"github.com/danisbagus/matchoshop/utils/auth"
-	"github.com/gorilla/mux"
+
+	"github.com/labstack/echo/v4"
 )
 
 type UserHandler struct {
-	Service port.UserService
+	service port.UserService
 }
 
-func (rc UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+func NewUserhandler(service port.UserService) *UserHandler {
+	return &UserHandler{service: service}
+}
+
+func (h UserHandler) Login(c echo.Context) error {
 	var loginRequest dto.LoginRequest
-	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
+	if err := c.Bind(&loginRequest); err != nil {
 		logger.Error("Error while decoding login request: " + err.Error())
-		response.Error(w, http.StatusBadRequest, "Failed to login: "+err.Error())
-		return
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	token, appErr := rc.Service.Login(loginRequest)
+	token, appErr := h.service.Login(loginRequest)
 	if appErr != nil {
-		response.Write(w, appErr.Code, appErr.AsMessage())
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
-	response.Write(w, http.StatusOK, *token)
+	return c.JSON(http.StatusOK, *token)
 }
 
-func (rc UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+func (h UserHandler) Refresh(c echo.Context) error {
 	var refreshRequest dto.RefreshTokenRequest
-	if err := json.NewDecoder(r.Body).Decode(&refreshRequest); err != nil {
+	if err := c.Bind(&refreshRequest); err != nil {
 		logger.Error("Error while decoding refresh token request: " + err.Error())
-		response.Error(w, http.StatusBadRequest, "Failed to refresh token")
-		return
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	token, appErr := rc.Service.Refresh(refreshRequest)
-
+	token, appErr := h.service.Refresh(refreshRequest)
 	if appErr != nil {
-
-		response.Write(w, appErr.Code, appErr.AsMessage())
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
-	response.Write(w, http.StatusOK, *token)
+	return c.JSON(http.StatusOK, *token)
 }
 
-func (rc UserHandler) RegisterCustomer(w http.ResponseWriter, r *http.Request) {
+func (h UserHandler) RegisterCustomer(c echo.Context) error {
 	var registerRequest dto.RegisterCustomerRequest
-	if err := json.NewDecoder(r.Body).Decode(&registerRequest); err != nil {
+	if err := c.Bind(&registerRequest); err != nil {
 		logger.Error("Error while decoding register customer request: " + err.Error())
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	token, appErr := rc.Service.RegisterCustomer(&registerRequest)
+	token, appErr := h.service.RegisterCustomer(&registerRequest)
 	if appErr != nil {
-		response.Write(w, appErr.Code, appErr.AsMessage())
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
+
 	}
 
-	response.Write(w, http.StatusOK, *token)
+	return c.JSON(http.StatusOK, *token)
 }
 
-func (rc UserHandler) GetUserDetail(w http.ResponseWriter, r *http.Request) {
-
-	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
-
-	userData, appErr := rc.Service.GetDetail(userInfo.UserID)
+func (h UserHandler) GetUserDetail(c echo.Context) error {
+	userInfo := auth.GetClaimData(c)
+	userData, appErr := h.service.GetDetail(userInfo.UserID)
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
+
 	}
 
-	response.Write(w, http.StatusOK, userData)
+	return c.JSON(http.StatusOK, *userData)
 }
 
-func (rc UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
+func (h UserHandler) UpdateUser(c echo.Context) error {
+	userInfo := auth.GetClaimData(c)
 	req := new(dto.UpdateUserRequest)
 
-	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		logger.Error("Error while decoding update user request: " + err.Error())
-		response.Error(w, http.StatusBadRequest, "Failed create user category")
-		return
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	appErr := req.Validate()
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
 	form := new(domain.User)
 	form.UserID = userInfo.UserID
 	form.Name = req.Name
 
-	appErr = rc.Service.Update(form)
+	appErr = h.service.Update(form)
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
 	res := dto.NewGetUserDetailResponse("Sucessfully update data", form)
-	response.Write(w, http.StatusOK, res)
+	return c.JSON(http.StatusOK, res)
+
 }
 
-func (rc UserHandler) GetUserList(w http.ResponseWriter, r *http.Request) {
-	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
+func (h UserHandler) GetUserList(c echo.Context) error {
+	userInfo := auth.GetClaimData(c)
 	roleID := userInfo.RoleID
 
-	users, appErr := rc.Service.GetList(roleID)
+	users, appErr := h.service.GetList(roleID)
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
+
 	}
+
 	resData := dto.NewGetUserListResponse("Successfully get data", users)
-	response.Write(w, http.StatusOK, resData)
+	return c.JSON(http.StatusOK, resData)
 }
 
-func (rc UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
-	vars := mux.Vars(r)
-	userID, _ := strconv.Atoi(vars["user_id"])
+func (h UserHandler) DeleteUser(c echo.Context) error {
+	userInfo := auth.GetClaimData(c)
+	userID, _ := strconv.Atoi(c.Param("user_id"))
 	roleID := userInfo.RoleID
 
-	appErr := rc.Service.Delete(int64(userID), roleID)
+	appErr := h.service.Delete(int64(userID), roleID)
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
+
 	}
 
 	res := dto.GenerateResponseData("Sucessfully delete data", nil)
-	response.Write(w, http.StatusOK, res)
+	return c.JSON(http.StatusOK, res)
 }
 
-func (rc UserHandler) UpdateUserAdmin(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	userID, _ := strconv.Atoi(vars["user_id"])
+func (h UserHandler) UpdateUserAdmin(c echo.Context) error {
+	userID, _ := strconv.Atoi(c.Param("user_id"))
 	req := new(dto.UpdateUserRequest)
 
-	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		logger.Error("Error while decoding update user request: " + err.Error())
-		response.Error(w, http.StatusBadRequest, "Failed create user category")
-		return
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	appErr := req.Validate()
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
 	form := new(domain.User)
 	form.UserID = int64(userID)
 	form.Name = req.Name
 
-	appErr = rc.Service.Update(form)
+	appErr = h.service.Update(form)
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
+
 	}
 
 	res := dto.NewGetUserDetailResponse("Sucessfully update data", form)
-	response.Write(w, http.StatusOK, res)
+	return c.JSON(http.StatusOK, res)
 }
 
-func (rc UserHandler) GetUserDetailAdmin(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	userID, _ := strconv.Atoi(vars["user_id"])
-	userData, appErr := rc.Service.GetDetail(int64(userID))
+func (h UserHandler) GetUserDetailAdmin(c echo.Context) error {
+	userID, _ := strconv.Atoi(c.Param("user_id"))
+	userData, appErr := h.service.GetDetail(int64(userID))
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
+
 	}
-	response.Write(w, http.StatusOK, userData)
+
+	return c.JSON(http.StatusOK, userData)
 }
