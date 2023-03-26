@@ -3,12 +3,12 @@ package auth
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/labstack/echo/v4"
 )
 
 const ACCESS_TOKEN_DURATION = time.Hour
@@ -98,41 +98,6 @@ func GenerateAccessTokenAndRefreshToken(userID int64, roleID int64) (string, str
 	return accessToken, refreshToken, nil
 }
 
-func ValidatedToken(r *http.Request) (*AccessTokenClaims, *errs.AppError) {
-	authHeader := r.Header.Get("Authorization")
-
-	if authHeader == "" {
-		return nil, errs.NewAuthorizationError("Missing token!")
-	}
-	tokenString := strings.Split(authHeader, "Bearer ")[1]
-
-	jwtToken, err := jwt.ParseWithClaims(tokenString, &AccessTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(HMAC_SAMPLE_SECRET), nil
-	})
-
-	if err != nil {
-		return nil, errs.NewAuthorizationError(fmt.Sprintf("Error while parsing token: %+v", err.Error()))
-	}
-
-	if !jwtToken.Valid {
-		if ve, ok := err.(*jwt.ValidationError); ok {
-			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
-				return nil, errs.NewAuthorizationError("That's not even a token")
-			} else if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
-				return nil, errs.NewAuthorizationError("Token has expired")
-			} else if ve.Errors&jwt.ValidationErrorSignatureInvalid != 0 {
-				return nil, errs.NewAuthorizationError("Invalid token")
-			} else {
-				return nil, errs.NewAuthorizationError(fmt.Sprintf("Couldn't handle this token: %+v", err.Error()))
-			}
-		}
-	}
-
-	claims := jwtToken.Claims.(*AccessTokenClaims)
-
-	return claims, nil
-}
-
 func NewAuthToken(claims AccessTokenClaims) AuthToken {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return AuthToken{token: token}
@@ -167,4 +132,65 @@ func IsTokenValid(token string) *jwt.ValidationError {
 	}
 
 	return nil
+}
+
+func VerifyToken(c echo.Context) error {
+	token, err := getToken(c)
+	if err != nil {
+		return err
+	}
+
+	_, err = parseToken(token)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetClaimData(c echo.Context) *AccessTokenClaims {
+	token, err := getToken(c)
+	if err != nil {
+		return nil
+	}
+
+	jwtToken, err := parseToken(token)
+	if err != nil {
+		return nil
+	}
+
+	userClaims := jwtToken.Claims.(*AccessTokenClaims)
+
+	return userClaims
+}
+
+func getToken(c echo.Context) (string, error) {
+	token := c.Request().Header.Get("Authorization")
+	if token == "" {
+		return "", errors.New("token not found")
+	}
+
+	splitToken := strings.Split(token, " ")
+	if len(splitToken) != 2 || splitToken[0] != "Bearer" {
+		return "", errors.New("invalid token format")
+	}
+
+	return strings.TrimSpace(splitToken[1]), nil
+}
+
+func parseToken(token string) (*jwt.Token, error) {
+	jwtSecret := []byte(HMAC_SAMPLE_SECRET) // todo: move to config
+	jwtToken, err := jwt.ParseWithClaims(token, &AccessTokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return jwtSecret, nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("error while parsing token: %+v", err)
+	}
+
+	if !jwtToken.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return jwtToken, nil
 }

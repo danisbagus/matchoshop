@@ -4,13 +4,13 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/danisbagus/go-common-packages/http/response"
+	"github.com/labstack/echo/v4"
 )
 
 type ConfigHandler struct {
 }
 
-func (h ConfigHandler) GetConfig(w http.ResponseWriter, r *http.Request) {
+func (h ConfigHandler) GetConfig(c echo.Context) error {
 	databaseURL := os.Getenv("DATABASE_URL")
 	cloudinaryURL := os.Getenv("CLOUDINARY_URL")
 	cloudinaryUploadFolder := os.Getenv("CLOUDINARY_UPLOAD_FOLDER")
@@ -22,13 +22,15 @@ func (h ConfigHandler) GetConfig(w http.ResponseWriter, r *http.Request) {
 		"claudinary_upload_folder": cloudinaryUploadFolder,
 		"paypal_client_id":         paypalClientID,
 	}
-	response.Write(w, http.StatusOK, resData)
+
+	return c.JSON(http.StatusOK, resData)
 }
 
-func (h ConfigHandler) GetPaypalConfig(w http.ResponseWriter, r *http.Request) {
+func (h ConfigHandler) GetPaypalConfig(c echo.Context) error {
 	paypalClientID := os.Getenv("PAYPAL_CLIENT_ID")
 	resData := map[string]interface{}{
 		"client_id": paypalClientID,
 	}
-	response.Write(w, http.StatusOK, resData)
+
+	return c.JSON(http.StatusOK, resData)
 }

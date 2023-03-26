@@ -1,58 +1,36 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/go-common-packages/http/response"
 	"github.com/danisbagus/matchoshop/utils/auth"
+
+	"github.com/labstack/echo/v4"
 )
 
-func AuthorizationHandler() func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			claims, appErr := auth.ValidatedToken(r)
-			if appErr != nil {
-				response.Write(w, appErr.Code, appErr.AsMessage())
-				return
-			} else {
-				ctx := context.WithValue(r.Context(), "userInfo", claims)
-				r = r.WithContext(ctx)
-				next.ServeHTTP(w, r)
+func AuthorizationHandler() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			err := auth.VerifyToken(c)
+			if err != nil {
+				return c.JSON(http.StatusUnauthorized, map[string]string{"message": err.Error()})
 			}
-		})
+			return next(c)
+		}
 	}
 }
 
-func ACL(permission map[int]bool) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
+func ACL(permission map[int]bool) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			userInfo := auth.GetClaimData(c)
 			if !permission[int(userInfo.RoleID)] {
 				appErr := errs.NewAuthorizationError("Not authorized")
-				response.Write(w, appErr.Code, appErr.AsMessage())
-				return
-			}
+				return c.JSON(appErr.Code, appErr.AsMessage())
 
-			next.ServeHTTP(w, r)
-		})
-	}
-}
-
-func CorsMiddleware() func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Add("Access-Control-Allow-Headers", "Content-Type,AccessToken,X-CSRF-Token, Authorization, Token")
-			w.Header().Add("Access-Control-Allow-Credentials", "true")
-			w.Header().Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-			w.Header().Set("content-type", "application/json;charset=UTF-8")
-			if r.Method == "OPTIONS" {
-				w.WriteHeader(http.StatusNoContent)
-				return
 			}
-			next.ServeHTTP(w, r)
-		})
+			return next(c)
+		}
 	}
 }

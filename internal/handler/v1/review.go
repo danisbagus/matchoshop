@@ -1,37 +1,39 @@
 package v1
 
 import (
-	"encoding/json"
 	"net/http"
 
-	"github.com/danisbagus/go-common-packages/http/response"
+	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/dto"
 	"github.com/danisbagus/matchoshop/utils/auth"
 	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/helper"
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 type ReviewHandler struct {
-	Service port.ReviewService
+	service port.ReviewService
 }
 
-func (h ReviewHandler) Create(w http.ResponseWriter, r *http.Request) {
-	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
+func NewReviewHandler(sevice port.ReviewService) *ReviewHandler {
+	return &ReviewHandler{service: sevice}
+}
+
+func (h ReviewHandler) Create(c echo.Context) error {
+	userInfo := auth.GetClaimData(c)
 	var req dto.ReviewRequest
 
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err := c.Bind(&req)
 	if err != nil {
-		response.Error(w, http.StatusBadRequest, err.Error())
-		return
+		logger.Error("Error while decoding create review request: " + err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	appErr := req.Validate()
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
 	form := new(domain.Review)
@@ -39,45 +41,41 @@ func (h ReviewHandler) Create(w http.ResponseWriter, r *http.Request) {
 	form.ProductID = req.ProductID
 	form.Rating = req.Rating
 	form.Comment = req.Comment
-
-	appErr = h.Service.Create(form)
+	appErr = h.service.Create(form)
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
 	resData := dto.GenerateResponseData(constants.SuccessCreate, nil)
-	response.Write(w, http.StatusCreated, resData)
+	return c.JSON(http.StatusOK, resData)
 }
 
-func (h ReviewHandler) GetDetail(w http.ResponseWriter, r *http.Request) {
-	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
-	vars := mux.Vars(r)
-	productID := helper.StringToInt64(vars["product_id"], 0)
+func (h ReviewHandler) GetDetail(c echo.Context) error {
+	userInfo := auth.GetClaimData(c)
+	productID := helper.StringToInt64(c.Param("product_id"), 0)
 
-	review, appErr := h.Service.GetDetail(userInfo.UserID, productID)
+	review, appErr := h.service.GetDetail(userInfo.UserID, productID)
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
+
 	resData := dto.NewReviewResponse(constants.SuccesGet, review)
-	response.Write(w, http.StatusOK, resData)
+	return c.JSON(http.StatusOK, resData)
 }
 
-func (h ReviewHandler) Update(w http.ResponseWriter, r *http.Request) {
-	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
+func (h ReviewHandler) Update(c echo.Context) error {
+	userInfo := auth.GetClaimData(c)
 	var req dto.ReviewRequest
 
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err := c.Bind(&req)
 	if err != nil {
-		response.Error(w, http.StatusBadRequest, err.Error())
-		return
+		logger.Error("Error while decoding update review request: " + err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
 	appErr := req.Validate()
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
 	form := new(domain.Review)
@@ -86,12 +84,10 @@ func (h ReviewHandler) Update(w http.ResponseWriter, r *http.Request) {
 	form.Rating = req.Rating
 	form.Comment = req.Comment
 
-	appErr = h.Service.Create(form)
+	appErr = h.service.Create(form)
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
-
 	resData := dto.GenerateResponseData(constants.SuccessUpdate, nil)
-	response.Write(w, http.StatusCreated, resData)
+	return c.JSON(http.StatusOK, resData)
 }

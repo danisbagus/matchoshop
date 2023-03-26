@@ -3,8 +3,8 @@ package v1
 import (
 	"net/http"
 
-	"github.com/danisbagus/go-common-packages/http/response"
 	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/labstack/echo/v4"
 )
 
 type HealthCheckHandler struct {
@@ -17,12 +17,12 @@ func NewHealthCheckHandlerHandler(service port.HealthCheckService) *HealthCheckH
 	}
 }
 
-func (h HealthCheckHandler) Get(w http.ResponseWriter, r *http.Request) {
+func (h HealthCheckHandler) Get(c echo.Context) error {
 	get := h.service.Get()
-
 	resData := map[string]interface{}{
 		"message": "Successfully get health-check",
 		"data":    get,
 	}
-	response.Write(w, http.StatusOK, resData)
+
+	return c.JSON(http.StatusOK, resData)
 }

@@ -3,35 +3,38 @@ package v1
 import (
 	"net/http"
 
-	"github.com/danisbagus/go-common-packages/http/response"
+	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/labstack/echo/v4"
 )
 
 type UploadHandler struct {
-	Service port.UploadService
+	service port.UploadService
 }
 
-func (h UploadHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
-	//  Ensure our file does not exceed 5MB
-	r.Body = http.MaxBytesReader(w, r.Body, 5*1024*1024)
+func NewUploadHandler(service port.UploadService) *UploadHandler {
+	return &UploadHandler{service: service}
+}
 
-	file, _, err := r.FormFile("file")
+func (h UploadHandler) UploadImage(c echo.Context) error {
+	//  Ensure our file does not exceed 5MB
+	// r.Body = http.MaxBytesReader(w, r.Body, 5*1024*1024)
+
+	// Source
+	file, err := c.FormFile("file")
 	if err != nil {
-		response.Error(w, http.StatusBadRequest, err.Error())
-		return
+		logger.Error("Error while read upload image file: " + err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	defer file.Close()
-
-	url, appErr := h.Service.UploadImage(file)
+	url, appErr := h.service.UploadImage(file)
 	if appErr != nil {
-		response.Error(w, appErr.Code, appErr.Message)
-		return
+		return c.JSON(appErr.Code, appErr.AsMessage())
 	}
 
 	resData := map[string]interface{}{
 		"message": "Successfully upload image",
 		"url":     url,
 	}
-	response.Write(w, http.StatusOK, resData)
+	return c.JSON(http.StatusOK, resData)
 }

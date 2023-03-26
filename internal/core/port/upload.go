@@ -7,5 +7,5 @@ import (
 )
 
 type UploadService interface {
-	UploadImage(file multipart.File) (string, *errs.AppError)
+	UploadImage(file *multipart.FileHeader) (string, *errs.AppError)
 }
