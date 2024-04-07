@@ -14,12 +14,14 @@ require (
 	github.com/pressly/goose v2.7.0+incompatible
 	github.com/rs/cors v1.8.3
 	github.com/spf13/cobra v1.6.1
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.4
+	github.com/urfave/cli v1.22.14
 	golang.org/x/crypto v0.6.0
 )
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/creasty/defaults v1.5.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
@@ -30,6 +32,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.10 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect

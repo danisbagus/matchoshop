@@ -52,7 +52,7 @@ func main() {
 			}
 
 			appPath, _ := os.Getwd()
-			dir := appPath + "/app/migration/migrations"
+			dir := appPath + "/infrastructure/database/migrations"
 			if len(args) == 0 {
 				cmd.Help()
 				os.Exit(0)

@@ -10,7 +10,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"github.com/danisbagus/matchoshop/app/api/middleware"
+	"github.com/danisbagus/matchoshop/cmd/api/middleware"
 	"github.com/danisbagus/matchoshop/internal/core/service"
 	handlerV1 "github.com/danisbagus/matchoshop/internal/handler/v1"
 	"github.com/danisbagus/matchoshop/internal/repo"
@@ -18,7 +18,7 @@ import (
 	"github.com/danisbagus/matchoshop/utils/modules"
 )
 
-func StartApp() {
+func Set() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Failed loading .env file")
