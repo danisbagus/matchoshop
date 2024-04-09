@@ -13,7 +13,7 @@ import (
 	"github.com/danisbagus/matchoshop/cmd/api/middleware"
 	"github.com/danisbagus/matchoshop/internal/core/service"
 	handlerV1 "github.com/danisbagus/matchoshop/internal/handler/v1"
-	"github.com/danisbagus/matchoshop/internal/repo"
+	"github.com/danisbagus/matchoshop/internal/repository"
 	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/modules"
 )
@@ -44,24 +44,15 @@ func Set() {
 	router.StrictSlash(true)
 
 	// wiring
-	userRepo := repo.NewUserRepo(client)
-	productRepo := repo.NewProductRepo(client)
-	productCategoryRepo := repo.NewProductCategoryRepo(client)
-	productProductCategoryRepo := repo.NewProductProductCategoryRepo(client)
-	refreshTokenStoreRepo := repo.NewRefreshTokenStoreRepo(client)
-	orderRepo := repo.NewOrderRepo(client)
-	orderProductRepo := repo.NewOrderProductRepo(client)
-	paymentResultRepo := repo.NewPaymentResult(client)
-	reviewRepo := repo.NewReviewRepo(client)
-	healthCheckRepo := repo.NewHealthCheck(client)
+	repoCollection := repository.NewRepoCollection(client)
 
-	userService := service.NewUserService(userRepo, refreshTokenStoreRepo)
-	productService := service.NewProductService(productRepo, productCategoryRepo, productProductCategoryRepo, reviewRepo)
-	productCategoryService := service.NewProductCategoryService(productCategoryRepo)
-	orderService := service.NewOrderService(orderRepo, orderProductRepo, paymentResultRepo, productRepo)
+	userService := service.NewUserService(repoCollection)
+	productService := service.NewProductService(repoCollection)
+	productCategoryService := service.NewProductCategoryService(repoCollection)
+	orderService := service.NewOrderService(repoCollection)
 	uploadService := service.NewUploadService()
-	reviewService := service.NewReviewService(reviewRepo)
-	healthCheckService := service.NewHealthCheckService(healthCheckRepo)
+	reviewService := service.NewReviewService(repoCollection)
+	healthCheckService := service.NewHealthCheckService(repoCollection)
 
 	userHandlerV1 := handlerV1.UserHandler{Service: userService}
 	productHandlerV1 := handlerV1.ProductHandler{Service: productService}

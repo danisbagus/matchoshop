@@ -1,4 +1,4 @@
-package repo
+package repository
 
 import (
 	"database/sql"
@@ -6,21 +6,32 @@ import (
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/jmoiron/sqlx"
 )
 
-type ProductCategoryRepo struct {
+type IProductCategoryRepository interface {
+	Insert(data *domain.ProductCategory) (*domain.ProductCategory, *errs.AppError)
+	CheckByIDAndName(productCategoryID int64, name string) (bool, *errs.AppError)
+	CheckByName(name string) (bool, *errs.AppError)
+	CheckByID(productCategoryID int64) (bool, *errs.AppError)
+	GetAll() ([]domain.ProductCategory, *errs.AppError)
+	GetAllByProductID(productID int64) ([]domain.ProductCategory, *errs.AppError)
+	GetOneByID(productCategoryID int64) (*domain.ProductCategory, *errs.AppError)
+	Update(productCategoryID int64, data *domain.ProductCategory) *errs.AppError
+	Delete(productCategoryID int64) *errs.AppError
+}
+
+type ProductCategoryRepository struct {
 	db *sqlx.DB
 }
 
-func NewProductCategoryRepo(db *sqlx.DB) port.ProductCategoryRepo {
-	return &ProductCategoryRepo{
+func NewProductCategoryRepository(db *sqlx.DB) *ProductCategoryRepository {
+	return &ProductCategoryRepository{
 		db: db,
 	}
 }
 
-func (r ProductCategoryRepo) Insert(data *domain.ProductCategory) (*domain.ProductCategory, *errs.AppError) {
+func (r ProductCategoryRepository) Insert(data *domain.ProductCategory) (*domain.ProductCategory, *errs.AppError) {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -53,7 +64,7 @@ func (r ProductCategoryRepo) Insert(data *domain.ProductCategory) (*domain.Produ
 	return data, nil
 }
 
-func (r ProductCategoryRepo) CheckByIDAndName(productCategoryID int64, name string) (bool, *errs.AppError) {
+func (r ProductCategoryRepository) CheckByIDAndName(productCategoryID int64, name string) (bool, *errs.AppError) {
 
 	sqlCountProductCategory := `SELECT COUNT(product_category_Id) 
 	FROM product_categories 
@@ -70,7 +81,7 @@ func (r ProductCategoryRepo) CheckByIDAndName(productCategoryID int64, name stri
 	return totalData > 0, nil
 }
 
-func (r ProductCategoryRepo) CheckByName(name string) (bool, *errs.AppError) {
+func (r ProductCategoryRepository) CheckByName(name string) (bool, *errs.AppError) {
 
 	sqlCountProductCategory := `SELECT COUNT(product_category_Id) 
 	FROM product_categories 
@@ -86,7 +97,7 @@ func (r ProductCategoryRepo) CheckByName(name string) (bool, *errs.AppError) {
 	return totalData > 0, nil
 }
 
-func (r ProductCategoryRepo) CheckByID(productCategoryID int64) (bool, *errs.AppError) {
+func (r ProductCategoryRepository) CheckByID(productCategoryID int64) (bool, *errs.AppError) {
 
 	sqlCountProductCategory := `SELECT COUNT(product_category_Id) 
 	FROM product_categories 
@@ -102,7 +113,7 @@ func (r ProductCategoryRepo) CheckByID(productCategoryID int64) (bool, *errs.App
 	return totalData > 0, nil
 }
 
-func (r ProductCategoryRepo) GetAll() ([]domain.ProductCategory, *errs.AppError) {
+func (r ProductCategoryRepository) GetAll() ([]domain.ProductCategory, *errs.AppError) {
 
 	sqlGetProductCategory := `
 	SELECT 
@@ -134,7 +145,7 @@ func (r ProductCategoryRepo) GetAll() ([]domain.ProductCategory, *errs.AppError)
 	return productCategories, nil
 }
 
-func (r ProductCategoryRepo) GetAllByProductID(productID int64) ([]domain.ProductCategory, *errs.AppError) {
+func (r ProductCategoryRepository) GetAllByProductID(productID int64) ([]domain.ProductCategory, *errs.AppError) {
 
 	sqlGetProductCategory := `
 	SELECT 
@@ -167,7 +178,7 @@ func (r ProductCategoryRepo) GetAllByProductID(productID int64) ([]domain.Produc
 	return productCategories, nil
 }
 
-func (r ProductCategoryRepo) GetOneByID(productCategoryID int64) (*domain.ProductCategory, *errs.AppError) {
+func (r ProductCategoryRepository) GetOneByID(productCategoryID int64) (*domain.ProductCategory, *errs.AppError) {
 
 	var productCategory domain.ProductCategory
 
@@ -193,7 +204,7 @@ func (r ProductCategoryRepo) GetOneByID(productCategoryID int64) (*domain.Produc
 
 }
 
-func (r ProductCategoryRepo) Update(productCategoryID int64, data *domain.ProductCategory) *errs.AppError {
+func (r ProductCategoryRepository) Update(productCategoryID int64, data *domain.ProductCategory) *errs.AppError {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -223,7 +234,7 @@ func (r ProductCategoryRepo) Update(productCategoryID int64, data *domain.Produc
 	return nil
 }
 
-func (r ProductCategoryRepo) Delete(productCategoryID int64) *errs.AppError {
+func (r ProductCategoryRepository) Delete(productCategoryID int64) *errs.AppError {
 
 	tx, err := r.db.Begin()
 	if err != nil {

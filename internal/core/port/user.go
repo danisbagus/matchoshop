@@ -6,15 +6,6 @@ import (
 	"github.com/danisbagus/matchoshop/internal/dto"
 )
 
-type UserRepo interface {
-	GetAll() ([]domain.UserDetail, *errs.AppError)
-	FindOne(email string) (*domain.User, *errs.AppError)
-	FindOneById(userID int64) (*domain.User, *errs.AppError)
-	CreateUserCustomer(data *domain.User) (*domain.User, *errs.AppError)
-	Update(userID int64, data *domain.User) *errs.AppError
-	Delete(userID int64) *errs.AppError
-}
-
 type UserService interface {
 	Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppError)
 	Refresh(request dto.RefreshTokenRequest) (*dto.ResponseData, *errs.AppError)

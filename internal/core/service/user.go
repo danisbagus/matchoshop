@@ -8,6 +8,7 @@ import (
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/dto"
+	"github.com/danisbagus/matchoshop/internal/repository"
 	"github.com/danisbagus/matchoshop/utils/auth"
 	"github.com/danisbagus/matchoshop/utils/constants"
 
@@ -18,14 +19,14 @@ import (
 const dbTSLayout = "2006-01-02 15:04:05"
 
 type UserService struct {
-	repo                  port.UserRepo
-	refreshTokenStoreRepo port.RefreshTokenStoreRepo
+	userRepo              repository.IUserRepository
+	refreshTokenStoreRepo repository.IRefreshTokenStoreRepository
 }
 
-func NewUserService(repo port.UserRepo, refreshTokenStoreRepo port.RefreshTokenStoreRepo) port.UserService {
+func NewUserService(repository repository.RepositoryCollection) port.UserService {
 	return &UserService{
-		repo:                  repo,
-		refreshTokenStoreRepo: refreshTokenStoreRepo,
+		userRepo:              repository.UserRepository,
+		refreshTokenStoreRepo: repository.RefreshTokenStoreRepository,
 	}
 }
 
@@ -39,7 +40,7 @@ func (r UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppEr
 		return nil, appErr
 	}
 
-	login, appErr = r.repo.FindOne(req.Email)
+	login, appErr = r.userRepo.FindOne(req.Email)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -116,7 +117,7 @@ func (r UserService) RegisterCustomer(req *dto.RegisterCustomerRequest) (*dto.Re
 	hashPassword, _ := hashPassword(req.Password)
 
 	// validate email
-	user, appErr := r.repo.FindOne(req.Email)
+	user, appErr := r.userRepo.FindOne(req.Email)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -134,7 +135,7 @@ func (r UserService) RegisterCustomer(req *dto.RegisterCustomerRequest) (*dto.Re
 		UpdatedAt: time.Now().Format(dbTSLayout),
 	}
 
-	newData, appErr := r.repo.CreateUserCustomer(&form)
+	newData, appErr := r.userRepo.CreateUserCustomer(&form)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -160,7 +161,7 @@ func (r UserService) RegisterCustomer(req *dto.RegisterCustomerRequest) (*dto.Re
 
 func (r UserService) GetDetail(userID int64) (*dto.ResponseData, *errs.AppError) {
 	// get detail user
-	userDetail, appErr := r.repo.FindOneById(userID)
+	userDetail, appErr := r.userRepo.FindOneById(userID)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -176,7 +177,7 @@ func (r UserService) GetDetail(userID int64) (*dto.ResponseData, *errs.AppError)
 
 func (r UserService) Update(form *domain.User) *errs.AppError {
 
-	user, appErr := r.repo.FindOneById(form.UserID)
+	user, appErr := r.userRepo.FindOneById(form.UserID)
 	if appErr != nil {
 		return appErr
 	}
@@ -185,7 +186,7 @@ func (r UserService) Update(form *domain.User) *errs.AppError {
 	}
 
 	form.UpdatedAt = time.Now().Format(dbTSLayout)
-	appErr = r.repo.Update(form.UserID, form)
+	appErr = r.userRepo.Update(form.UserID, form)
 	if appErr != nil {
 		return appErr
 	}
@@ -197,7 +198,7 @@ func (r UserService) Update(form *domain.User) *errs.AppError {
 
 func (r UserService) GetList(roleID int64) ([]domain.UserDetail, *errs.AppError) {
 	result := make([]domain.UserDetail, 0)
-	userList, appErr := r.repo.GetAll()
+	userList, appErr := r.userRepo.GetAll()
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -223,7 +224,7 @@ func (r UserService) GetList(roleID int64) ([]domain.UserDetail, *errs.AppError)
 
 func (r UserService) Delete(userID, roleID int64) *errs.AppError {
 
-	user, appErr := r.repo.FindOneById(userID)
+	user, appErr := r.userRepo.FindOneById(userID)
 	if appErr != nil {
 		return appErr
 	}
@@ -235,7 +236,7 @@ func (r UserService) Delete(userID, roleID int64) *errs.AppError {
 		return errs.NewBadRequestError("not allowed delete this user")
 	}
 
-	appErr = r.repo.Delete(userID)
+	appErr = r.userRepo.Delete(userID)
 	if appErr != nil {
 		return appErr
 	}

@@ -1,4 +1,4 @@
-package repo
+package repository
 
 import (
 	"fmt"
@@ -7,21 +7,25 @@ import (
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/jmoiron/sqlx"
 )
 
-type ProductProductCategoryRepo struct {
+type IProductProductCategoryRepository interface {
+	BulkInsert(data []domain.ProductProductCategory) *errs.AppError
+	DeleteAll(productID int64) *errs.AppError
+}
+
+type ProductProductCategoryRepository struct {
 	db *sqlx.DB
 }
 
-func NewProductProductCategoryRepo(db *sqlx.DB) port.ProductProductCategoryRepo {
-	return &ProductProductCategoryRepo{
+func NewProductProductCategoryRepository(db *sqlx.DB) *ProductProductCategoryRepository {
+	return &ProductProductCategoryRepository{
 		db: db,
 	}
 }
 
-func (r ProductProductCategoryRepo) BulkInsert(data []domain.ProductProductCategory) *errs.AppError {
+func (r ProductProductCategoryRepository) BulkInsert(data []domain.ProductProductCategory) *errs.AppError {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -60,7 +64,7 @@ func (r ProductProductCategoryRepo) BulkInsert(data []domain.ProductProductCateg
 	return nil
 }
 
-func (r ProductProductCategoryRepo) DeleteAll(productID int64) *errs.AppError {
+func (r ProductProductCategoryRepository) DeleteAll(productID int64) *errs.AppError {
 
 	tx, err := r.db.Begin()
 	if err != nil {

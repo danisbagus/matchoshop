@@ -2,15 +2,16 @@ package service
 
 import (
 	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/danisbagus/matchoshop/internal/repository"
 )
 
 type HealthCheckService struct {
-	repo port.HealthCheckRepo
+	repo repository.IHealthcheckRepository
 }
 
-func NewHealthCheckService(repo port.HealthCheckRepo) port.HealthCheckService {
+func NewHealthCheckService(repository repository.RepositoryCollection) port.HealthCheckService {
 	return &HealthCheckService{
-		repo: repo,
+		repo: repository.HealthCheckRepository,
 	}
 }
 

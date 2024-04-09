@@ -1,4 +1,4 @@
-package repo
+package repository
 
 import (
 	"database/sql"
@@ -7,24 +7,32 @@ import (
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/jmoiron/sqlx"
 )
 
 const ACCESS_TOKEN_DURATION = time.Hour
 const dbTSLayout = "2006-01-02 15:04:05"
 
-type UserRepo struct {
+type IUserRepository interface {
+	GetAll() ([]domain.UserDetail, *errs.AppError)
+	FindOne(email string) (*domain.User, *errs.AppError)
+	FindOneById(userID int64) (*domain.User, *errs.AppError)
+	CreateUserCustomer(data *domain.User) (*domain.User, *errs.AppError)
+	Update(userID int64, data *domain.User) *errs.AppError
+	Delete(userID int64) *errs.AppError
+}
+
+type UserRepository struct {
 	db *sqlx.DB
 }
 
-func NewUserRepo(db *sqlx.DB) port.UserRepo {
-	return &UserRepo{
+func NewUserRepository(db *sqlx.DB) *UserRepository {
+	return &UserRepository{
 		db: db,
 	}
 }
 
-func (r UserRepo) GetAll() ([]domain.UserDetail, *errs.AppError) {
+func (r UserRepository) GetAll() ([]domain.UserDetail, *errs.AppError) {
 	sqlGet := `SELECT u.user_id, u.email, u.name, u.role_id, r.name AS role_name FROM users u
 			   INNER JOIN roles r ON r.role_id = u.role_id
 			   ORDER BY u.user_id`
@@ -51,7 +59,7 @@ func (r UserRepo) GetAll() ([]domain.UserDetail, *errs.AppError) {
 	return users, nil
 }
 
-func (r UserRepo) FindOne(email string) (*domain.User, *errs.AppError) {
+func (r UserRepository) FindOne(email string) (*domain.User, *errs.AppError) {
 	var login domain.User
 	sqlVerify := `SELECT user_id, email, password, name, role_id FROM users WHERE email = $1`
 
@@ -64,7 +72,7 @@ func (r UserRepo) FindOne(email string) (*domain.User, *errs.AppError) {
 	return &login, nil
 }
 
-func (r UserRepo) FindOneById(userID int64) (*domain.User, *errs.AppError) {
+func (r UserRepository) FindOneById(userID int64) (*domain.User, *errs.AppError) {
 	var login domain.User
 	sqlVerify := `SELECT user_id, email, password, name, role_id FROM users WHERE user_id = $1`
 
@@ -77,7 +85,7 @@ func (r UserRepo) FindOneById(userID int64) (*domain.User, *errs.AppError) {
 	return &login, nil
 }
 
-func (r UserRepo) CreateUserCustomer(data *domain.User) (*domain.User, *errs.AppError) {
+func (r UserRepository) CreateUserCustomer(data *domain.User) (*domain.User, *errs.AppError) {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -109,7 +117,7 @@ func (r UserRepo) CreateUserCustomer(data *domain.User) (*domain.User, *errs.App
 	return data, nil
 }
 
-func (r UserRepo) Update(userID int64, data *domain.User) *errs.AppError {
+func (r UserRepository) Update(userID int64, data *domain.User) *errs.AppError {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -140,7 +148,7 @@ func (r UserRepo) Update(userID int64, data *domain.User) *errs.AppError {
 	return nil
 }
 
-func (r UserRepo) Delete(userID int64) *errs.AppError {
+func (r UserRepository) Delete(userID int64) *errs.AppError {
 
 	tx, err := r.db.Begin()
 	if err != nil {

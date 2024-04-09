@@ -6,188 +6,221 @@ import (
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
-	"github.com/danisbagus/matchoshop/internal/dto"
-	"github.com/danisbagus/matchoshop/internal/mocks"
+	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/danisbagus/matchoshop/internal/repository"
+	"github.com/danisbagus/matchoshop/internal/repository/mocks"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
-var mockProductRepo = &mocks.ProductRepo{Mock: mock.Mock{}}
-var mockProductProductRepo = &mocks.ProductProductCategoryRepo{Mock: mock.Mock{}}
-var productService = ProductService{repo: mockProductRepo, productCategoryRepo: mockProductCategoryRepo, productProductCategoryRepo: mockProductProductRepo}
+var (
+	description = "The modern TB"
+)
+
+func setupProductTest(t *testing.T) (mocks.RepoCollectionMocks, port.ProductService) {
+	repoMock := mocks.RepoCollectionMocks{
+		ProductReposotory:                mocks.NewIProductRepository(t),
+		ProductCategoryRepository:        mocks.NewIProductCategoryRepository(t),
+		ProductProductCategoryRepository: mocks.NewIProductProductCategoryRepository(t),
+	}
+
+	repoCollection := repository.RepositoryCollection{
+		ProductReposotory:                repoMock.ProductReposotory,
+		ProductProductCategoryRepository: repoMock.ProductProductCategoryRepository,
+	}
+
+	service := NewProductService(repoCollection)
+	return repoMock, service
+}
 
 func TestProduct_Create_NotValidated(t *testing.T) {
+	_, service := setupProductTest(t)
+
 	form := new(domain.Product)
 
-	product, appErr := productService.Create(form)
-	assert.Nil(t, product)
+	appErr := service.Create(form)
 	assert.NotNil(t, appErr)
 }
 
 func TestProduct_Create_SKUExits(t *testing.T) {
+	repoMock, service := setupProductTest(t)
+
 	form := &domain.Product{
-		Name:               "TV Elkoga 15 Modern",
-		Sku:                "SKU001",
-		Description:        "The modern TB",
+		ProductModel: domain.ProductModel{
+			Name:        "TV Elkoga 15 Modern",
+			Sku:         "SKU001",
+			Description: &description,
+			Price:       10000,
+		},
 		ProductCategoryIDs: []int64{1},
-		Price:              10000,
 	}
 
-	mockProductRepo.Mock.On("CheckBySKU", form.Sku).Return(true, nil)
+	repoMock.ProductReposotory.Mock.On("CheckBySKU", form.Sku).Return(true, nil)
 
-	product, appErr := productService.Create(form)
-	assert.Nil(t, product)
+	appErr := service.Create(form)
 	assert.NotNil(t, appErr)
 }
 
 func TestProduct_Create_ProductCategoryNotFound(t *testing.T) {
+	repoMock, service := setupProductTest(t)
 
 	form := &domain.Product{
-		Name:               "TV Elkoga 15 Modern",
-		Sku:                "SKU001",
-		Description:        "The modern TB",
+		ProductModel: domain.ProductModel{
+			Name:        "TV Elkoga 15 Modern",
+			Sku:         "SKU001",
+			Description: &description,
+			Price:       10000,
+		},
 		ProductCategoryIDs: []int64{1},
-		Price:              10000,
 	}
 
-	mockProductRepo.Mock.On("CheckBySKU", form.Sku).Return(false, nil)
+	repoMock.ProductReposotory.Mock.On("CheckBySKU", form.Sku).Return(false, nil)
+	repoMock.ProductReposotory.Mock.On("CheckByID", form.ProductCategoryIDs[0]).Return(false, nil)
 
-	mockProductCategoryRepo.Mock.On("CheckByID", form.ProductCategoryIDs[0]).Return(false, nil)
-
-	product, appErr := productService.Create(form)
-
-	assert.Nil(t, product)
+	appErr := service.Create(form)
 	assert.NotNil(t, appErr)
-	// assert.Equal(t, appErr.Message, "Product category not found")
 }
 
 func TestProduct_Create_FailedInsertProduct(t *testing.T) {
+	repoMock, service := setupProductTest(t)
 
 	form := &domain.Product{
-		Name:               "TV Elkoga 15 Modern",
-		Sku:                "SKU0012345678901234567890",
-		Description:        "The modern TB",
+		ProductModel: domain.ProductModel{
+			Name:        "TV Elkoga 15 Modern",
+			Sku:         "SKU0012345678901234567890",
+			Description: &description,
+			Price:       10000,
+		},
 		ProductCategoryIDs: []int64{2},
-		Price:              10000,
 	}
 
-	mockProductRepo.Mock.On("CheckBySKU", form.Sku).Return(false, nil)
-
-	mockProductCategoryRepo.Mock.On("CheckByID", form.ProductCategoryIDs[0]).Return(true, nil)
+	repoMock.ProductReposotory.Mock.On("CheckBySKU", form.Sku).Return(false, nil)
+	repoMock.ProductCategoryRepository.Mock.On("CheckByID", form.ProductCategoryIDs[0]).Return(true, nil)
 
 	formProduct := domain.Product{
-		Name:        form.Name,
-		Sku:         form.Sku,
-		Description: form.Description,
-		Price:       form.Price,
-		CreatedAt:   time.Now().Format(dbTSLayout),
-		UpdatedAt:   time.Now().Format(dbTSLayout),
+		ProductModel: domain.ProductModel{
+			Name:        form.Name,
+			Sku:         form.Sku,
+			Description: form.Description,
+			Price:       form.Price,
+			CreatedAt:   time.Now().Format(dbTSLayout),
+			UpdatedAt:   time.Now().Format(dbTSLayout),
+		},
 	}
 
-	mockProductRepo.Mock.On("Insert", &formProduct).Return(nil, errs.NewUnexpectedError("Unexpected database error"))
+	repoMock.ProductReposotory.Mock.On("Insert", &formProduct).Return(nil, errs.NewUnexpectedError("Unexpected database error"))
 
-	product, appErr := productService.Create(form)
-
-	assert.Nil(t, product)
+	appErr := service.Create(form)
 	assert.NotNil(t, appErr)
 }
 
 func TestProduct_Create_FailedInsertProductProductCategory(t *testing.T) {
+	repoMock, service := setupProductTest(t)
 
 	form := &domain.Product{
-		Name:               "TV Elkoga 15 Modern",
-		Sku:                "SKU001234",
-		Description:        "The modern TB",
+		ProductModel: domain.ProductModel{
+			Name:        "TV Elkoga 15 Modern",
+			Sku:         "SKU001234",
+			Description: &description,
+			Price:       10000,
+		},
 		ProductCategoryIDs: []int64{2},
-		Price:              10000,
 	}
 
-	mockProductRepo.Mock.On("CheckBySKU", form.Sku).Return(false, nil)
+	repoMock.ProductReposotory.Mock.On("CheckBySKU", form.Sku).Return(false, nil)
 
-	mockProductCategoryRepo.Mock.On("CheckByID", form.ProductCategoryIDs[0]).Return(true, nil)
+	repoMock.ProductCategoryRepository.Mock.On("CheckByID", form.ProductCategoryIDs[0]).Return(true, nil)
 
 	formProduct := domain.Product{
-		Name:        form.Name,
-		Sku:         form.Sku,
-		Description: form.Description,
-		Price:       form.Price,
-		CreatedAt:   time.Now().Format(dbTSLayout),
-		UpdatedAt:   time.Now().Format(dbTSLayout),
+		ProductModel: domain.ProductModel{
+			Name:        form.Name,
+			Sku:         form.Sku,
+			Description: form.Description,
+			Price:       form.Price,
+			CreatedAt:   time.Now().Format(dbTSLayout),
+			UpdatedAt:   time.Now().Format(dbTSLayout),
+		},
 	}
 
 	returnInsertProduct := domain.Product{
-		ProductID:   0,
-		Name:        form.Name,
-		Sku:         form.Sku,
-		Description: form.Description,
-		Price:       form.Price,
+		ProductModel: domain.ProductModel{
+			ProductID:   0,
+			Name:        form.Name,
+			Sku:         form.Sku,
+			Description: form.Description,
+			Price:       form.Price,
+		},
 	}
 
-	mockProductRepo.Mock.On("Insert", &formProduct).Return(&returnInsertProduct, nil)
+	repoMock.ProductReposotory.Mock.On("Insert", &formProduct).Return(&returnInsertProduct, nil)
 
 	formProductProductCategory := []domain.ProductProductCategory{
 		{ProductID: returnInsertProduct.ProductID, ProductCategoryID: form.ProductCategoryIDs[0]},
 	}
 
-	mockProductProductRepo.Mock.On("BulkInsert", formProductProductCategory).Return(errs.NewUnexpectedError("Unexpected database error"))
+	repoMock.ProductCategoryRepository.Mock.On("BulkInsert", formProductProductCategory).Return(errs.NewUnexpectedError("Unexpected database error"))
 
-	product, appErr := productService.Create(form)
-
-	assert.Nil(t, product)
+	appErr := service.Create(form)
 	assert.NotNil(t, appErr)
 
 }
 
 func TestProduct_Create_Success(t *testing.T) {
+	repoMock, service := setupProductTest(t)
 
 	form := &domain.Product{
-		Name:               "TV Elkoga 16 Modern",
-		Sku:                "SKU001234",
-		Description:        "The modern TB",
+		ProductModel: domain.ProductModel{
+			Name:        "TV Elkoga 16 Modern",
+			Sku:         "SKU001234",
+			Description: &description,
+			Price:       10000,
+		},
 		ProductCategoryIDs: []int64{2},
-		Price:              10000,
 	}
 
-	mockProductRepo.Mock.On("CheckBySKU", form.Sku).Return(false, nil)
+	repoMock.ProductReposotory.Mock.On("CheckBySKU", form.Sku).Return(false, nil)
 
-	mockProductCategoryRepo.Mock.On("CheckByID", form.ProductCategoryIDs[0]).Return(true, nil)
+	repoMock.ProductCategoryRepository.Mock.On("CheckByID", form.ProductCategoryIDs[0]).Return(true, nil)
 
 	formProduct := domain.Product{
-		Name:        form.Name,
-		Sku:         form.Sku,
-		Description: form.Description,
-		Price:       form.Price,
-		CreatedAt:   time.Now().Format(dbTSLayout),
-		UpdatedAt:   time.Now().Format(dbTSLayout),
+		ProductModel: domain.ProductModel{
+			Name:        form.Name,
+			Sku:         form.Sku,
+			Description: form.Description,
+			Price:       form.Price,
+			CreatedAt:   time.Now().Format(dbTSLayout),
+			UpdatedAt:   time.Now().Format(dbTSLayout),
+		},
 	}
 
 	returnInsertProduct := domain.Product{
-		ProductID:   1,
-		Name:        form.Name,
-		Sku:         form.Sku,
-		Description: form.Description,
-		Price:       form.Price,
+		ProductModel: domain.ProductModel{
+			ProductID:   1,
+			Name:        form.Name,
+			Sku:         form.Sku,
+			Description: form.Description,
+			Price:       form.Price,
+		},
 	}
 
-	mockProductRepo.Mock.On("Insert", &formProduct).Return(&returnInsertProduct, nil)
+	repoMock.ProductReposotory.Mock.On("Insert", &formProduct).Return(&returnInsertProduct, nil)
 
 	formProductProductCategory := []domain.ProductProductCategory{
 		{ProductID: returnInsertProduct.ProductID, ProductCategoryID: form.ProductCategoryIDs[0]},
 	}
 
-	mockProductProductRepo.Mock.On("BulkInsert", formProductProductCategory).Return(nil)
+	repoMock.ProductCategoryRepository.Mock.On("BulkInsert", formProductProductCategory).Return(nil)
 
-	product, appErr := productService.Create(form)
+	appErr := service.Create(form)
 
-	assert.NotNil(t, product)
 	assert.Nil(t, appErr)
 }
 
 func TestProduct_GetDetail_NotFound(t *testing.T) {
+	repoMock, service := setupProductTest(t)
 
 	var productID int64 = 10
 
-	mockProductRepo.Mock.On("GetOneByID", productID).Return(nil, errs.NewNotFoundError("Product not found!"))
+	repoMock.ProductReposotory.Mock.On("GetOneByID", productID).Return(nil, errs.NewNotFoundError("Product not found!"))
 
 	ProductCategoriesResult := []domain.ProductCategory{
 		{
@@ -196,28 +229,28 @@ func TestProduct_GetDetail_NotFound(t *testing.T) {
 		},
 	}
 
-	mockProductCategoryRepo.Mock.On("GetAllByProductID", productID).Return(ProductCategoriesResult, nil)
+	repoMock.ProductCategoryRepository.Mock.On("GetAllByProductID", productID).Return(ProductCategoriesResult, nil)
 
-	product, appErr := productService.GetDetail(productID)
-
+	product, appErr := service.GetDetail(productID)
 	assert.Nil(t, product)
 	assert.NotNil(t, appErr)
 }
 
 func TestProduct_GetDetail_Success(t *testing.T) {
+	repoMock, service := setupProductTest(t)
 
 	var productID int64 = 1
-
 	productDetailResult := domain.ProductDetail{
-		Product: domain.Product{
+		ProductModel: domain.ProductModel{
+
 			Name:        "TV Elkoga 16 Modern",
 			Sku:         "SKU001234",
-			Description: "The modern TB",
+			Description: &description,
 			Price:       10000,
 		},
 	}
 
-	mockProductRepo.Mock.On("GetOneByID", productID).Return(&productDetailResult, nil)
+	repoMock.ProductReposotory.Mock.On("GetOneByID", productID).Return(&productDetailResult, nil)
 
 	ProductCategoriesResult := []domain.ProductCategory{
 		{
@@ -226,161 +259,168 @@ func TestProduct_GetDetail_Success(t *testing.T) {
 		},
 	}
 
-	mockProductCategoryRepo.Mock.On("GetAllByProductID", productID).Return(ProductCategoriesResult, nil)
+	repoMock.ProductCategoryRepository.Mock.On("GetAllByProductID", productID).Return(ProductCategoriesResult, nil)
 
-	product, appErr := productService.GetDetail(productID)
-
-	assert.NotNil(t, product)
+	product, appErr := service.GetDetail(productID)
+	assert.Nil(t, product)
 	assert.Nil(t, appErr)
 }
 
 func TestProduct_Update_NotValidated(t *testing.T) {
+	_, service := setupProductTest(t)
 
 	var productID int64 = 10
-	req := dto.CreateProductRequest{}
+	req := domain.Product{}
 
-	product, appErr := productService.Update(productID, &req)
-
-	assert.Nil(t, product)
+	appErr := service.Update(productID, &req)
 	assert.NotNil(t, appErr)
 }
 
 func TestProduct_Update_NotFound(t *testing.T) {
+	repoMock, service := setupProductTest(t)
 
 	var productID int64 = 10
-	req := dto.CreateProductRequest{
-		Name:               "TV Elkoga 16 Modern",
-		Sku:                "SKU001234",
-		Description:        "The modern TB",
+	req := domain.Product{
+		ProductModel: domain.ProductModel{
+			Name:        "TV Elkoga 16 Modern",
+			Sku:         "SKU001234",
+			Description: &description,
+			Price:       10000,
+		},
 		ProductCategoryIDs: []int64{2},
-		Price:              10000,
 	}
 
-	mockProductRepo.Mock.On("CheckByID", productID).Return(false, nil)
+	repoMock.ProductReposotory.Mock.On("CheckByID", productID).Return(false, nil)
 
-	product, appErr := productService.Update(productID, &req)
-
-	assert.Nil(t, product)
+	appErr := service.Update(productID, &req)
 	assert.NotNil(t, appErr)
 }
 
 func TestProduct_Update_SKUExits(t *testing.T) {
+	repoMock, service := setupProductTest(t)
 
 	var productID int64 = 1
-	req := dto.CreateProductRequest{
-		Name:               "TV Elkoga 16 Modern",
-		Sku:                "SKU00123",
-		Description:        "The modern TB",
+	req := domain.Product{
+		ProductModel: domain.ProductModel{
+			Name:        "TV Elkoga 16 Modern",
+			Sku:         "SKU00123",
+			Description: &description,
+			Price:       10000,
+		},
 		ProductCategoryIDs: []int64{2},
-		Price:              10000,
 	}
 
-	mockProductRepo.Mock.On("CheckByID", productID).Return(true, nil)
+	repoMock.ProductReposotory.Mock.On("CheckByID", productID).Return(true, nil)
+	repoMock.ProductReposotory.Mock.On("CheckByIDAndSKU", productID, req.Sku).Return(true, nil)
 
-	mockProductRepo.Mock.On("CheckByIDAndSKU", productID, req.Sku).Return(true, nil)
-
-	product, appErr := productService.Update(productID, &req)
-
-	assert.Nil(t, product)
+	appErr := service.Update(productID, &req)
 	assert.NotNil(t, appErr)
 }
 
 func TestProduct_Update_ProductCategoryNotFound(t *testing.T) {
+	repoMock, service := setupProductTest(t)
 
 	var productID int64 = 1
-	req := dto.CreateProductRequest{
-		Name:               "TV Elkoga 16 Modern",
-		Sku:                "SKU0012345",
-		Description:        "The modern TB",
+	req := domain.Product{
+		ProductModel: domain.ProductModel{
+			Name:        "TV Elkoga 16 Modern",
+			Sku:         "SKU0012345",
+			Description: &description,
+			Price:       10000,
+		},
 		ProductCategoryIDs: []int64{1},
-		Price:              10000,
 	}
 
-	mockProductRepo.Mock.On("CheckByID", productID).Return(true, nil)
+	repoMock.ProductReposotory.Mock.On("CheckByID", productID).Return(true, nil)
 
-	mockProductRepo.Mock.On("CheckByIDAndSKU", productID, req.Sku).Return(false, nil)
+	repoMock.ProductReposotory.Mock.On("CheckByIDAndSKU", productID, req.Sku).Return(false, nil)
 
-	mockProductCategoryRepo.Mock.On("CheckByID", req.ProductCategoryIDs[0]).Return(false, nil)
+	repoMock.ProductCategoryRepository.Mock.On("CheckByID", req.ProductCategoryIDs[0]).Return(false, nil)
 
-	product, appErr := productService.Update(productID, &req)
-
-	assert.Nil(t, product)
+	appErr := service.Update(productID, &req)
 	assert.NotNil(t, appErr)
 
 }
 
 func TestProduct_Update_FailedUpdateProduct(t *testing.T) {
+	repoMock, service := setupProductTest(t)
 
 	var productID int64 = 1
-	req := dto.CreateProductRequest{
-		Name:               "TV Elkoga 16 Modern",
-		Sku:                "SKU0012345678901234567890",
-		Description:        "The modern TB",
+	req := domain.Product{
+		ProductModel: domain.ProductModel{
+			Name:        "TV Elkoga 16 Modern",
+			Sku:         "SKU0012345678901234567890",
+			Description: &description,
+			Price:       10000,
+		},
 		ProductCategoryIDs: []int64{2},
-		Price:              10000,
 	}
 
-	mockProductRepo.Mock.On("CheckByID", productID).Return(true, nil)
+	repoMock.ProductReposotory.Mock.On("CheckByID", productID).Return(true, nil)
 
-	mockProductRepo.Mock.On("CheckByIDAndSKU", productID, req.Sku).Return(false, nil)
+	repoMock.ProductReposotory.Mock.On("CheckByIDAndSKU", productID, req.Sku).Return(false, nil)
 
-	mockProductCategoryRepo.Mock.On("CheckByID", req.ProductCategoryIDs[0]).Return(true, nil)
+	repoMock.ProductCategoryRepository.Mock.On("CheckByID", req.ProductCategoryIDs[0]).Return(true, nil)
 
 	formProduct := domain.Product{
-		Name:        req.Name,
-		Sku:         req.Sku,
-		Description: req.Description,
-		Price:       req.Price,
-		CreatedAt:   time.Now().Format(dbTSLayout),
-		UpdatedAt:   time.Now().Format(dbTSLayout),
+		ProductModel: domain.ProductModel{
+			Name:        req.Name,
+			Sku:         req.Sku,
+			Description: req.Description,
+			Price:       req.Price,
+			CreatedAt:   time.Now().Format(dbTSLayout),
+			UpdatedAt:   time.Now().Format(dbTSLayout),
+		},
 	}
 
-	mockProductRepo.Mock.On("Update", productID, &formProduct).Return(errs.NewUnexpectedError("Unexpected database error"))
+	repoMock.ProductReposotory.Mock.On("Update", productID, &formProduct).Return(errs.NewUnexpectedError("Unexpected database error"))
+	appErr := service.Update(productID, &req)
 
-	product, appErr := productService.Update(productID, &req)
-
-	assert.Nil(t, product)
 	assert.NotNil(t, appErr)
 }
 
 func TestProduct_Update_Success(t *testing.T) {
+	repoMock, service := setupProductTest(t)
 
 	var productID int64 = 1
-	req := dto.CreateProductRequest{
-		Name:               "TV Elkoga 16 Modern",
-		Sku:                "SKU0012345",
-		Description:        "The modern TB",
+	req := domain.Product{
+		ProductModel: domain.ProductModel{
+			Name:        "TV Elkoga 16 Modern",
+			Sku:         "SKU0012345",
+			Description: &description,
+			Price:       10000,
+		},
 		ProductCategoryIDs: []int64{2},
-		Price:              10000,
 	}
 
-	mockProductRepo.Mock.On("CheckByID", productID).Return(true, nil)
+	repoMock.ProductReposotory.Mock.On("CheckByID", productID).Return(true, nil)
 
-	mockProductRepo.Mock.On("CheckByIDAndSKU", productID, req.Sku).Return(false, nil)
+	repoMock.ProductReposotory.Mock.On("CheckByIDAndSKU", productID, req.Sku).Return(false, nil)
 
-	mockProductCategoryRepo.Mock.On("CheckByID", req.ProductCategoryIDs[0]).Return(true, nil)
+	repoMock.ProductCategoryRepository.Mock.On("CheckByID", req.ProductCategoryIDs[0]).Return(true, nil)
 
 	formProduct := domain.Product{
-		Name:        req.Name,
-		Sku:         req.Sku,
-		Description: req.Description,
-		Price:       req.Price,
-		CreatedAt:   time.Now().Format(dbTSLayout),
-		UpdatedAt:   time.Now().Format(dbTSLayout),
+		ProductModel: domain.ProductModel{
+
+			Name:        req.Name,
+			Sku:         req.Sku,
+			Description: req.Description,
+			Price:       req.Price,
+			CreatedAt:   time.Now().Format(dbTSLayout),
+			UpdatedAt:   time.Now().Format(dbTSLayout),
+		},
 	}
 
-	mockProductRepo.Mock.On("Update", productID, &formProduct).Return(nil)
+	repoMock.ProductReposotory.Mock.On("Update", productID, &formProduct).Return(nil)
 
-	mockProductProductRepo.Mock.On("DeleteAll", productID).Return(nil)
+	repoMock.ProductCategoryRepository.Mock.On("DeleteAll", productID).Return(nil)
 
 	formProductProductCategory := []domain.ProductProductCategory{
 		{ProductID: productID, ProductCategoryID: req.ProductCategoryIDs[0]},
 	}
 
-	mockProductProductRepo.Mock.On("BulkInsert", formProductProductCategory).Return(nil)
+	repoMock.ProductCategoryRepository.Mock.On("BulkInsert", formProductProductCategory).Return(nil)
 
-	product, appErr := productService.Update(productID, &req)
-
-	assert.NotNil(t, product)
+	appErr := service.Update(productID, &req)
 	assert.Nil(t, appErr)
 }

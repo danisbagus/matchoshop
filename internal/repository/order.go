@@ -1,4 +1,4 @@
-package repo
+package repository
 
 import (
 	"database/sql"
@@ -9,21 +9,29 @@ import (
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/jmoiron/sqlx"
 )
 
-type OrderRepo struct {
+type IOrderRepository interface {
+	Insert(form *domain.OrderDetail) (int64, *errs.AppError)
+	GetAll() ([]domain.OrderDetail, *errs.AppError)
+	GetAllByUserID(userID int64) ([]domain.OrderDetail, *errs.AppError)
+	GetOneByID(ID int64) (*domain.OrderDetail, *errs.AppError)
+	UpdatePaid(form *domain.PaymentResult) *errs.AppError
+	UpdateDelivered(ID int64) *errs.AppError
+}
+
+type OrderRepository struct {
 	db *sqlx.DB
 }
 
-func NewOrderRepo(db *sqlx.DB) port.OrderRepo {
-	return &OrderRepo{
+func NewOrderRepository(db *sqlx.DB) *OrderRepository {
+	return &OrderRepository{
 		db: db,
 	}
 }
 
-func (r OrderRepo) GetAll() ([]domain.OrderDetail, *errs.AppError) {
+func (r OrderRepository) GetAll() ([]domain.OrderDetail, *errs.AppError) {
 	sqlGet := `
 	SELECT 
 		o.order_id, 
@@ -67,7 +75,7 @@ func (r OrderRepo) GetAll() ([]domain.OrderDetail, *errs.AppError) {
 	return orders, nil
 }
 
-func (r OrderRepo) GetAllByUserID(userID int64) ([]domain.OrderDetail, *errs.AppError) {
+func (r OrderRepository) GetAllByUserID(userID int64) ([]domain.OrderDetail, *errs.AppError) {
 	sqlGet := `
 	SELECT 
 		o.order_id, 
@@ -110,7 +118,7 @@ func (r OrderRepo) GetAllByUserID(userID int64) ([]domain.OrderDetail, *errs.App
 	return orders, nil
 }
 
-func (r OrderRepo) GetOneByID(OrderID int64) (*domain.OrderDetail, *errs.AppError) {
+func (r OrderRepository) GetOneByID(OrderID int64) (*domain.OrderDetail, *errs.AppError) {
 	sqlGet := `
 	SELECT 
 		o.order_id, 
@@ -154,7 +162,7 @@ func (r OrderRepo) GetOneByID(OrderID int64) (*domain.OrderDetail, *errs.AppErro
 	return &order, nil
 }
 
-func (r OrderRepo) Insert(form *domain.OrderDetail) (int64, *errs.AppError) {
+func (r OrderRepository) Insert(form *domain.OrderDetail) (int64, *errs.AppError) {
 	tx, err := r.db.Begin()
 	if err != nil {
 		logger.Error("Error when starting insert order: " + err.Error())
@@ -197,7 +205,7 @@ func (r OrderRepo) Insert(form *domain.OrderDetail) (int64, *errs.AppError) {
 	return orderID, nil
 }
 
-func (r OrderRepo) UpdatePaid(form *domain.PaymentResult) *errs.AppError {
+func (r OrderRepository) UpdatePaid(form *domain.PaymentResult) *errs.AppError {
 	tx, err := r.db.Begin()
 	if err != nil {
 		logger.Error("Error when starting update order paid: " + err.Error())
@@ -236,7 +244,7 @@ func (r OrderRepo) UpdatePaid(form *domain.PaymentResult) *errs.AppError {
 
 }
 
-func (r OrderRepo) UpdateDelivered(ID int64) *errs.AppError {
+func (r OrderRepository) UpdateDelivered(ID int64) *errs.AppError {
 	tx, err := r.db.Begin()
 	if err != nil {
 		logger.Error("Error when starting update order paid: " + err.Error())
@@ -267,7 +275,7 @@ func (r OrderRepo) UpdateDelivered(ID int64) *errs.AppError {
 	return nil
 }
 
-func (r OrderRepo) bulkInsertOrderProduct(tx *sql.Tx, orderID int64, form []domain.OrderProduct) error {
+func (r OrderRepository) bulkInsertOrderProduct(tx *sql.Tx, orderID int64, form []domain.OrderProduct) error {
 	valueStrings := make([]string, 0, len(form))
 	valueArgs := make([]interface{}, 0, len(form)*2)
 
@@ -290,7 +298,7 @@ func (r OrderRepo) bulkInsertOrderProduct(tx *sql.Tx, orderID int64, form []doma
 	return nil
 }
 
-func (r OrderRepo) insertShipmentAddress(tx *sql.Tx, orderID int64, form *domain.ShipmentAddress) error {
+func (r OrderRepository) insertShipmentAddress(tx *sql.Tx, orderID int64, form *domain.ShipmentAddress) error {
 
 	sqlInsert := `INSERT INTO shipment_address(order_id, address, city, postal_code, country) 
 					  VALUES($1, $2,$3, $4, $5)`
@@ -302,7 +310,7 @@ func (r OrderRepo) insertShipmentAddress(tx *sql.Tx, orderID int64, form *domain
 	return nil
 }
 
-func (r OrderRepo) insertPaymentResult(tx *sql.Tx, form *domain.PaymentResult) error {
+func (r OrderRepository) insertPaymentResult(tx *sql.Tx, form *domain.PaymentResult) error {
 
 	sqlInsert := `INSERT INTO payment_results(payment_result_id, order_id, status, update_time, email) 
 					  VALUES($1, $2, $3, $4, $5)`

@@ -1,25 +1,29 @@
-package repo
+package repository
 
 import (
 	"database/sql"
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/jmoiron/sqlx"
 )
 
-type PaymentResult struct {
+type IPaymentResultRepository interface {
+	CheckByID(PaymentResultID string) (bool, *errs.AppError)
+	CheckByOrderIDAndStatus(OrderID int64, status string) (bool, *errs.AppError)
+}
+
+type PaymentResultRepository struct {
 	db *sqlx.DB
 }
 
-func NewPaymentResult(db *sqlx.DB) port.PaymentResultRepo {
-	return &PaymentResult{
+func NewPaymentResultRepository(db *sqlx.DB) *PaymentResultRepository {
+	return &PaymentResultRepository{
 		db: db,
 	}
 }
 
-func (r PaymentResult) CheckByID(ID string) (bool, *errs.AppError) {
+func (r PaymentResultRepository) CheckByID(ID string) (bool, *errs.AppError) {
 	sqlGet := `
 	SELECT 
 	    payment_result_id
@@ -38,7 +42,7 @@ func (r PaymentResult) CheckByID(ID string) (bool, *errs.AppError) {
 	return paymentResultID != "", nil
 }
 
-func (r PaymentResult) CheckByOrderIDAndStatus(OrderID int64, status string) (bool, *errs.AppError) {
+func (r PaymentResultRepository) CheckByOrderIDAndStatus(OrderID int64, status string) (bool, *errs.AppError) {
 	sqlGet := `
 	SELECT 
 	    payment_result_id

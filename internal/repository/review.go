@@ -1,4 +1,4 @@
-package repo
+package repository
 
 import (
 	"database/sql"
@@ -7,21 +7,27 @@ import (
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/jmoiron/sqlx"
 )
 
-type ReviewRepo struct {
+type IReviewRepository interface {
+	Insert(form *domain.Review) *errs.AppError
+	GetAllByProductID(productID int64) ([]domain.Review, *errs.AppError)
+	GetOneByUserIDAndProductID(userID, productID int64) (*domain.Review, *errs.AppError)
+	Update(form *domain.Review) *errs.AppError
+}
+
+type ReviewRepository struct {
 	db *sqlx.DB
 }
 
-func NewReviewRepo(db *sqlx.DB) port.ReviewRepo {
-	return &ReviewRepo{
+func NewReviewRepository(db *sqlx.DB) *ReviewRepository {
+	return &ReviewRepository{
 		db: db,
 	}
 }
 
-func (r ReviewRepo) GetAllByProductID(productID int64) ([]domain.Review, *errs.AppError) {
+func (r ReviewRepository) GetAllByProductID(productID int64) ([]domain.Review, *errs.AppError) {
 	sqlGet := `
 	SELECT 
 		r.review_id, 
@@ -59,7 +65,7 @@ func (r ReviewRepo) GetAllByProductID(productID int64) ([]domain.Review, *errs.A
 	return reviews, nil
 }
 
-func (r ReviewRepo) GetOneByUserIDAndProductID(UserID, ProductID int64) (*domain.Review, *errs.AppError) {
+func (r ReviewRepository) GetOneByUserIDAndProductID(UserID, ProductID int64) (*domain.Review, *errs.AppError) {
 	sqlGet := `
 	SELECT 
 		r.review_id, 
@@ -85,7 +91,7 @@ func (r ReviewRepo) GetOneByUserIDAndProductID(UserID, ProductID int64) (*domain
 	return &review, nil
 }
 
-func (r ReviewRepo) Insert(form *domain.Review) *errs.AppError {
+func (r ReviewRepository) Insert(form *domain.Review) *errs.AppError {
 	tx, err := r.db.Begin()
 	if err != nil {
 		logger.Error("Error when starting insert review: " + err.Error())
@@ -112,7 +118,7 @@ func (r ReviewRepo) Insert(form *domain.Review) *errs.AppError {
 	return nil
 }
 
-func (r ReviewRepo) Update(form *domain.Review) *errs.AppError {
+func (r ReviewRepository) Update(form *domain.Review) *errs.AppError {
 	tx, err := r.db.Begin()
 	if err != nil {
 		logger.Error("Error when starting update review: " + err.Error())

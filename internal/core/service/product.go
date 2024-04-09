@@ -8,27 +8,28 @@ import (
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/danisbagus/matchoshop/internal/repository"
 )
 
 type ProductService struct {
-	repo                       port.ProductRepo
-	productCategoryRepo        port.ProductCategoryRepo
-	productProductCategoryRepo port.ProductProductCategoryRepo
-	reviewRepo                 port.ReviewRepo
+	productRepo                repository.IProductRepository
+	productCategoryRepo        repository.IProductCategoryRepository
+	productProductCategoryRepo repository.IProductProductCategoryRepository
+	reviewRepo                 repository.IReviewRepository
 }
 
-func NewProductService(repo port.ProductRepo, productCategoryRepo port.ProductCategoryRepo, productProductCategoryRepo port.ProductProductCategoryRepo, reviewRepo port.ReviewRepo) port.ProductService {
+func NewProductService(repository repository.RepositoryCollection) port.ProductService {
 	return &ProductService{
-		repo:                       repo,
-		productCategoryRepo:        productCategoryRepo,
-		productProductCategoryRepo: productProductCategoryRepo,
-		reviewRepo:                 reviewRepo,
+		productRepo:                repository.ProductReposotory,
+		productCategoryRepo:        repository.ProductCategoryRepository,
+		productProductCategoryRepo: repository.ProductProductCategoryRepository,
+		reviewRepo:                 repository.ReviewRepository,
 	}
 }
 
 func (r ProductService) Create(form *domain.Product) *errs.AppError {
 
-	checkProduct, appErr := r.repo.CheckBySKU(form.Sku)
+	checkProduct, appErr := r.productRepo.CheckBySKU(form.Sku)
 	if appErr != nil {
 		return appErr
 	}
@@ -52,7 +53,7 @@ func (r ProductService) Create(form *domain.Product) *errs.AppError {
 	form.CreatedAt = time.Now().Format(dbTSLayout)
 	form.UpdatedAt = time.Now().Format(dbTSLayout)
 
-	newProductData, appErr := r.repo.Insert(form)
+	newProductData, appErr := r.productRepo.Insert(form)
 	if appErr != nil {
 		return appErr
 	}
@@ -76,7 +77,7 @@ func (r ProductService) Create(form *domain.Product) *errs.AppError {
 
 func (r ProductService) GetList(criteria *domain.ProductListCriteria) ([]domain.ProductDetail, *errs.AppError) {
 
-	products, appErr := r.repo.GetAll(criteria)
+	products, appErr := r.productRepo.GetAll(criteria)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -99,7 +100,7 @@ func (r ProductService) GetList(criteria *domain.ProductListCriteria) ([]domain.
 
 func (r ProductService) GetListPaginate(criteria *domain.ProductListCriteria) ([]domain.ProductDetail, int64, *errs.AppError) {
 
-	products, total, appErr := r.repo.GetAllPaginate(criteria)
+	products, total, appErr := r.productRepo.GetAllPaginate(criteria)
 	if appErr != nil {
 		return nil, 0, appErr
 	}
@@ -146,7 +147,7 @@ func (r ProductService) GetDetail(productID int64) (*domain.ProductDetail, *errs
 	go func() {
 		defer wg.Done()
 
-		product, appErr := r.repo.GetOneByID(productID)
+		product, appErr := r.productRepo.GetOneByID(productID)
 		if appErr != nil {
 			errorChan <- appErr
 		}
@@ -226,7 +227,7 @@ func (r ProductService) GetDetail(productID int64) (*domain.ProductDetail, *errs
 
 func (r ProductService) Update(productID int64, form *domain.Product) *errs.AppError {
 
-	checkProduct, appErr := r.repo.CheckByID(productID)
+	checkProduct, appErr := r.productRepo.CheckByID(productID)
 	if appErr != nil {
 		return appErr
 	}
@@ -235,7 +236,7 @@ func (r ProductService) Update(productID int64, form *domain.Product) *errs.AppE
 		return errs.NewBadRequestError("Product not found")
 	}
 
-	checkProductSKU, appErr := r.repo.CheckByIDAndSKU(productID, form.Sku)
+	checkProductSKU, appErr := r.productRepo.CheckByIDAndSKU(productID, form.Sku)
 	if appErr != nil {
 		return appErr
 	}
@@ -257,7 +258,7 @@ func (r ProductService) Update(productID int64, form *domain.Product) *errs.AppE
 	}
 
 	form.UpdatedAt = time.Now().Format(dbTSLayout)
-	appErr = r.repo.Update(productID, form)
+	appErr = r.productRepo.Update(productID, form)
 	if appErr != nil {
 		return appErr
 	}
@@ -286,7 +287,7 @@ func (r ProductService) Update(productID int64, form *domain.Product) *errs.AppE
 
 func (r ProductService) Delete(productID int64) *errs.AppError {
 
-	checkProduct, appErr := r.repo.CheckByID(productID)
+	checkProduct, appErr := r.productRepo.CheckByID(productID)
 	if appErr != nil {
 		return appErr
 	}
@@ -294,7 +295,7 @@ func (r ProductService) Delete(productID int64) *errs.AppError {
 		return errs.NewBadRequestError("Product not found")
 	}
 
-	appErr = r.repo.Delete(productID)
+	appErr = r.productRepo.Delete(productID)
 	if appErr != nil {
 		return appErr
 	}

@@ -1,4 +1,4 @@
-package repo
+package repository
 
 import (
 	"database/sql"
@@ -6,21 +6,25 @@ import (
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/jmoiron/sqlx"
 )
 
-type RefreshTokenStoreRepo struct {
+type IRefreshTokenStoreRepository interface {
+	Insert(refreshToken string) *errs.AppError
+	CheckRefreshToken(refreshToken string) (bool, *errs.AppError)
+}
+
+type RefreshTokenStoreRepository struct {
 	db *sqlx.DB
 }
 
-func NewRefreshTokenStoreRepo(db *sqlx.DB) port.RefreshTokenStoreRepo {
-	return &RefreshTokenStoreRepo{
+func NewRefreshTokenStoreRepository(db *sqlx.DB) *RefreshTokenStoreRepository {
+	return &RefreshTokenStoreRepository{
 		db: db,
 	}
 }
 
-func (r RefreshTokenStoreRepo) Insert(refreshToken string) *errs.AppError {
+func (r RefreshTokenStoreRepository) Insert(refreshToken string) *errs.AppError {
 
 	sqlInsert := `INSERT INTO refresh_token_stores(refresh_token, created_at) 
 		VALUES($1, $2)`
@@ -36,7 +40,7 @@ func (r RefreshTokenStoreRepo) Insert(refreshToken string) *errs.AppError {
 	return nil
 }
 
-func (r RefreshTokenStoreRepo) CheckRefreshToken(refreshToken string) (bool, *errs.AppError) {
+func (r RefreshTokenStoreRepository) CheckRefreshToken(refreshToken string) (bool, *errs.AppError) {
 
 	sqlCountRefreshToken := `SELECT COUNT(refresh_token) 
 	FROM refresh_token_stores 

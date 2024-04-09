@@ -6,22 +6,23 @@ import (
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/danisbagus/matchoshop/internal/repository"
 )
 
 type (
 	ReviewService struct {
-		repo port.ReviewRepo
+		reviewRepo repository.IReviewRepository
 	}
 )
 
-func NewReviewService(repo port.ReviewRepo) port.ReviewService {
+func NewReviewService(repository repository.RepositoryCollection) port.ReviewService {
 	return &ReviewService{
-		repo: repo,
+		reviewRepo: repository.ReviewRepository,
 	}
 }
 
 func (s ReviewService) GetDetail(userID, productID int64) (*domain.Review, *errs.AppError) {
-	review, appErr := s.repo.GetOneByUserIDAndProductID(userID, productID)
+	review, appErr := s.reviewRepo.GetOneByUserIDAndProductID(userID, productID)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -29,7 +30,7 @@ func (s ReviewService) GetDetail(userID, productID int64) (*domain.Review, *errs
 }
 
 func (s ReviewService) Create(form *domain.Review) *errs.AppError {
-	review, appErr := s.repo.GetOneByUserIDAndProductID(form.UserID, form.ProductID)
+	review, appErr := s.reviewRepo.GetOneByUserIDAndProductID(form.UserID, form.ProductID)
 	if appErr != nil {
 		return appErr
 	}
@@ -39,7 +40,7 @@ func (s ReviewService) Create(form *domain.Review) *errs.AppError {
 
 	form.CreatedAt = time.Now().Format(dbTSLayout)
 	form.UpdatedAt = time.Now().Format(dbTSLayout)
-	appErr = s.repo.Insert(form)
+	appErr = s.reviewRepo.Insert(form)
 	if appErr != nil {
 		return appErr
 	}
@@ -48,7 +49,7 @@ func (s ReviewService) Create(form *domain.Review) *errs.AppError {
 }
 
 func (s ReviewService) Update(form *domain.Review) *errs.AppError {
-	review, appErr := s.repo.GetOneByUserIDAndProductID(form.UserID, form.ProductID)
+	review, appErr := s.reviewRepo.GetOneByUserIDAndProductID(form.UserID, form.ProductID)
 	if appErr != nil {
 		return appErr
 	}
@@ -58,7 +59,7 @@ func (s ReviewService) Update(form *domain.Review) *errs.AppError {
 
 	form.ReviewID = review.ReviewID
 	form.UpdatedAt = time.Now().Format(dbTSLayout)
-	appErr = s.repo.Update(form)
+	appErr = s.reviewRepo.Update(form)
 	if appErr != nil {
 		return appErr
 	}

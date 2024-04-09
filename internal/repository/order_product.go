@@ -1,4 +1,4 @@
-package repo
+package repository
 
 import (
 	"database/sql"
@@ -6,21 +6,24 @@ import (
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/jmoiron/sqlx"
 )
 
-type OrderProductRepo struct {
+type IOrderProductRepository interface {
+	GetAllByOrderID(orderUD int64) ([]domain.OrderProduct, *errs.AppError)
+}
+
+type OrderProductRepository struct {
 	db *sqlx.DB
 }
 
-func NewOrderProductRepo(db *sqlx.DB) port.OrderProductRepo {
-	return &OrderProductRepo{
+func NewOrderProductRepository(db *sqlx.DB) *OrderProductRepository {
+	return &OrderProductRepository{
 		db: db,
 	}
 }
 
-func (r *OrderProductRepo) GetAllByOrderID(orderID int64) ([]domain.OrderProduct, *errs.AppError) {
+func (r *OrderProductRepository) GetAllByOrderID(orderID int64) ([]domain.OrderProduct, *errs.AppError) {
 
 	sqlGet := `
 	SELECT 

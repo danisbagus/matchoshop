@@ -1,4 +1,4 @@
-package repo
+package repository
 
 import (
 	"database/sql"
@@ -9,21 +9,33 @@ import (
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/jmoiron/sqlx"
 )
 
-type ProductRepo struct {
+type IProductRepository interface {
+	Insert(data *domain.Product) (*domain.Product, *errs.AppError)
+	CheckByID(productID int64) (bool, *errs.AppError)
+	CheckBySKU(sku string) (bool, *errs.AppError)
+	CheckByIDAndSKU(productID int64, sku string) (bool, *errs.AppError)
+	GetAll(criteria *domain.ProductListCriteria) ([]domain.ProductList, *errs.AppError)
+	GetAllPaginate(criteria *domain.ProductListCriteria) ([]domain.ProductList, int64, *errs.AppError)
+	GetOneByID(productID int64) (*domain.ProductDetail, *errs.AppError)
+	Update(productID int64, data *domain.Product) *errs.AppError
+	UpdateStock(productID, quantity int64) *errs.AppError
+	Delete(productID int64) *errs.AppError
+}
+
+type ProductReposotory struct {
 	db *sqlx.DB
 }
 
-func NewProductRepo(db *sqlx.DB) port.ProductRepo {
-	return &ProductRepo{
+func NewProductReposotory(db *sqlx.DB) *ProductReposotory {
+	return &ProductReposotory{
 		db: db,
 	}
 }
 
-func (r ProductRepo) Insert(data *domain.Product) (*domain.Product, *errs.AppError) {
+func (r ProductReposotory) Insert(data *domain.Product) (*domain.Product, *errs.AppError) {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -56,7 +68,7 @@ func (r ProductRepo) Insert(data *domain.Product) (*domain.Product, *errs.AppErr
 	return data, nil
 }
 
-func (r ProductRepo) CheckByID(productID int64) (bool, *errs.AppError) {
+func (r ProductReposotory) CheckByID(productID int64) (bool, *errs.AppError) {
 
 	sqlCountProduct := `SELECT COUNT(product_Id) 
 	FROM products 
@@ -72,7 +84,7 @@ func (r ProductRepo) CheckByID(productID int64) (bool, *errs.AppError) {
 	return totalData > 0, nil
 }
 
-func (r ProductRepo) CheckBySKU(sku string) (bool, *errs.AppError) {
+func (r ProductReposotory) CheckBySKU(sku string) (bool, *errs.AppError) {
 
 	sqlCountProduct := `SELECT COUNT(product_Id) 
 	FROM products 
@@ -88,7 +100,7 @@ func (r ProductRepo) CheckBySKU(sku string) (bool, *errs.AppError) {
 	return totalData > 0, nil
 }
 
-func (r ProductRepo) CheckByIDAndSKU(productID int64, sku string) (bool, *errs.AppError) {
+func (r ProductReposotory) CheckByIDAndSKU(productID int64, sku string) (bool, *errs.AppError) {
 
 	sqlCountProduct := `SELECT COUNT(product_Id) 
 	FROM products 
@@ -105,7 +117,7 @@ func (r ProductRepo) CheckByIDAndSKU(productID int64, sku string) (bool, *errs.A
 	return totalData > 0, nil
 }
 
-func (r ProductRepo) GetAll(criteria *domain.ProductListCriteria) ([]domain.ProductList, *errs.AppError) {
+func (r ProductReposotory) GetAll(criteria *domain.ProductListCriteria) ([]domain.ProductList, *errs.AppError) {
 	sort := getSortProduct(criteria.Sort, criteria.Order)
 
 	sqlGetProduct := fmt.Sprintf(`
@@ -157,7 +169,7 @@ func (r ProductRepo) GetAll(criteria *domain.ProductListCriteria) ([]domain.Prod
 	return products, nil
 }
 
-func (r ProductRepo) GetAllPaginate(criteria *domain.ProductListCriteria) ([]domain.ProductList, int64, *errs.AppError) {
+func (r ProductReposotory) GetAllPaginate(criteria *domain.ProductListCriteria) ([]domain.ProductList, int64, *errs.AppError) {
 	var totalData int64
 	var offset int64
 	if criteria.Page > 0 {
@@ -224,7 +236,7 @@ func (r ProductRepo) GetAllPaginate(criteria *domain.ProductListCriteria) ([]dom
 	return products, totalData, nil
 }
 
-func (r ProductRepo) GetOneByID(productID int64) (*domain.ProductDetail, *errs.AppError) {
+func (r ProductReposotory) GetOneByID(productID int64) (*domain.ProductDetail, *errs.AppError) {
 
 	var product domain.ProductDetail
 
@@ -256,7 +268,7 @@ func (r ProductRepo) GetOneByID(productID int64) (*domain.ProductDetail, *errs.A
 	return &product, nil
 }
 
-func (r ProductRepo) Update(productID int64, data *domain.Product) *errs.AppError {
+func (r ProductReposotory) Update(productID int64, data *domain.Product) *errs.AppError {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -293,7 +305,7 @@ func (r ProductRepo) Update(productID int64, data *domain.Product) *errs.AppErro
 	return nil
 }
 
-func (r ProductRepo) UpdateStock(productID, quantity int64) *errs.AppError {
+func (r ProductReposotory) UpdateStock(productID, quantity int64) *errs.AppError {
 	tx, err := r.db.Begin()
 	if err != nil {
 		logger.Error("Error when starting update stock: " + err.Error())
@@ -323,7 +335,7 @@ func (r ProductRepo) UpdateStock(productID, quantity int64) *errs.AppError {
 	return nil
 }
 
-func (r ProductRepo) Delete(productID int64) *errs.AppError {
+func (r ProductReposotory) Delete(productID int64) *errs.AppError {
 
 	tx, err := r.db.Begin()
 	if err != nil {

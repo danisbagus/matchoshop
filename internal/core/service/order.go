@@ -8,23 +8,24 @@ import (
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/danisbagus/matchoshop/internal/repository"
 )
 
 type (
 	OrderService struct {
-		repo              port.OrderRepo
-		repoOrderProduct  port.OrderProductRepo
-		repoPaymentResult port.PaymentResultRepo
-		repoProduct       port.ProductRepo
+		orderRepo         repository.IOrderRepository
+		orderProductRepo  repository.IOrderProductRepository
+		paymentResultRepo repository.IPaymentResultRepository
+		productRepo       repository.IProductRepository
 	}
 )
 
-func NewOrderService(repo port.OrderRepo, repoOrderProduct port.OrderProductRepo, repoPaymentResult port.PaymentResultRepo, repoProduct port.ProductRepo) port.OrderService {
+func NewOrderService(repository repository.RepositoryCollection) port.OrderService {
 	return &OrderService{
-		repo:              repo,
-		repoOrderProduct:  repoOrderProduct,
-		repoPaymentResult: repoPaymentResult,
-		repoProduct:       repoProduct,
+		orderRepo:         repository.OrderRepository,
+		orderProductRepo:  repository.OrderProductRepository,
+		paymentResultRepo: repository.PaymentResultRepository,
+		productRepo:       repository.ProductReposotory,
 	}
 }
 
@@ -32,7 +33,7 @@ func (s OrderService) Create(form *domain.OrderDetail) (*domain.OrderDetail, *er
 
 	// validate stock
 	for _, orderProduct := range form.OrderProducts {
-		product, appErr := s.repoProduct.GetOneByID(orderProduct.ProductID)
+		product, appErr := s.productRepo.GetOneByID(orderProduct.ProductID)
 		if appErr != nil {
 			return nil, appErr
 		}
@@ -46,7 +47,7 @@ func (s OrderService) Create(form *domain.OrderDetail) (*domain.OrderDetail, *er
 	form.CreatedAt = time.Now()
 	form.UpdatedAt = time.Now()
 
-	orderID, appErr := s.repo.Insert(form)
+	orderID, appErr := s.orderRepo.Insert(form)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -56,7 +57,7 @@ func (s OrderService) Create(form *domain.OrderDetail) (*domain.OrderDetail, *er
 }
 
 func (s OrderService) GetList() ([]domain.OrderDetail, *errs.AppError) {
-	orders, appErr := s.repo.GetAll()
+	orders, appErr := s.orderRepo.GetAll()
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -65,7 +66,7 @@ func (s OrderService) GetList() ([]domain.OrderDetail, *errs.AppError) {
 }
 
 func (s OrderService) GetListByUser(userID int64) ([]domain.OrderDetail, *errs.AppError) {
-	orders, appErr := s.repo.GetAllByUserID(userID)
+	orders, appErr := s.orderRepo.GetAllByUserID(userID)
 	if appErr != nil {
 		return nil, appErr
 	}
@@ -86,7 +87,7 @@ func (s OrderService) GetDetail(ID int64) (*domain.OrderDetail, *errs.AppError) 
 
 	go func() {
 		defer wg.Done()
-		order, appErr := s.repo.GetOneByID(ID)
+		order, appErr := s.orderRepo.GetOneByID(ID)
 		if appErr != nil {
 			errorChan <- appErr
 		}
@@ -95,7 +96,7 @@ func (s OrderService) GetDetail(ID int64) (*domain.OrderDetail, *errs.AppError) 
 
 	go func() {
 		defer wg.Done()
-		orderProducts, appErr := s.repoOrderProduct.GetAllByOrderID(ID)
+		orderProducts, appErr := s.orderProductRepo.GetAllByOrderID(ID)
 		if appErr != nil {
 			errorChan <- appErr
 		}
@@ -128,13 +129,13 @@ func (s OrderService) GetDetail(ID int64) (*domain.OrderDetail, *errs.AppError) 
 
 func (s OrderService) UpdatePaid(form *domain.PaymentResult) *errs.AppError {
 
-	_, appErr := s.repo.GetOneByID(form.OrderID)
+	_, appErr := s.orderRepo.GetOneByID(form.OrderID)
 	if appErr != nil {
 		return appErr
 	}
 
 	// check payment result by id
-	checkPaymentResult, appErr := s.repoPaymentResult.CheckByID(form.PaymentResultID)
+	checkPaymentResult, appErr := s.paymentResultRepo.CheckByID(form.PaymentResultID)
 	if appErr != nil {
 		return appErr
 	}
@@ -144,7 +145,7 @@ func (s OrderService) UpdatePaid(form *domain.PaymentResult) *errs.AppError {
 	}
 
 	// check order payment result
-	checkPaymentResult, appErr = s.repoPaymentResult.CheckByOrderIDAndStatus(form.OrderID, "COMPLETED")
+	checkPaymentResult, appErr = s.paymentResultRepo.CheckByOrderIDAndStatus(form.OrderID, "COMPLETED")
 	if appErr != nil {
 		return appErr
 	}
@@ -154,19 +155,19 @@ func (s OrderService) UpdatePaid(form *domain.PaymentResult) *errs.AppError {
 		return errs.NewBadRequestError("order already paid")
 	}
 
-	appErr = s.repo.UpdatePaid(form)
+	appErr = s.orderRepo.UpdatePaid(form)
 	if appErr != nil {
 		return appErr
 	}
 
 	// update stock
-	orderProducts, appErr := s.repoOrderProduct.GetAllByOrderID(form.OrderID)
+	orderProducts, appErr := s.orderProductRepo.GetAllByOrderID(form.OrderID)
 	if appErr != nil {
 		return appErr
 	}
 
 	for _, orderProduct := range orderProducts {
-		appErr := s.repoProduct.UpdateStock(orderProduct.ProductID, orderProduct.Quantity)
+		appErr := s.productRepo.UpdateStock(orderProduct.ProductID, orderProduct.Quantity)
 		if appErr != nil {
 			return appErr
 		}
@@ -177,7 +178,7 @@ func (s OrderService) UpdatePaid(form *domain.PaymentResult) *errs.AppError {
 }
 
 func (s OrderService) UpdateDelivered(ID int64) *errs.AppError {
-	order, appErr := s.repo.GetOneByID(ID)
+	order, appErr := s.orderRepo.GetOneByID(ID)
 	if appErr != nil {
 		return appErr
 	}
@@ -192,7 +193,7 @@ func (s OrderService) UpdateDelivered(ID int64) *errs.AppError {
 		return errs.NewBadRequestError("order already deliverd")
 	}
 
-	appErr = s.repo.UpdateDelivered(ID)
+	appErr = s.orderRepo.UpdateDelivered(ID)
 	if appErr != nil {
 		return appErr
 	}
