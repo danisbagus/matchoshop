@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/repository"
 )
 
@@ -58,10 +58,10 @@ func (r ProductService) Create(form *domain.Product) *errs.AppError {
 		return appErr
 	}
 
-	formProductProductCategory := make([]domain.ProductProductCategory, 0)
+	formProductProductCategory := make([]domain.ProductProductCategoryModel, 0)
 
 	for _, productCategoryID := range form.ProductCategoryIDs {
-		formProductProductCategory = append(formProductProductCategory, domain.ProductProductCategory{
+		formProductProductCategory = append(formProductProductCategory, domain.ProductProductCategoryModel{
 			ProductID:         newProductData.ProductID,
 			ProductCategoryID: productCategoryID,
 		})
@@ -132,11 +132,11 @@ func (r ProductService) GetListPaginate(criteria *domain.ProductListCriteria) ([
 func (r ProductService) GetDetail(productID int64) (*domain.ProductDetail, *errs.AppError) {
 
 	var product *domain.ProductDetail
-	var productCategories []domain.ProductCategory
+	var productCategories []domain.ProductCategoryModel
 	var productReviews []domain.Review
 
 	productChan := make(chan *domain.ProductDetail, 1)
-	productCategoriesChan := make(chan []domain.ProductCategory, 1)
+	productCategoriesChan := make(chan []domain.ProductCategoryModel, 1)
 	productReviewsChan := make(chan []domain.Review, 1)
 	errorChan := make(chan *errs.AppError, 3)
 
@@ -263,10 +263,10 @@ func (r ProductService) Update(productID int64, form *domain.Product) *errs.AppE
 		return appErr
 	}
 
-	formProductProductCategory := make([]domain.ProductProductCategory, 0)
+	formProductProductCategory := make([]domain.ProductProductCategoryModel, 0)
 
 	for _, productCategoryID := range form.ProductCategoryIDs {
-		formProductProductCategory = append(formProductProductCategory, domain.ProductProductCategory{
+		formProductProductCategory = append(formProductProductCategory, domain.ProductProductCategoryModel{
 			ProductID:         productID,
 			ProductCategoryID: productCategoryID,
 		})

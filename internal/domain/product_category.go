@@ -1,29 +1,37 @@
-package dto
+package domain
 
 import (
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-type CreateProductCategoryRequest struct {
-	Name string `json:"name"`
-}
+type (
+	ProductCategoryModel struct {
+		ProductCategoryID int64  `db:"product_category_id"`
+		Name              string `db:"name"`
+		CreatedAt         string `db:"created_at"`
+		UpdatedAt         string `db:"updated_at"`
+	}
 
-type CreateProductCategoryResponse struct {
-	ProductCategoryID int64 `json:"product_category_id"`
-}
+	CreateProductCategoryRequest struct {
+		Name string `json:"name"`
+	}
 
-type ProductCategoryResponse struct {
-	ProductCategoryID int64  `json:"product_category_id"`
-	Name              string `json:"name"`
-}
+	CreateProductCategoryResponse struct {
+		ProductCategoryID int64 `json:"product_category_id"`
+	}
 
-type UpdateroductCategoryRequest struct {
-	Name string `json:"name"`
-}
+	ProductCategoryResponse struct {
+		ProductCategoryID int64  `json:"product_category_id"`
+		Name              string `json:"name"`
+	}
 
-func NewCreateProductCategoryResponse(message string, data *domain.ProductCategory) *ResponseData {
+	UpdateroductCategoryRequest struct {
+		Name string `json:"name"`
+	}
+)
+
+func NewCreateProductCategoryResponse(message string, data *ProductCategoryModel) *ResponseData {
 
 	createProductCategoryResponse := &CreateProductCategoryResponse{
 		ProductCategoryID: data.ProductCategoryID,
@@ -32,7 +40,7 @@ func NewCreateProductCategoryResponse(message string, data *domain.ProductCatego
 	return GenerateResponseData(message, createProductCategoryResponse)
 }
 
-func NewGetProductCategoryListResponse(message string, data []domain.ProductCategory) *ResponseData {
+func NewGetProductCategoryListResponse(message string, data []ProductCategoryModel) *ResponseData {
 
 	productCategories := make([]ProductCategoryResponse, len(data))
 
@@ -45,7 +53,7 @@ func NewGetProductCategoryListResponse(message string, data []domain.ProductCate
 	return GenerateResponseData(message, productCategories)
 }
 
-func NewGetProductCategoryDetailResponse(message string, data *domain.ProductCategory) *ResponseData {
+func NewGetProductCategoryDetailResponse(message string, data *ProductCategoryModel) *ResponseData {
 	productCategoryResponse := &ProductCategoryResponse{
 		ProductCategoryID: data.ProductCategoryID,
 		Name:              data.Name,

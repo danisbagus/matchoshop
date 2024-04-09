@@ -6,7 +6,7 @@ import (
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
+	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -15,10 +15,10 @@ const dbTSLayout = "2006-01-02 15:04:05"
 
 type IUserRepository interface {
 	GetAll() ([]domain.UserDetail, *errs.AppError)
-	FindOne(email string) (*domain.User, *errs.AppError)
-	FindOneById(userID int64) (*domain.User, *errs.AppError)
-	CreateUserCustomer(data *domain.User) (*domain.User, *errs.AppError)
-	Update(userID int64, data *domain.User) *errs.AppError
+	FindOne(email string) (*domain.UserModel, *errs.AppError)
+	FindOneById(userID int64) (*domain.UserModel, *errs.AppError)
+	CreateUserCustomer(data *domain.UserModel) (*domain.UserModel, *errs.AppError)
+	Update(userID int64, data *domain.UserModel) *errs.AppError
 	Delete(userID int64) *errs.AppError
 }
 
@@ -59,8 +59,8 @@ func (r UserRepository) GetAll() ([]domain.UserDetail, *errs.AppError) {
 	return users, nil
 }
 
-func (r UserRepository) FindOne(email string) (*domain.User, *errs.AppError) {
-	var login domain.User
+func (r UserRepository) FindOne(email string) (*domain.UserModel, *errs.AppError) {
+	var login domain.UserModel
 	sqlVerify := `SELECT user_id, email, password, name, role_id FROM users WHERE email = $1`
 
 	err := r.db.QueryRow(sqlVerify, email).Scan(&login.UserID, &login.Email, &login.Password, &login.Name, &login.RoleID)
@@ -72,8 +72,8 @@ func (r UserRepository) FindOne(email string) (*domain.User, *errs.AppError) {
 	return &login, nil
 }
 
-func (r UserRepository) FindOneById(userID int64) (*domain.User, *errs.AppError) {
-	var login domain.User
+func (r UserRepository) FindOneById(userID int64) (*domain.UserModel, *errs.AppError) {
+	var login domain.UserModel
 	sqlVerify := `SELECT user_id, email, password, name, role_id FROM users WHERE user_id = $1`
 
 	err := r.db.QueryRow(sqlVerify, userID).Scan(&login.UserID, &login.Email, &login.Password, &login.Name, &login.RoleID)
@@ -85,7 +85,7 @@ func (r UserRepository) FindOneById(userID int64) (*domain.User, *errs.AppError)
 	return &login, nil
 }
 
-func (r UserRepository) CreateUserCustomer(data *domain.User) (*domain.User, *errs.AppError) {
+func (r UserRepository) CreateUserCustomer(data *domain.UserModel) (*domain.UserModel, *errs.AppError) {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -117,7 +117,7 @@ func (r UserRepository) CreateUserCustomer(data *domain.User) (*domain.User, *er
 	return data, nil
 }
 
-func (r UserRepository) Update(userID int64, data *domain.User) *errs.AppError {
+func (r UserRepository) Update(userID int64, data *domain.UserModel) *errs.AppError {
 
 	tx, err := r.db.Begin()
 	if err != nil {

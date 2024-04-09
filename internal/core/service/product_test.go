@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/repository"
 	"github.com/danisbagus/matchoshop/internal/repository/mocks"
 	"github.com/stretchr/testify/assert"
@@ -153,7 +153,7 @@ func TestProduct_Create_FailedInsertProductProductCategory(t *testing.T) {
 
 	repoMock.ProductReposotory.Mock.On("Insert", &formProduct).Return(&returnInsertProduct, nil)
 
-	formProductProductCategory := []domain.ProductProductCategory{
+	formProductProductCategory := []domain.ProductProductCategoryModel{
 		{ProductID: returnInsertProduct.ProductID, ProductCategoryID: form.ProductCategoryIDs[0]},
 	}
 
@@ -204,7 +204,7 @@ func TestProduct_Create_Success(t *testing.T) {
 
 	repoMock.ProductReposotory.Mock.On("Insert", &formProduct).Return(&returnInsertProduct, nil)
 
-	formProductProductCategory := []domain.ProductProductCategory{
+	formProductProductCategory := []domain.ProductProductCategoryModel{
 		{ProductID: returnInsertProduct.ProductID, ProductCategoryID: form.ProductCategoryIDs[0]},
 	}
 
@@ -222,7 +222,7 @@ func TestProduct_GetDetail_NotFound(t *testing.T) {
 
 	repoMock.ProductReposotory.Mock.On("GetOneByID", productID).Return(nil, errs.NewNotFoundError("Product not found!"))
 
-	ProductCategoriesResult := []domain.ProductCategory{
+	ProductCategoriesResult := []domain.ProductCategoryModel{
 		{
 			ProductCategoryID: 1,
 			Name:              "Modern shoes",
@@ -252,7 +252,7 @@ func TestProduct_GetDetail_Success(t *testing.T) {
 
 	repoMock.ProductReposotory.Mock.On("GetOneByID", productID).Return(&productDetailResult, nil)
 
-	ProductCategoriesResult := []domain.ProductCategory{
+	ProductCategoriesResult := []domain.ProductCategoryModel{
 		{
 			ProductCategoryID: 1,
 			Name:              "Modern shoes",
@@ -415,7 +415,7 @@ func TestProduct_Update_Success(t *testing.T) {
 
 	repoMock.ProductCategoryRepository.Mock.On("DeleteAll", productID).Return(nil)
 
-	formProductProductCategory := []domain.ProductProductCategory{
+	formProductProductCategory := []domain.ProductProductCategoryModel{
 		{ProductID: productID, ProductCategoryID: req.ProductCategoryIDs[0]},
 	}
 

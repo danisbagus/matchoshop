@@ -7,9 +7,8 @@ import (
 
 	"github.com/danisbagus/go-common-packages/http/response"
 	"github.com/danisbagus/go-common-packages/logger"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
-	"github.com/danisbagus/matchoshop/internal/dto"
+	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/utils/helper"
 	"github.com/gorilla/mux"
 )
@@ -19,7 +18,7 @@ type ProductHandler struct {
 }
 
 func (rc ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
-	var req dto.ProductRequest
+	var req domain.ProductRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Error("Error while decoding create product request: " + err.Error())
 		response.Error(w, http.StatusBadRequest, "Failed create product")
@@ -48,7 +47,7 @@ func (rc ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := dto.GenerateResponseData("Successfully create data", nil)
+	res := domain.GenerateResponseData("Successfully create data", nil)
 	response.Write(w, http.StatusCreated, res)
 }
 
@@ -64,7 +63,7 @@ func (rc ProductHandler) GetTopProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := dto.NewGetProductListResponse("Successfully get data", products, nil)
+	res := domain.NewGetProductListResponse("Successfully get data", products, nil)
 	response.Write(w, http.StatusOK, res)
 }
 
@@ -85,7 +84,7 @@ func (rc ProductHandler) GetProductListPaginate(w http.ResponseWriter, r *http.R
 	meta := new(helper.Meta)
 	meta.SetPaginationData(criteria.Page, criteria.Limit, total)
 
-	res := dto.NewGetProductListResponse("Successfully get data", products, meta)
+	res := domain.NewGetProductListResponse("Successfully get data", products, meta)
 	response.Write(w, http.StatusOK, res)
 }
 
@@ -99,14 +98,14 @@ func (rc ProductHandler) GetProductDetail(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	res := dto.NewGetProductDetailResponse("Successfully get data", product)
+	res := domain.NewGetProductDetailResponse("Successfully get data", product)
 	response.Write(w, http.StatusOK, res)
 }
 
 func (rc ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	productID, _ := strconv.Atoi(vars["product_id"])
-	var req dto.ProductRequest
+	var req domain.ProductRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Error("Error while decoding update product request: " + err.Error())
@@ -136,7 +135,7 @@ func (rc ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := dto.GenerateResponseData("Successfully update data", nil)
+	res := domain.GenerateResponseData("Successfully update data", nil)
 	response.Write(w, http.StatusOK, res)
 }
 
@@ -148,6 +147,6 @@ func (rc ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
-	res := dto.GenerateResponseData("Successfully delete data", nil)
+	res := domain.GenerateResponseData("Successfully delete data", nil)
 	response.Write(w, http.StatusOK, res)
 }

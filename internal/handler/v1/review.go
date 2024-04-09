@@ -5,9 +5,8 @@ import (
 	"net/http"
 
 	"github.com/danisbagus/go-common-packages/http/response"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
-	"github.com/danisbagus/matchoshop/internal/dto"
+	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/utils/auth"
 	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/helper"
@@ -20,7 +19,7 @@ type ReviewHandler struct {
 
 func (h ReviewHandler) Create(w http.ResponseWriter, r *http.Request) {
 	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
-	var req dto.ReviewRequest
+	var req domain.ReviewRequest
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -46,7 +45,7 @@ func (h ReviewHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resData := dto.GenerateResponseData(constants.SuccessCreate, nil)
+	resData := domain.GenerateResponseData(constants.SuccessCreate, nil)
 	response.Write(w, http.StatusCreated, resData)
 }
 
@@ -60,13 +59,13 @@ func (h ReviewHandler) GetDetail(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
-	resData := dto.NewReviewResponse(constants.SuccesGet, review)
+	resData := domain.NewReviewResponse(constants.SuccesGet, review)
 	response.Write(w, http.StatusOK, resData)
 }
 
 func (h ReviewHandler) Update(w http.ResponseWriter, r *http.Request) {
 	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
-	var req dto.ReviewRequest
+	var req domain.ReviewRequest
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -92,6 +91,6 @@ func (h ReviewHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resData := dto.GenerateResponseData(constants.SuccessUpdate, nil)
+	resData := domain.GenerateResponseData(constants.SuccessUpdate, nil)
 	response.Write(w, http.StatusCreated, resData)
 }

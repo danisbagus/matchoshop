@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/repository"
 )
 

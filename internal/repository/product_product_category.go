@@ -6,12 +6,12 @@ import (
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
+	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/jmoiron/sqlx"
 )
 
 type IProductProductCategoryRepository interface {
-	BulkInsert(data []domain.ProductProductCategory) *errs.AppError
+	BulkInsert(data []domain.ProductProductCategoryModel) *errs.AppError
 	DeleteAll(productID int64) *errs.AppError
 }
 
@@ -25,7 +25,7 @@ func NewProductProductCategoryRepository(db *sqlx.DB) *ProductProductCategoryRep
 	}
 }
 
-func (r ProductProductCategoryRepository) BulkInsert(data []domain.ProductProductCategory) *errs.AppError {
+func (r ProductProductCategoryRepository) BulkInsert(data []domain.ProductProductCategoryModel) *errs.AppError {
 
 	tx, err := r.db.Begin()
 	if err != nil {

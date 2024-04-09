@@ -8,7 +8,7 @@ import (
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
+	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -63,7 +63,7 @@ func (r OrderRepository) GetAll() ([]domain.OrderDetail, *errs.AppError) {
 	orders := make([]domain.OrderDetail, 0)
 	for rows.Next() {
 		var order domain.OrderDetail
-		err := rows.Scan(&order.Order.OrderID, &order.UserID, &order.PaymentMethodID, &order.ProductPrice, &order.TaxPrice, &order.ShippingPrice,
+		err := rows.Scan(&order.OrderModel.OrderID, &order.UserID, &order.PaymentMethodID, &order.ProductPrice, &order.TaxPrice, &order.ShippingPrice,
 			&order.TotalPrice, &order.IsPaid, &order.PaidAt, &order.IsDelivered, &order.DeliveredAt, &order.CreatedAt, &order.UserName)
 		if err != nil && err != sql.ErrNoRows {
 			logger.Error("Error while get all order from database: " + err.Error())
@@ -106,7 +106,7 @@ func (r OrderRepository) GetAllByUserID(userID int64) ([]domain.OrderDetail, *er
 	orders := make([]domain.OrderDetail, 0)
 	for rows.Next() {
 		var order domain.OrderDetail
-		err := rows.Scan(&order.Order.OrderID, &order.UserID, &order.PaymentMethodID, &order.ProductPrice, &order.TaxPrice, &order.ShippingPrice,
+		err := rows.Scan(&order.OrderModel.OrderID, &order.UserID, &order.PaymentMethodID, &order.ProductPrice, &order.TaxPrice, &order.ShippingPrice,
 			&order.TotalPrice, &order.IsPaid, &order.PaidAt, &order.IsDelivered, &order.DeliveredAt, &order.CreatedAt)
 		if err != nil && err != sql.ErrNoRows {
 			logger.Error("Error while get all order from database: " + err.Error())
@@ -148,7 +148,7 @@ func (r OrderRepository) GetOneByID(OrderID int64) (*domain.OrderDetail, *errs.A
   		o.order_id=$1`
 
 	var order domain.OrderDetail
-	err := r.db.QueryRow(sqlGet, OrderID).Scan(&order.Order.OrderID, &order.UserID, &order.PaymentMethodID, &order.ProductPrice, &order.TaxPrice, &order.ShippingPrice,
+	err := r.db.QueryRow(sqlGet, OrderID).Scan(&order.OrderModel.OrderID, &order.UserID, &order.PaymentMethodID, &order.ProductPrice, &order.TaxPrice, &order.ShippingPrice,
 		&order.TotalPrice, &order.IsPaid, &order.PaidAt, &order.IsDelivered, &order.DeliveredAt, &order.Address, &order.City, &order.PostalCode, &order.Country, &order.PaymentMethodName, &order.UserName, &order.UserEmail)
 	if err != nil {
 		if err == sql.ErrNoRows {

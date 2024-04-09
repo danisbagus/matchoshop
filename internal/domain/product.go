@@ -1,54 +1,102 @@
-package dto
+package domain
 
 import (
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/utils/helper"
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-type ProductRequest struct {
-	Name               string  `json:"name"`
-	Sku                string  `json:"sku"`
-	Brand              *string `json:"brand"`
-	Image              *string `json:"Image"`
-	Description        *string `json:"description"`
-	ProductCategoryIDs []int64 `json:"product_category_id"`
-	Price              int64   `json:"price"`
-	Stock              int64   `json:"stock"`
-}
+type (
+	ProductModel struct {
+		ProductID   int64   `db:"product_id"`
+		Name        string  `db:"name"`
+		Sku         string  `db:"sku"`
+		Brand       *string `db:"brand"`
+		Image       *string `db:"image"`
+		Description *string `db:"description"`
+		Price       int64   `db:"price"`
+		Stock       int64   `db:"stock"`
+		CreatedAt   string  `db:"created_at"`
+		UpdatedAt   string  `db:"updated_at"`
+	}
 
-type ProductResponse struct {
-	ProductID int64   `json:"product_id"`
-	Name      string  `json:"name"`
-	Sku       string  `json:"sku"`
-	Brand     *string `json:"brand"`
-	Image     *string `json:"image"`
-	Price     int64   `json:"price"`
-}
+	ProductProductCategoryModel struct {
+		ProductID         int64 `db:"product_id"`
+		ProductCategoryID int64 `db:"product_category_id"`
+	}
 
-type ProductListResponse struct {
-	ProductResponse
-	Rating            float32                   `json:"rating"`
-	NumbReviews       int64                     `json:"numb_reviews"`
-	ProductCategories []ProductCategoryResponse `json:"product_categories"`
-}
+	Product struct {
+		ProductModel
+		ProductCategoryIDs []int64
+	}
 
-type ProductDetailtResponse struct {
-	ProductResponse
-	Description       *string                   `json:"description"`
-	Stock             int64                     `json:"stock"`
-	Rating            float32                   `json:"rating"`
-	NumbReviews       int64                     `json:"numb_reviews"`
-	ProductCategories []ProductCategoryResponse `json:"product_categories"`
-	Review            []ReviewResponse          `json:"reviews"`
-}
+	ProductList struct {
+		ProductModel
+		ProductCategoryID   int64
+		ProductCategoryName string
+		Rating              float32
+		NumbReviews         int64
+	}
 
-type ResponsePaginateData struct {
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
-	Meta    interface{} `json:"meta"`
-}
+	ProductDetail struct {
+		ProductModel
+		Rating            float32
+		NumbReviews       int64
+		ProductCategories []ProductCategoryModel
+		Review            []Review
+	}
+
+	ProductListCriteria struct {
+		Keyword string
+		Page    int64
+		Limit   int64
+		Sort    string
+		Order   string
+	}
+
+	ProductRequest struct {
+		Name               string  `json:"name"`
+		Sku                string  `json:"sku"`
+		Brand              *string `json:"brand"`
+		Image              *string `json:"Image"`
+		Description        *string `json:"description"`
+		ProductCategoryIDs []int64 `json:"product_category_id"`
+		Price              int64   `json:"price"`
+		Stock              int64   `json:"stock"`
+	}
+
+	ProductResponse struct {
+		ProductID int64   `json:"product_id"`
+		Name      string  `json:"name"`
+		Sku       string  `json:"sku"`
+		Brand     *string `json:"brand"`
+		Image     *string `json:"image"`
+		Price     int64   `json:"price"`
+	}
+
+	ProductListResponse struct {
+		ProductResponse
+		Rating            float32                   `json:"rating"`
+		NumbReviews       int64                     `json:"numb_reviews"`
+		ProductCategories []ProductCategoryResponse `json:"product_categories"`
+	}
+
+	ProductDetailtResponse struct {
+		ProductResponse
+		Description       *string                   `json:"description"`
+		Stock             int64                     `json:"stock"`
+		Rating            float32                   `json:"rating"`
+		NumbReviews       int64                     `json:"numb_reviews"`
+		ProductCategories []ProductCategoryResponse `json:"product_categories"`
+		Review            []ReviewResponse          `json:"reviews"`
+	}
+
+	ResponsePaginateData struct {
+		Message string      `json:"message"`
+		Data    interface{} `json:"data"`
+		Meta    interface{} `json:"meta"`
+	}
+)
 
 func GenerateResponsePaginateData(message string, data interface{}, meta interface{}) *ResponsePaginateData {
 	return &ResponsePaginateData{
@@ -58,7 +106,7 @@ func GenerateResponsePaginateData(message string, data interface{}, meta interfa
 	}
 }
 
-func NewGetProductListResponse(message string, data []domain.ProductDetail, meta *helper.Meta) *ResponsePaginateData {
+func NewGetProductListResponse(message string, data []ProductDetail, meta *helper.Meta) *ResponsePaginateData {
 	products := make([]ProductListResponse, 0)
 	for _, value := range data {
 		var product ProductListResponse
@@ -85,7 +133,7 @@ func NewGetProductListResponse(message string, data []domain.ProductDetail, meta
 	return GenerateResponsePaginateData(message, products, meta)
 }
 
-func NewGetProductDetailResponse(message string, data *domain.ProductDetail) *ResponseData {
+func NewGetProductDetailResponse(message string, data *ProductDetail) *ResponseData {
 	product := new(ProductDetailtResponse)
 	product.ProductID = data.ProductID
 	product.Name = data.Name

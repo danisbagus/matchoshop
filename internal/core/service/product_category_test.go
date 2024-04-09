@@ -5,9 +5,8 @@ import (
 	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
-	"github.com/danisbagus/matchoshop/internal/dto"
+	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/repository"
 	"github.com/danisbagus/matchoshop/internal/repository/mocks"
 
@@ -30,7 +29,7 @@ func setupProductCategoryTest(t *testing.T) (mocks.RepoCollectionMocks, port.Pro
 func TestProductCategory_Create_NotValidated(t *testing.T) {
 	_, service := setupProductCategoryTest(t)
 
-	req := dto.CreateProductCategoryRequest{}
+	req := domain.CreateProductCategoryRequest{}
 	productCategory, appErr := service.Create(&req)
 
 	assert.Nil(t, productCategory)
@@ -40,7 +39,7 @@ func TestProductCategory_Create_NotValidated(t *testing.T) {
 func TestProductCategory_Create_NameExits(t *testing.T) {
 	repoMock, service := setupProductCategoryTest(t)
 
-	req := dto.CreateProductCategoryRequest{
+	req := domain.CreateProductCategoryRequest{
 		Name: "Electronic",
 	}
 
@@ -55,19 +54,19 @@ func TestProductCategory_Create_NameExits(t *testing.T) {
 func TestProductCategory_Create_Success(t *testing.T) {
 	repoMock, service := setupProductCategoryTest(t)
 
-	req := dto.CreateProductCategoryRequest{
+	req := domain.CreateProductCategoryRequest{
 		Name: "Sport",
 	}
 
 	repoMock.ProductCategoryRepository.Mock.On("CheckByName", req.Name).Return(false, nil)
 
-	formProductCategory := domain.ProductCategory{
+	formProductCategory := domain.ProductCategoryModel{
 		Name:      req.Name,
 		CreatedAt: time.Now().Format(dbTSLayout),
 		UpdatedAt: time.Now().Format(dbTSLayout),
 	}
 
-	resultProductCategory := domain.ProductCategory{
+	resultProductCategory := domain.ProductCategoryModel{
 		ProductCategoryID: 1,
 		Name:              formProductCategory.Name,
 		CreatedAt:         formProductCategory.CreatedAt,
@@ -97,7 +96,7 @@ func TestProductCategory_GetDetail_Success(t *testing.T) {
 
 	var productCategoryID int64 = 1
 
-	productCategoryResult := domain.ProductCategory{
+	productCategoryResult := domain.ProductCategoryModel{
 		ProductCategoryID: 1,
 		Name:              "Modern shoes",
 	}
@@ -113,7 +112,7 @@ func TestProductCategory_Update_NotValidated(t *testing.T) {
 	_, service := setupProductCategoryTest(t)
 
 	productCategoryID := 1
-	reqProductCategory := dto.CreateProductCategoryRequest{}
+	reqProductCategory := domain.CreateProductCategoryRequest{}
 
 	productCategory, appErr := service.Update(int64(productCategoryID), &reqProductCategory)
 
@@ -125,7 +124,7 @@ func TestProductCategory_Update_NotFound(t *testing.T) {
 	repoMock, service := setupProductCategoryTest(t)
 
 	productCategoryID := 1
-	req := dto.CreateProductCategoryRequest{
+	req := domain.CreateProductCategoryRequest{
 		Name: "Electonics",
 	}
 
@@ -141,7 +140,7 @@ func TestProductCategory_Update_NameExits(t *testing.T) {
 	repoMock, service := setupProductCategoryTest(t)
 
 	productCategoryID := 2
-	req := dto.CreateProductCategoryRequest{
+	req := domain.CreateProductCategoryRequest{
 		Name: "Electonics",
 	}
 
@@ -158,14 +157,14 @@ func TestProductCategory_Updated_Success(t *testing.T) {
 	repoMock, service := setupProductCategoryTest(t)
 
 	productCategoryID := 2
-	req := dto.CreateProductCategoryRequest{
+	req := domain.CreateProductCategoryRequest{
 		Name: "Sport",
 	}
 
 	repoMock.ProductCategoryRepository.Mock.On("CheckByID", int64(productCategoryID)).Return(true, nil)
 	repoMock.ProductCategoryRepository.Mock.On("CheckByIDAndName", int64(productCategoryID), req.Name).Return(false, nil)
 
-	formProductCategory := domain.ProductCategory{
+	formProductCategory := domain.ProductCategoryModel{
 		Name:      req.Name,
 		CreatedAt: time.Now().Format(dbTSLayout),
 		UpdatedAt: time.Now().Format(dbTSLayout),

@@ -6,9 +6,8 @@ import (
 	"time"
 
 	"github.com/danisbagus/go-common-packages/http/response"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
-	"github.com/danisbagus/matchoshop/internal/dto"
+	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/utils/auth"
 	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/helper"
@@ -21,7 +20,7 @@ type OrderHandler struct {
 
 func (h OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
-	var req dto.CreateOrder
+	var req domain.CreateOrder
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -64,7 +63,7 @@ func (h OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resData := dto.NewOrderResponse(constants.SuccessCreate, createData)
+	resData := domain.NewOrderResponse(constants.SuccessCreate, createData)
 	response.Write(w, http.StatusCreated, resData)
 }
 
@@ -77,7 +76,7 @@ func (h OrderHandler) GetList(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
-	resData := dto.NewGetOrderListResponse(constants.SuccesGet, orders)
+	resData := domain.NewGetOrderListResponse(constants.SuccesGet, orders)
 	response.Write(w, http.StatusOK, resData)
 }
 
@@ -91,7 +90,7 @@ func (h OrderHandler) GetDetail(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
-	resData := dto.NewGetOrderDetailResponse(constants.SuccesGet, order)
+	resData := domain.NewGetOrderDetailResponse(constants.SuccesGet, order)
 	response.Write(w, http.StatusOK, resData)
 }
 
@@ -101,7 +100,7 @@ func (h OrderHandler) UpdatePaid(w http.ResponseWriter, r *http.Request) {
 
 	OrderID := helper.StringToInt64(vars["order_id"], 0)
 
-	var req dto.UpdateOrderPaid
+	var req domain.UpdateOrderPaid
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -128,7 +127,7 @@ func (h OrderHandler) UpdatePaid(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resData := dto.NewUpdatePaidResponse(constants.SuccessCreate, form)
+	resData := domain.NewUpdatePaidResponse(constants.SuccessCreate, form)
 
 	response.Write(w, http.StatusOK, resData)
 }
@@ -156,6 +155,6 @@ func (h OrderHandler) GetListAdmin(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
 	}
-	resData := dto.NewGetOrderListResponse(constants.SuccesGet, orders)
+	resData := domain.NewGetOrderListResponse(constants.SuccesGet, orders)
 	response.Write(w, http.StatusOK, resData)
 }

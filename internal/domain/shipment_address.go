@@ -1,6 +1,6 @@
 package domain
 
-type ShipmentAddress struct {
+type ShipmentAddressModel struct {
 	ShipmentAddressID int64  `db:"shipment_address_id"`
 	OrderID           int64  `db:"order_id"`
 	Address           string `db:"address"`

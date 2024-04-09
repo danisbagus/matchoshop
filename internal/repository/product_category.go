@@ -5,19 +5,19 @@ import (
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
+	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/jmoiron/sqlx"
 )
 
 type IProductCategoryRepository interface {
-	Insert(data *domain.ProductCategory) (*domain.ProductCategory, *errs.AppError)
+	Insert(data *domain.ProductCategoryModel) (*domain.ProductCategoryModel, *errs.AppError)
 	CheckByIDAndName(productCategoryID int64, name string) (bool, *errs.AppError)
 	CheckByName(name string) (bool, *errs.AppError)
 	CheckByID(productCategoryID int64) (bool, *errs.AppError)
-	GetAll() ([]domain.ProductCategory, *errs.AppError)
-	GetAllByProductID(productID int64) ([]domain.ProductCategory, *errs.AppError)
-	GetOneByID(productCategoryID int64) (*domain.ProductCategory, *errs.AppError)
-	Update(productCategoryID int64, data *domain.ProductCategory) *errs.AppError
+	GetAll() ([]domain.ProductCategoryModel, *errs.AppError)
+	GetAllByProductID(productID int64) ([]domain.ProductCategoryModel, *errs.AppError)
+	GetOneByID(productCategoryID int64) (*domain.ProductCategoryModel, *errs.AppError)
+	Update(productCategoryID int64, data *domain.ProductCategoryModel) *errs.AppError
 	Delete(productCategoryID int64) *errs.AppError
 }
 
@@ -31,7 +31,7 @@ func NewProductCategoryRepository(db *sqlx.DB) *ProductCategoryRepository {
 	}
 }
 
-func (r ProductCategoryRepository) Insert(data *domain.ProductCategory) (*domain.ProductCategory, *errs.AppError) {
+func (r ProductCategoryRepository) Insert(data *domain.ProductCategoryModel) (*domain.ProductCategoryModel, *errs.AppError) {
 
 	tx, err := r.db.Begin()
 	if err != nil {
@@ -113,7 +113,7 @@ func (r ProductCategoryRepository) CheckByID(productCategoryID int64) (bool, *er
 	return totalData > 0, nil
 }
 
-func (r ProductCategoryRepository) GetAll() ([]domain.ProductCategory, *errs.AppError) {
+func (r ProductCategoryRepository) GetAll() ([]domain.ProductCategoryModel, *errs.AppError) {
 
 	sqlGetProductCategory := `
 	SELECT 
@@ -130,10 +130,10 @@ func (r ProductCategoryRepository) GetAll() ([]domain.ProductCategory, *errs.App
 
 	defer rows.Close()
 
-	productCategories := make([]domain.ProductCategory, 0)
+	productCategories := make([]domain.ProductCategoryModel, 0)
 
 	for rows.Next() {
-		var productCategory domain.ProductCategory
+		var productCategory domain.ProductCategoryModel
 		if err := rows.Scan(&productCategory.ProductCategoryID, &productCategory.Name); err != nil {
 			logger.Error("Error while scanning product category from database: " + err.Error())
 			return nil, errs.NewUnexpectedError("Unexpected database error")
@@ -145,7 +145,7 @@ func (r ProductCategoryRepository) GetAll() ([]domain.ProductCategory, *errs.App
 	return productCategories, nil
 }
 
-func (r ProductCategoryRepository) GetAllByProductID(productID int64) ([]domain.ProductCategory, *errs.AppError) {
+func (r ProductCategoryRepository) GetAllByProductID(productID int64) ([]domain.ProductCategoryModel, *errs.AppError) {
 
 	sqlGetProductCategory := `
 	SELECT 
@@ -163,10 +163,10 @@ func (r ProductCategoryRepository) GetAllByProductID(productID int64) ([]domain.
 
 	defer rows.Close()
 
-	productCategories := make([]domain.ProductCategory, 0)
+	productCategories := make([]domain.ProductCategoryModel, 0)
 
 	for rows.Next() {
-		var productCategory domain.ProductCategory
+		var productCategory domain.ProductCategoryModel
 		if err := rows.Scan(&productCategory.ProductCategoryID, &productCategory.Name); err != nil {
 			logger.Error("Error while scanning product category from database: " + err.Error())
 			return nil, errs.NewUnexpectedError("Unexpected database error")
@@ -178,9 +178,9 @@ func (r ProductCategoryRepository) GetAllByProductID(productID int64) ([]domain.
 	return productCategories, nil
 }
 
-func (r ProductCategoryRepository) GetOneByID(productCategoryID int64) (*domain.ProductCategory, *errs.AppError) {
+func (r ProductCategoryRepository) GetOneByID(productCategoryID int64) (*domain.ProductCategoryModel, *errs.AppError) {
 
-	var productCategory domain.ProductCategory
+	var productCategory domain.ProductCategoryModel
 
 	sqlGetProductCategory := `
 	SELECT 
@@ -204,7 +204,7 @@ func (r ProductCategoryRepository) GetOneByID(productCategoryID int64) (*domain.
 
 }
 
-func (r ProductCategoryRepository) Update(productCategoryID int64, data *domain.ProductCategory) *errs.AppError {
+func (r ProductCategoryRepository) Update(productCategoryID int64, data *domain.ProductCategoryModel) *errs.AppError {
 
 	tx, err := r.db.Begin()
 	if err != nil {

@@ -4,9 +4,8 @@ import (
 	"testing"
 
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
-	"github.com/danisbagus/matchoshop/internal/dto"
+	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/repository"
 	"github.com/danisbagus/matchoshop/internal/repository/mocks"
 	"github.com/stretchr/testify/assert"
@@ -29,7 +28,7 @@ func TestUser_Login_NotValidated(t *testing.T) {
 	_, service := setupUserTest(t)
 
 	// Arrange
-	req := dto.LoginRequest{}
+	req := domain.LoginRequest{}
 
 	// Act
 	login, appErr := service.Login(req)
@@ -42,12 +41,12 @@ func TestUser_Login_NotValidated(t *testing.T) {
 func TestUser_Login_NotFound(t *testing.T) {
 	repoMock, service := setupUserTest(t)
 
-	req := dto.LoginRequest{
+	req := domain.LoginRequest{
 		Email:    "edagangan@live.com",
 		Password: "test12",
 	}
 
-	resultFindOne := domain.User{
+	resultFindOne := domain.UserModel{
 		UserID: 0,
 	}
 
@@ -62,12 +61,12 @@ func TestUser_Login_NotFound(t *testing.T) {
 func TestUser_Login_PasswordNotMatch(t *testing.T) {
 	repoMock, service := setupUserTest(t)
 
-	req := dto.LoginRequest{
+	req := domain.LoginRequest{
 		Email:    "matcho@live.com",
 		Password: "test12",
 	}
 
-	resultFindOne := domain.User{
+	resultFindOne := domain.UserModel{
 		Email:    "matcho@live.com",
 		Password: "$2a$14$jCf0U5Ic9QI7RZdYGmgABOlV27nYac7Xg5iwoby/HFW.lcU8xqvaW",
 	}
@@ -83,7 +82,7 @@ func TestUser_Login_PasswordNotMatch(t *testing.T) {
 func TestUser_Register_Not_Validated(t *testing.T) {
 	_, service := setupUserTest(t)
 
-	req := dto.RegisterCustomerRequest{
+	req := domain.RegisterCustomerRequest{
 		Email:           "matcho@live.com",
 		Name:            "customer 1",
 		Password:        "test12345",
@@ -99,14 +98,14 @@ func TestUser_Register_Not_Validated(t *testing.T) {
 func TestUser_Register_Email_Already_Used(t *testing.T) {
 	repoMock, service := setupUserTest(t)
 
-	req := dto.RegisterCustomerRequest{
+	req := domain.RegisterCustomerRequest{
 		Email:           "matcho@live.com",
 		Name:            "customer 1",
 		Password:        "test12345",
 		ConfirmPassword: "test123456",
 	}
 
-	resultFindOne := domain.User{
+	resultFindOne := domain.UserModel{
 		UserID: 1,
 	}
 	repoMock.UserRepository.Mock.On("FindOne", req.Email).Return(&resultFindOne, nil)
@@ -120,7 +119,7 @@ func TestUser_Register_Email_Already_Used(t *testing.T) {
 func TestUser_Update_Not_Validated(t *testing.T) {
 	_, service := setupUserTest(t)
 
-	form := new(domain.User)
+	form := new(domain.UserModel)
 	form.UserID = 2
 
 	appErr := service.Update(form)
@@ -131,11 +130,11 @@ func TestUser_Update_Not_Validated(t *testing.T) {
 func TestUser_Update_User_Not_Found(t *testing.T) {
 	repoMock, service := setupUserTest(t)
 
-	form := new(domain.User)
+	form := new(domain.UserModel)
 	form.Name = "Customer 3"
 	form.UserID = 2
 
-	resFindOneByID := domain.User{
+	resFindOneByID := domain.UserModel{
 		UserID: 0,
 	}
 
@@ -149,18 +148,18 @@ func TestUser_Update_User_Not_Found(t *testing.T) {
 func TestUser_Update_Unexpected_Error_Update(t *testing.T) {
 	repoMock, service := setupUserTest(t)
 
-	form := new(domain.User)
+	form := new(domain.UserModel)
 	form.Name = "Customer 112345678901234567890123456789012345678901234567890234567890"
 	form.UserID = 1
 
-	resFindOneByID := domain.User{
+	resFindOneByID := domain.UserModel{
 		UserID: 1,
 		Name:   "Customer 3",
 	}
 
 	repoMock.UserRepository.Mock.On("FindOneById", form.UserID).Return(&resFindOneByID, nil)
 
-	formUpdate := domain.User{
+	formUpdate := domain.UserModel{
 		Name: form.Name,
 	}
 
@@ -173,18 +172,18 @@ func TestUser_Update_Unexpected_Error_Update(t *testing.T) {
 func TestUser_Update_Success(t *testing.T) {
 	repoMock, service := setupUserTest(t)
 
-	form := new(domain.User)
+	form := new(domain.UserModel)
 	form.Name = "Customer 4"
 	form.UserID = 1
 
-	resFindOneByID := domain.User{
+	resFindOneByID := domain.UserModel{
 		UserID: 1,
 		Name:   "Customer 4",
 	}
 
 	repoMock.UserRepository.Mock.On("FindOneById", form.UserID).Return(&resFindOneByID, nil)
 
-	formUpdate := domain.User{
+	formUpdate := domain.UserModel{
 		Name: form.Name,
 	}
 
@@ -199,7 +198,7 @@ func TestUser_GetDetail_UserNotFound(t *testing.T) {
 
 	userID := 2
 
-	resFindOneByID := &domain.User{
+	resFindOneByID := &domain.UserModel{
 		UserID: 0,
 	}
 
@@ -216,7 +215,7 @@ func TestUser_GetDetail_Success(t *testing.T) {
 
 	userID := 2
 
-	resFindOneByID := &domain.User{
+	resFindOneByID := &domain.UserModel{
 		UserID: 2,
 	}
 

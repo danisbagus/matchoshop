@@ -1,12 +1,26 @@
-package dto
+package domain
 
 import (
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 type (
+	ReviewModel struct {
+		ReviewID  int64  `db:"review_id"`
+		UserID    int64  `db:"user_id"`
+		ProductID int64  `db:"product_id"`
+		Rating    int    `db:"rating"`
+		Comment   string `db:"comment"`
+		CreatedAt string `db:"created_at"`
+		UpdatedAt string `db:"updated_at"`
+	}
+
+	Review struct {
+		ReviewModel
+		UserName string
+	}
+
 	ReviewRequest struct {
 		ReviewID  int64  `json:"-"`
 		UserID    int64  `json:"-"`
@@ -26,7 +40,7 @@ type (
 	}
 )
 
-func NewReviewResponse(message string, data *domain.Review) *ResponseData {
+func NewReviewResponse(message string, data *Review) *ResponseData {
 	resData := new(ReviewResponse)
 	resData.ReviewID = data.ReviewID
 	resData.UserID = data.UserID

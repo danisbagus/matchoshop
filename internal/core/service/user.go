@@ -5,9 +5,8 @@ import (
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
-	"github.com/danisbagus/matchoshop/internal/dto"
+	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/repository"
 	"github.com/danisbagus/matchoshop/utils/auth"
 	"github.com/danisbagus/matchoshop/utils/constants"
@@ -30,9 +29,9 @@ func NewUserService(repository repository.RepositoryCollection) port.UserService
 	}
 }
 
-func (r UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppError) {
+func (r UserService) Login(req domain.LoginRequest) (*domain.ResponseData, *errs.AppError) {
 	var appErr *errs.AppError
-	var login *domain.User
+	var login *domain.UserModel
 
 	appErr = req.Validate()
 
@@ -65,12 +64,12 @@ func (r UserService) Login(req dto.LoginRequest) (*dto.ResponseData, *errs.AppEr
 		return nil, appErr
 	}
 
-	response := dto.NewLoginResponse("Successfully login", accessToken, refreshToken, login)
+	response := domain.NewLoginResponse("Successfully login", accessToken, refreshToken, login)
 
 	return response, nil
 }
 
-func (r UserService) Refresh(request dto.RefreshTokenRequest) (*dto.ResponseData, *errs.AppError) {
+func (r UserService) Refresh(request domain.RefreshTokenRequest) (*domain.ResponseData, *errs.AppError) {
 
 	// check token is valid or not
 	validationErr := auth.IsTokenValid(request.AccessToken)
@@ -96,7 +95,7 @@ func (r UserService) Refresh(request dto.RefreshTokenRequest) (*dto.ResponseData
 				return nil, appErr
 			}
 
-			response := dto.NewRefreshTokenResponse("Successfully refresh token", accessToken)
+			response := domain.NewRefreshTokenResponse("Successfully refresh token", accessToken)
 
 			return response, nil
 		}
@@ -107,7 +106,7 @@ func (r UserService) Refresh(request dto.RefreshTokenRequest) (*dto.ResponseData
 	return nil, errs.NewAuthenticationError("cannot generate a new access token until the current one expires")
 }
 
-func (r UserService) RegisterCustomer(req *dto.RegisterCustomerRequest) (*dto.ResponseData, *errs.AppError) {
+func (r UserService) RegisterCustomer(req *domain.RegisterCustomerRequest) (*domain.ResponseData, *errs.AppError) {
 	appErr := req.Validate()
 	if appErr != nil {
 		return nil, appErr
@@ -126,7 +125,7 @@ func (r UserService) RegisterCustomer(req *dto.RegisterCustomerRequest) (*dto.Re
 		return nil, errs.NewAuthenticationError("Email already used")
 	}
 
-	form := domain.User{
+	form := domain.UserModel{
 		Name:      req.Name,
 		Email:     req.Email,
 		Password:  hashPassword,
@@ -154,12 +153,12 @@ func (r UserService) RegisterCustomer(req *dto.RegisterCustomerRequest) (*dto.Re
 		return nil, appErr
 	}
 
-	response := dto.NewRegisterUserCustomerResponse("Successfully register", accessToken, refreshToken, newData)
+	response := domain.NewRegisterUserCustomerResponse("Successfully register", accessToken, refreshToken, newData)
 
 	return response, nil
 }
 
-func (r UserService) GetDetail(userID int64) (*dto.ResponseData, *errs.AppError) {
+func (r UserService) GetDetail(userID int64) (*domain.ResponseData, *errs.AppError) {
 	// get detail user
 	userDetail, appErr := r.userRepo.FindOneById(userID)
 	if appErr != nil {
@@ -170,12 +169,12 @@ func (r UserService) GetDetail(userID int64) (*dto.ResponseData, *errs.AppError)
 		return nil, errs.NewAuthenticationError("user not found")
 	}
 
-	response := dto.NewGetUserDetailResponse("Successfully get data", userDetail)
+	response := domain.NewGetUserDetailResponse("Successfully get data", userDetail)
 
 	return response, nil
 }
 
-func (r UserService) Update(form *domain.User) *errs.AppError {
+func (r UserService) Update(form *domain.UserModel) *errs.AppError {
 
 	user, appErr := r.userRepo.FindOneById(form.UserID)
 	if appErr != nil {

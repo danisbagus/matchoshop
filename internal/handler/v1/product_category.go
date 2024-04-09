@@ -8,7 +8,7 @@ import (
 	"github.com/danisbagus/go-common-packages/http/response"
 	"github.com/danisbagus/go-common-packages/logger"
 	"github.com/danisbagus/matchoshop/internal/core/port"
-	"github.com/danisbagus/matchoshop/internal/dto"
+	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/gorilla/mux"
 )
 
@@ -17,7 +17,7 @@ type ProductCategoryHandler struct {
 }
 
 func (rc ProductCategoryHandler) CreateProductCategory(w http.ResponseWriter, r *http.Request) {
-	var request dto.CreateProductCategoryRequest
+	var request domain.CreateProductCategoryRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		logger.Error("Error while decoding create product category request: " + err.Error())
@@ -42,7 +42,7 @@ func (rc ProductCategoryHandler) GetProductCategoryList(w http.ResponseWriter, r
 		return
 	}
 
-	res := dto.NewGetProductCategoryListResponse("Successfully get data", productCategories)
+	res := domain.NewGetProductCategoryListResponse("Successfully get data", productCategories)
 	response.Write(w, http.StatusOK, res)
 }
 
@@ -63,7 +63,7 @@ func (rc ProductCategoryHandler) UpdateProductCategory(w http.ResponseWriter, r 
 	vars := mux.Vars(r)
 	productCategoryID, _ := strconv.Atoi(vars["product_category_id"])
 
-	var request dto.CreateProductCategoryRequest
+	var request domain.CreateProductCategoryRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		logger.Error("Error while decoding update product category request: " + err.Error())

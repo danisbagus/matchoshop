@@ -6,8 +6,8 @@ import (
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/repository"
 )
 
@@ -52,7 +52,7 @@ func (s OrderService) Create(form *domain.OrderDetail) (*domain.OrderDetail, *er
 		return nil, appErr
 	}
 
-	form.Order.OrderID = orderID
+	form.OrderModel.OrderID = orderID
 	return form, nil
 }
 

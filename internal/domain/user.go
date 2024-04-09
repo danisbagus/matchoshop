@@ -1,69 +1,85 @@
-package dto
+package domain
 
 import (
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-type ResponseData struct {
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
-}
+type (
+	UserModel struct {
+		UserID    int64  `db:"user_id"`
+		Email     string `db:"email"`
+		Password  string `db:"password"`
+		Name      string `db:"name"`
+		RoleID    int64  `db:"role_id"`
+		CreatedAt string `db:"created_at"`
+		UpdatedAt string `db:"updated_at"`
+	}
 
-type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
+	UserDetail struct {
+		UserModel
+		RoleName string `db:"role_name"`
+	}
 
-type RefreshTokenRequest struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-}
+	ResponseData struct {
+		Message string      `json:"message"`
+		Data    interface{} `json:"data"`
+	}
 
-type RegisterCustomerRequest struct {
-	Name            string `json:"name"`
-	Email           string `json:"email"`
-	Password        string `json:"password"`
-	ConfirmPassword string `json:"confirm_password"`
-}
+	LoginRequest struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
 
-type UpdateUserRequest struct {
-	Name string `json:"name"`
-}
+	RefreshTokenRequest struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+	}
 
-type LoginResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	UserID       int64  `json:"user_id"`
-	Name         string `json:"name"`
-	Email        string `json:"email"`
-	RoleID       int64  `json:"role_id"`
-}
+	RegisterCustomerRequest struct {
+		Name            string `json:"name"`
+		Email           string `json:"email"`
+		Password        string `json:"password"`
+		ConfirmPassword string `json:"confirm_password"`
+	}
 
-type UserDetailResponse struct {
-	UserID int64  `json:"user_id"`
-	Name   string `json:"name"`
-	Email  string `json:"email"`
-	RoleID int64  `json:"role_id"`
-}
+	UpdateUserRequest struct {
+		Name string `json:"name"`
+	}
 
-type UserListResponse struct {
-	UserDetailResponse
-	RoleName string `json:"role_name"`
-}
-type RefreshTokenResponse struct {
-	AccessToken string `json:"access_token"`
-}
+	LoginResponse struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+		UserID       int64  `json:"user_id"`
+		Name         string `json:"name"`
+		Email        string `json:"email"`
+		RoleID       int64  `json:"role_id"`
+	}
 
-type RegisterCustomerResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	UserID       int64  `json:"user_id"`
-	Name         string `json:"name"`
-	Email        string `json:"email"`
-	RoleID       int64  `json:"role_id"`
-}
+	UserDetailResponse struct {
+		UserID int64  `json:"user_id"`
+		Name   string `json:"name"`
+		Email  string `json:"email"`
+		RoleID int64  `json:"role_id"`
+	}
+
+	UserListResponse struct {
+		UserDetailResponse
+		RoleName string `json:"role_name"`
+	}
+	RefreshTokenResponse struct {
+		AccessToken string `json:"access_token"`
+	}
+
+	RegisterCustomerResponse struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+		UserID       int64  `json:"user_id"`
+		Name         string `json:"name"`
+		Email        string `json:"email"`
+		RoleID       int64  `json:"role_id"`
+	}
+)
 
 func GenerateResponseData(message string, data interface{}) *ResponseData {
 	return &ResponseData{
@@ -72,7 +88,7 @@ func GenerateResponseData(message string, data interface{}) *ResponseData {
 	}
 }
 
-func NewLoginResponse(message string, accessToken string, refreshToken string, user *domain.User) *ResponseData {
+func NewLoginResponse(message string, accessToken string, refreshToken string, user *UserModel) *ResponseData {
 
 	loginResponse := LoginResponse{
 		AccessToken:  accessToken,
@@ -95,7 +111,7 @@ func NewRefreshTokenResponse(message string, accessToken string) *ResponseData {
 	return GenerateResponseData(message, refreshTokenResponse)
 }
 
-func NewRegisterUserCustomerResponse(message string, accessToken string, refreshToken string, user *domain.User) *ResponseData {
+func NewRegisterUserCustomerResponse(message string, accessToken string, refreshToken string, user *UserModel) *ResponseData {
 
 	registerResponse := RegisterCustomerResponse{
 		AccessToken:  accessToken,
@@ -109,7 +125,7 @@ func NewRegisterUserCustomerResponse(message string, accessToken string, refresh
 	return GenerateResponseData(message, registerResponse)
 }
 
-func NewGetUserDetailResponse(message string, data *domain.User) *ResponseData {
+func NewGetUserDetailResponse(message string, data *UserModel) *ResponseData {
 
 	userDetailResponse := &UserDetailResponse{
 		UserID: data.UserID,
@@ -121,7 +137,7 @@ func NewGetUserDetailResponse(message string, data *domain.User) *ResponseData {
 	return GenerateResponseData(message, userDetailResponse)
 }
 
-func NewGetUserListResponse(message string, data []domain.UserDetail) *ResponseData {
+func NewGetUserListResponse(message string, data []UserDetail) *ResponseData {
 	users := make([]UserListResponse, 0)
 
 	for _, value := range data {

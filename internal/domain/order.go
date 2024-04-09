@@ -1,14 +1,47 @@
-package dto
+package domain
 
 import (
+	"time"
+
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/domain"
 	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/helper"
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 type (
+	OrderModel struct {
+		OrderID         int64      `db:"order_id"`
+		UserID          int64      `db:"user_id"`
+		PaymentMethodID int64      `db:"payment_method_id"`
+		ProductPrice    int64      `db:"product_price"`
+		TaxPrice        int64      `db:"tax_price"`
+		ShippingPrice   int64      `db:"shipping_price"`
+		TotalPrice      int64      `db:"total_price"`
+		IsPaid          bool       `db:"is_paid"`
+		PaidAt          *time.Time `db:"paid_at"`
+		IsDelivered     bool       `db:"is_delivered"`
+		DeliveredAt     *time.Time `db:"delivered_at"`
+		CreatedAt       time.Time  `db:"created_at"`
+		UpdatedAt       time.Time  `db:"updated_at"`
+	}
+
+	OrderProductModel struct {
+		OrderID   int64 `db:"order_id"`
+		ProductID int64 `db:"product_id"`
+		Quantity  int64 `db:"quantity"`
+	}
+
+	OrderDetail struct {
+		OrderModel
+		PaymentMethodName string `db:"payment_method_name"`
+		UserName          string `db:"user_name"`
+		UserEmail         string `db:"user_email"`
+		ShipmentAddress
+		OrderProducts []OrderProduct
+		PaymentResult
+	}
+
 	CreateOrder struct {
 		UserID             int64           `json:"-"`
 		PaymentMethodID    int64           `json:"payment_method_id"`
@@ -21,6 +54,7 @@ type (
 	}
 
 	OrderProduct struct {
+		OrderID   int64  // need adjust
 		ProductID int64  `json:"product_id"`
 		Name      string `json:"name"`
 		Image     string `json:"image"`
@@ -86,19 +120,19 @@ type (
 	}
 )
 
-func NewOrderResponse(message string, data *domain.OrderDetail) *ResponseData {
+func NewOrderResponse(message string, data *OrderDetail) *ResponseData {
 	resData := new(CreateOrderResponse)
-	resData.OrderID = data.Order.OrderID
+	resData.OrderID = data.OrderModel.OrderID
 
 	return GenerateResponseData(message, resData)
 }
 
-func NewGetOrderListResponse(message string, data []domain.OrderDetail) *ResponseData {
+func NewGetOrderListResponse(message string, data []OrderDetail) *ResponseData {
 	resData := make([]OrderListResponse, 0)
 
 	for _, orderDetail := range data {
 		var resOrderList OrderListResponse
-		resOrderList.OrderID = orderDetail.Order.OrderID
+		resOrderList.OrderID = orderDetail.OrderModel.OrderID
 		resOrderList.PaymentMethodID = orderDetail.PaymentMethodID
 		resOrderList.ProductPrice = orderDetail.ProductPrice
 		resOrderList.TaxPrice = orderDetail.TaxPrice
@@ -115,9 +149,9 @@ func NewGetOrderListResponse(message string, data []domain.OrderDetail) *Respons
 	return GenerateResponseData(message, resData)
 }
 
-func NewGetOrderDetailResponse(message string, data *domain.OrderDetail) *ResponseData {
+func NewGetOrderDetailResponse(message string, data *OrderDetail) *ResponseData {
 	resData := new(OrderDetailResponse)
-	resData.OrderID = data.Order.OrderID
+	resData.OrderID = data.OrderModel.OrderID
 	resData.PaymentMethodID = data.PaymentMethodID
 	resData.PaymentMethodName = data.PaymentMethodName
 	resData.ProductPrice = data.ProductPrice
@@ -152,7 +186,7 @@ func NewGetOrderDetailResponse(message string, data *domain.OrderDetail) *Respon
 	return GenerateResponseData(message, resData)
 }
 
-func NewUpdatePaidResponse(message string, data *domain.PaymentResult) *ResponseData {
+func NewUpdatePaidResponse(message string, data *PaymentResult) *ResponseData {
 	resData := new(UpdateOrderPaidResponse)
 	resData.OrderID = data.OrderID
 	resData.PaymentResultID = data.PaymentResultID
