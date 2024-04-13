@@ -1,26 +1,33 @@
-package service
+package usecase
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/repository"
 )
 
-type ProductCategoryService struct {
+type IProductCategoryUsecase interface {
+	Create(data *domain.CreateProductCategoryRequest) (*domain.ResponseData, *errs.AppError)
+	GetList() ([]domain.ProductCategoryModel, *errs.AppError)
+	GetDetail(productCategoryID int64) (*domain.ResponseData, *errs.AppError)
+	Update(productCategoryID int64, data *domain.CreateProductCategoryRequest) (*domain.ResponseData, *errs.AppError)
+	Delete(productCategoryID int64) (*domain.ResponseData, *errs.AppError)
+}
+
+type ProductCategoryUsecase struct {
 	productCategoryRepo repository.IProductCategoryRepository
 }
 
-func NewProductCategoryService(repository repository.RepositoryCollection) port.ProductCategoryService {
-	return &ProductCategoryService{
+func NewProductCategoryUsecase(repository repository.RepositoryCollection) IProductCategoryUsecase {
+	return &ProductCategoryUsecase{
 		productCategoryRepo: repository.ProductCategoryRepository,
 	}
 }
 
-func (r ProductCategoryService) Create(req *domain.CreateProductCategoryRequest) (*domain.ResponseData, *errs.AppError) {
+func (r ProductCategoryUsecase) Create(req *domain.CreateProductCategoryRequest) (*domain.ResponseData, *errs.AppError) {
 
 	appErr := req.Validate()
 	if appErr != nil {
@@ -53,7 +60,7 @@ func (r ProductCategoryService) Create(req *domain.CreateProductCategoryRequest)
 	return response, nil
 }
 
-func (r ProductCategoryService) GetList() ([]domain.ProductCategoryModel, *errs.AppError) {
+func (r ProductCategoryUsecase) GetList() ([]domain.ProductCategoryModel, *errs.AppError) {
 	productCategories, appErr := r.productCategoryRepo.GetAll()
 	if appErr != nil {
 		return nil, appErr
@@ -61,7 +68,7 @@ func (r ProductCategoryService) GetList() ([]domain.ProductCategoryModel, *errs.
 	return productCategories, nil
 }
 
-func (r ProductCategoryService) GetDetail(productCategoryID int64) (*domain.ResponseData, *errs.AppError) {
+func (r ProductCategoryUsecase) GetDetail(productCategoryID int64) (*domain.ResponseData, *errs.AppError) {
 
 	productCategory, appErr := r.productCategoryRepo.GetOneByID(productCategoryID)
 	if appErr != nil {
@@ -73,7 +80,7 @@ func (r ProductCategoryService) GetDetail(productCategoryID int64) (*domain.Resp
 	return response, nil
 }
 
-func (r ProductCategoryService) Update(productCategoryID int64, req *domain.CreateProductCategoryRequest) (*domain.ResponseData, *errs.AppError) {
+func (r ProductCategoryUsecase) Update(productCategoryID int64, req *domain.CreateProductCategoryRequest) (*domain.ResponseData, *errs.AppError) {
 
 	appErr := req.Validate()
 	if appErr != nil {
@@ -115,7 +122,7 @@ func (r ProductCategoryService) Update(productCategoryID int64, req *domain.Crea
 	return response, nil
 }
 
-func (r ProductCategoryService) Delete(productCategoryID int64) (*domain.ResponseData, *errs.AppError) {
+func (r ProductCategoryUsecase) Delete(productCategoryID int64) (*domain.ResponseData, *errs.AppError) {
 
 	checkProductCategory, appErr := r.productCategoryRepo.CheckByID(productCategoryID)
 	if appErr != nil {

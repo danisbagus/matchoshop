@@ -7,13 +7,13 @@ import (
 
 	"github.com/danisbagus/go-common-packages/http/response"
 	"github.com/danisbagus/go-common-packages/logger"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/domain"
+	"github.com/danisbagus/matchoshop/internal/usecase"
 	"github.com/gorilla/mux"
 )
 
 type ProductCategoryHandler struct {
-	Service port.ProductCategoryService
+	usecase usecase.IProductCategoryUsecase
 }
 
 func (rc ProductCategoryHandler) CreateProductCategory(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +25,7 @@ func (rc ProductCategoryHandler) CreateProductCategory(w http.ResponseWriter, r 
 		return
 	}
 
-	createData, appErr := rc.Service.Create(&request)
+	createData, appErr := rc.usecase.Create(&request)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -36,7 +36,7 @@ func (rc ProductCategoryHandler) CreateProductCategory(w http.ResponseWriter, r 
 
 func (rc ProductCategoryHandler) GetProductCategoryList(w http.ResponseWriter, r *http.Request) {
 
-	productCategories, appErr := rc.Service.GetList()
+	productCategories, appErr := rc.usecase.GetList()
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -50,7 +50,7 @@ func (rc ProductCategoryHandler) GetProductCategoryDetail(w http.ResponseWriter,
 	vars := mux.Vars(r)
 	productCategoryID, _ := strconv.Atoi(vars["product_category_id"])
 
-	productCategory, appErr := rc.Service.GetDetail(int64(productCategoryID))
+	productCategory, appErr := rc.usecase.GetDetail(int64(productCategoryID))
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -71,7 +71,7 @@ func (rc ProductCategoryHandler) UpdateProductCategory(w http.ResponseWriter, r 
 		return
 	}
 
-	updateData, appErr := rc.Service.Update(int64(productCategoryID), &request)
+	updateData, appErr := rc.usecase.Update(int64(productCategoryID), &request)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -84,7 +84,7 @@ func (rc ProductCategoryHandler) Delete(w http.ResponseWriter, r *http.Request) 
 	vars := mux.Vars(r)
 	productCategoryID, _ := strconv.Atoi(vars["product_category_id"])
 
-	deleteData, appErr := rc.Service.Delete(int64(productCategoryID))
+	deleteData, appErr := rc.usecase.Delete(int64(productCategoryID))
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return

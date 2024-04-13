@@ -4,11 +4,11 @@ import (
 	"net/http"
 
 	"github.com/danisbagus/go-common-packages/http/response"
-	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/danisbagus/matchoshop/internal/usecase"
 )
 
 type UploadHandler struct {
-	Service port.UploadService
+	usecase usecase.IUploadUsecase
 }
 
 func (h UploadHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
@@ -23,7 +23,7 @@ func (h UploadHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 
 	defer file.Close()
 
-	url, appErr := h.Service.UploadImage(file)
+	url, appErr := h.usecase.UploadImage(file)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return

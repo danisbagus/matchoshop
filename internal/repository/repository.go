@@ -17,7 +17,7 @@ type RepositoryCollection struct {
 	UserRepository                   IUserRepository
 }
 
-func NewRepoCollection(db *sqlx.DB) RepositoryCollection {
+func NewRepositoryCollection(db *sqlx.DB) RepositoryCollection {
 	return RepositoryCollection{
 		HealthCheckRepository:            NewHealthCheckRepository(db),
 		OrderRepository:                  NewOrderRepository(db),

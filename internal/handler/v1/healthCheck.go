@@ -4,21 +4,21 @@ import (
 	"net/http"
 
 	"github.com/danisbagus/go-common-packages/http/response"
-	"github.com/danisbagus/matchoshop/internal/core/port"
+	"github.com/danisbagus/matchoshop/internal/usecase"
 )
 
 type HealthCheckHandler struct {
-	service port.HealthCheckService
+	usecase usecase.IHealthCheckUsecase
 }
 
-func NewHealthCheckHandlerHandler(service port.HealthCheckService) *HealthCheckHandler {
+func NewHealthCheckHandlerHandler(usecase usecase.IHealthCheckUsecase) *HealthCheckHandler {
 	return &HealthCheckHandler{
-		service: service,
+		usecase: usecase,
 	}
 }
 
 func (h HealthCheckHandler) Get(w http.ResponseWriter, r *http.Request) {
-	get := h.service.Get()
+	get := h.usecase.Get()
 
 	resData := map[string]interface{}{
 		"message": "Successfully get health-check",

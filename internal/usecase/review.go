@@ -1,27 +1,30 @@
-package service
+package usecase
 
 import (
 	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/repository"
 )
 
-type (
-	ReviewService struct {
-		reviewRepo repository.IReviewRepository
-	}
-)
+type IReviewUsecase interface {
+	Create(form *domain.Review) *errs.AppError
+	GetDetail(userID, productID int64) (*domain.Review, *errs.AppError)
+	Update(form *domain.Review) *errs.AppError
+}
 
-func NewReviewService(repository repository.RepositoryCollection) port.ReviewService {
-	return &ReviewService{
+type ReviewUsecase struct {
+	reviewRepo repository.IReviewRepository
+}
+
+func NewReviewUsecase(repository repository.RepositoryCollection) IReviewUsecase {
+	return &ReviewUsecase{
 		reviewRepo: repository.ReviewRepository,
 	}
 }
 
-func (s ReviewService) GetDetail(userID, productID int64) (*domain.Review, *errs.AppError) {
+func (s ReviewUsecase) GetDetail(userID, productID int64) (*domain.Review, *errs.AppError) {
 	review, appErr := s.reviewRepo.GetOneByUserIDAndProductID(userID, productID)
 	if appErr != nil {
 		return nil, appErr
@@ -29,7 +32,7 @@ func (s ReviewService) GetDetail(userID, productID int64) (*domain.Review, *errs
 	return review, nil
 }
 
-func (s ReviewService) Create(form *domain.Review) *errs.AppError {
+func (s ReviewUsecase) Create(form *domain.Review) *errs.AppError {
 	review, appErr := s.reviewRepo.GetOneByUserIDAndProductID(form.UserID, form.ProductID)
 	if appErr != nil {
 		return appErr
@@ -48,7 +51,7 @@ func (s ReviewService) Create(form *domain.Review) *errs.AppError {
 	return nil
 }
 
-func (s ReviewService) Update(form *domain.Review) *errs.AppError {
+func (s ReviewUsecase) Update(form *domain.Review) *errs.AppError {
 	review, appErr := s.reviewRepo.GetOneByUserIDAndProductID(form.UserID, form.ProductID)
 	if appErr != nil {
 		return appErr

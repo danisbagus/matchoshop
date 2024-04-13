@@ -7,14 +7,14 @@ import (
 
 	"github.com/danisbagus/go-common-packages/http/response"
 	"github.com/danisbagus/go-common-packages/logger"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/domain"
+	"github.com/danisbagus/matchoshop/internal/usecase"
 	"github.com/danisbagus/matchoshop/utils/helper"
 	"github.com/gorilla/mux"
 )
 
 type ProductHandler struct {
-	Service port.ProductService
+	usecase usecase.IProductUsecase
 }
 
 func (rc ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
@@ -41,7 +41,7 @@ func (rc ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	form.Stock = req.Stock
 	form.ProductCategoryIDs = req.ProductCategoryIDs
 
-	appErr = rc.Service.Create(form)
+	appErr = rc.usecase.Create(form)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -57,7 +57,7 @@ func (rc ProductHandler) GetTopProduct(w http.ResponseWriter, r *http.Request) {
 	criteria.Sort = "numb_reviews"
 	criteria.Order = "DESC"
 
-	products, appErr := rc.Service.GetList(criteria)
+	products, appErr := rc.usecase.GetList(criteria)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -75,7 +75,7 @@ func (rc ProductHandler) GetProductListPaginate(w http.ResponseWriter, r *http.R
 	criteria := new(domain.ProductListCriteria)
 	criteria.Keyword = keyword
 	criteria.Page, criteria.Limit = helper.SetPaginationParameter(int64(page), int64(limit))
-	products, total, appErr := rc.Service.GetListPaginate(criteria)
+	products, total, appErr := rc.usecase.GetListPaginate(criteria)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -92,7 +92,7 @@ func (rc ProductHandler) GetProductDetail(w http.ResponseWriter, r *http.Request
 	vars := mux.Vars(r)
 	productID, _ := strconv.Atoi(vars["product_id"])
 
-	product, appErr := rc.Service.GetDetail(int64(productID))
+	product, appErr := rc.usecase.GetDetail(int64(productID))
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -129,7 +129,7 @@ func (rc ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	form.Description = req.Description
 	form.ProductCategoryIDs = req.ProductCategoryIDs
 
-	appErr = rc.Service.Update(int64(productID), form)
+	appErr = rc.usecase.Update(int64(productID), form)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -142,7 +142,7 @@ func (rc ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 func (rc ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	productID, _ := strconv.Atoi(vars["product_id"])
-	appErr := rc.Service.Delete(int64(productID))
+	appErr := rc.usecase.Delete(int64(productID))
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return

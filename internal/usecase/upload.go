@@ -1,4 +1,4 @@
-package service
+package usecase
 
 import (
 	"context"
@@ -8,18 +8,21 @@ import (
 	"github.com/cloudinary/cloudinary-go"
 	"github.com/cloudinary/cloudinary-go/api/uploader"
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/utils/helper"
 )
 
-type UploadService struct {
+type IUploadUsecase interface {
+	UploadImage(file multipart.File) (string, *errs.AppError)
 }
 
-func NewUploadService() port.UploadService {
-	return &UploadService{}
+type UploadUsecase struct {
 }
 
-func (s UploadService) UploadImage(file multipart.File) (string, *errs.AppError) {
+func NewUploadUsecase() IUploadUsecase {
+	return &UploadUsecase{}
+}
+
+func (s UploadUsecase) UploadImage(file multipart.File) (string, *errs.AppError) {
 	//create cloudinary instance
 	cld, err := cloudinary.NewFromURL(helper.EnvCloudURL())
 

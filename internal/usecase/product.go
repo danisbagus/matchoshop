@@ -1,4 +1,4 @@
-package service
+package usecase
 
 import (
 	"fmt"
@@ -6,20 +6,28 @@ import (
 	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/repository"
 )
 
-type ProductService struct {
+type IProductUsecase interface {
+	Create(form *domain.Product) *errs.AppError
+	GetList(criteria *domain.ProductListCriteria) ([]domain.ProductDetail, *errs.AppError)
+	GetListPaginate(criteria *domain.ProductListCriteria) ([]domain.ProductDetail, int64, *errs.AppError)
+	GetDetail(productID int64) (*domain.ProductDetail, *errs.AppError)
+	Update(productID int64, form *domain.Product) *errs.AppError
+	Delete(productID int64) *errs.AppError
+}
+
+type ProductUsecase struct {
 	productRepo                repository.IProductRepository
 	productCategoryRepo        repository.IProductCategoryRepository
 	productProductCategoryRepo repository.IProductProductCategoryRepository
 	reviewRepo                 repository.IReviewRepository
 }
 
-func NewProductService(repository repository.RepositoryCollection) port.ProductService {
-	return &ProductService{
+func NewProductUsecase(repository repository.RepositoryCollection) IProductUsecase {
+	return &ProductUsecase{
 		productRepo:                repository.ProductReposotory,
 		productCategoryRepo:        repository.ProductCategoryRepository,
 		productProductCategoryRepo: repository.ProductProductCategoryRepository,
@@ -27,7 +35,7 @@ func NewProductService(repository repository.RepositoryCollection) port.ProductS
 	}
 }
 
-func (r ProductService) Create(form *domain.Product) *errs.AppError {
+func (r ProductUsecase) Create(form *domain.Product) *errs.AppError {
 
 	checkProduct, appErr := r.productRepo.CheckBySKU(form.Sku)
 	if appErr != nil {
@@ -75,7 +83,7 @@ func (r ProductService) Create(form *domain.Product) *errs.AppError {
 	return nil
 }
 
-func (r ProductService) GetList(criteria *domain.ProductListCriteria) ([]domain.ProductDetail, *errs.AppError) {
+func (r ProductUsecase) GetList(criteria *domain.ProductListCriteria) ([]domain.ProductDetail, *errs.AppError) {
 
 	products, appErr := r.productRepo.GetAll(criteria)
 	if appErr != nil {
@@ -98,7 +106,7 @@ func (r ProductService) GetList(criteria *domain.ProductListCriteria) ([]domain.
 	return result, nil
 }
 
-func (r ProductService) GetListPaginate(criteria *domain.ProductListCriteria) ([]domain.ProductDetail, int64, *errs.AppError) {
+func (r ProductUsecase) GetListPaginate(criteria *domain.ProductListCriteria) ([]domain.ProductDetail, int64, *errs.AppError) {
 
 	products, total, appErr := r.productRepo.GetAllPaginate(criteria)
 	if appErr != nil {
@@ -129,7 +137,7 @@ func (r ProductService) GetListPaginate(criteria *domain.ProductListCriteria) ([
 	return result, total, nil
 }
 
-func (r ProductService) GetDetail(productID int64) (*domain.ProductDetail, *errs.AppError) {
+func (r ProductUsecase) GetDetail(productID int64) (*domain.ProductDetail, *errs.AppError) {
 
 	var product *domain.ProductDetail
 	var productCategories []domain.ProductCategoryModel
@@ -225,7 +233,7 @@ func (r ProductService) GetDetail(productID int64) (*domain.ProductDetail, *errs
 	return product, nil
 }
 
-func (r ProductService) Update(productID int64, form *domain.Product) *errs.AppError {
+func (r ProductUsecase) Update(productID int64, form *domain.Product) *errs.AppError {
 
 	checkProduct, appErr := r.productRepo.CheckByID(productID)
 	if appErr != nil {
@@ -285,7 +293,7 @@ func (r ProductService) Update(productID int64, form *domain.Product) *errs.AppE
 	return nil
 }
 
-func (r ProductService) Delete(productID int64) *errs.AppError {
+func (r ProductUsecase) Delete(productID int64) *errs.AppError {
 
 	checkProduct, appErr := r.productRepo.CheckByID(productID)
 	if appErr != nil {

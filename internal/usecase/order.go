@@ -1,4 +1,4 @@
-package service
+package usecase
 
 import (
 	"sync"
@@ -6,22 +6,28 @@ import (
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/repository"
 )
 
-type (
-	OrderService struct {
-		orderRepo         repository.IOrderRepository
-		orderProductRepo  repository.IOrderProductRepository
-		paymentResultRepo repository.IPaymentResultRepository
-		productRepo       repository.IProductRepository
-	}
-)
+type IOrderUsecase interface {
+	Create(form *domain.OrderDetail) (*domain.OrderDetail, *errs.AppError)
+	GetList() ([]domain.OrderDetail, *errs.AppError)
+	GetListByUser(userID int64) ([]domain.OrderDetail, *errs.AppError)
+	GetDetail(ID int64) (*domain.OrderDetail, *errs.AppError)
+	UpdatePaid(form *domain.PaymentResult) *errs.AppError
+	UpdateDelivered(ID int64) *errs.AppError
+}
 
-func NewOrderService(repository repository.RepositoryCollection) port.OrderService {
-	return &OrderService{
+type OrderUsecase struct {
+	orderRepo         repository.IOrderRepository
+	orderProductRepo  repository.IOrderProductRepository
+	paymentResultRepo repository.IPaymentResultRepository
+	productRepo       repository.IProductRepository
+}
+
+func NewOrderUsecase(repository repository.RepositoryCollection) IOrderUsecase {
+	return &OrderUsecase{
 		orderRepo:         repository.OrderRepository,
 		orderProductRepo:  repository.OrderProductRepository,
 		paymentResultRepo: repository.PaymentResultRepository,
@@ -29,7 +35,7 @@ func NewOrderService(repository repository.RepositoryCollection) port.OrderServi
 	}
 }
 
-func (s OrderService) Create(form *domain.OrderDetail) (*domain.OrderDetail, *errs.AppError) {
+func (s OrderUsecase) Create(form *domain.OrderDetail) (*domain.OrderDetail, *errs.AppError) {
 
 	// validate stock
 	for _, orderProduct := range form.OrderProducts {
@@ -56,7 +62,7 @@ func (s OrderService) Create(form *domain.OrderDetail) (*domain.OrderDetail, *er
 	return form, nil
 }
 
-func (s OrderService) GetList() ([]domain.OrderDetail, *errs.AppError) {
+func (s OrderUsecase) GetList() ([]domain.OrderDetail, *errs.AppError) {
 	orders, appErr := s.orderRepo.GetAll()
 	if appErr != nil {
 		return nil, appErr
@@ -65,7 +71,7 @@ func (s OrderService) GetList() ([]domain.OrderDetail, *errs.AppError) {
 	return orders, nil
 }
 
-func (s OrderService) GetListByUser(userID int64) ([]domain.OrderDetail, *errs.AppError) {
+func (s OrderUsecase) GetListByUser(userID int64) ([]domain.OrderDetail, *errs.AppError) {
 	orders, appErr := s.orderRepo.GetAllByUserID(userID)
 	if appErr != nil {
 		return nil, appErr
@@ -73,7 +79,7 @@ func (s OrderService) GetListByUser(userID int64) ([]domain.OrderDetail, *errs.A
 	return orders, nil
 }
 
-func (s OrderService) GetDetail(ID int64) (*domain.OrderDetail, *errs.AppError) {
+func (s OrderUsecase) GetDetail(ID int64) (*domain.OrderDetail, *errs.AppError) {
 
 	var order *domain.OrderDetail
 	var orderProducts []domain.OrderProduct
@@ -127,7 +133,7 @@ func (s OrderService) GetDetail(ID int64) (*domain.OrderDetail, *errs.AppError) 
 	return order, nil
 }
 
-func (s OrderService) UpdatePaid(form *domain.PaymentResult) *errs.AppError {
+func (s OrderUsecase) UpdatePaid(form *domain.PaymentResult) *errs.AppError {
 
 	_, appErr := s.orderRepo.GetOneByID(form.OrderID)
 	if appErr != nil {
@@ -177,7 +183,7 @@ func (s OrderService) UpdatePaid(form *domain.PaymentResult) *errs.AppError {
 	return nil
 }
 
-func (s OrderService) UpdateDelivered(ID int64) *errs.AppError {
+func (s OrderUsecase) UpdateDelivered(ID int64) *errs.AppError {
 	order, appErr := s.orderRepo.GetOneByID(ID)
 	if appErr != nil {
 		return appErr

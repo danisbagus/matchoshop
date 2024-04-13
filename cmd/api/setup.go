@@ -11,9 +11,9 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/danisbagus/matchoshop/cmd/api/middleware"
-	"github.com/danisbagus/matchoshop/internal/core/service"
 	handlerV1 "github.com/danisbagus/matchoshop/internal/handler/v1"
 	"github.com/danisbagus/matchoshop/internal/repository"
+	"github.com/danisbagus/matchoshop/internal/usecase"
 	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/modules"
 )
@@ -44,24 +44,24 @@ func Set() {
 	router.StrictSlash(true)
 
 	// wiring
-	repoCollection := repository.NewRepoCollection(client)
+	repoCollection := repository.NewRepositoryCollection(client)
 
-	userService := service.NewUserService(repoCollection)
-	productService := service.NewProductService(repoCollection)
-	productCategoryService := service.NewProductCategoryService(repoCollection)
-	orderService := service.NewOrderService(repoCollection)
-	uploadService := service.NewUploadService()
-	reviewService := service.NewReviewService(repoCollection)
-	healthCheckService := service.NewHealthCheckService(repoCollection)
+	UserUsecase := usecase.NewUserUsecase(repoCollection)
+	ProductUsecase := usecase.NewProductUsecase(repoCollection)
+	ProductCategoryUsecase := usecase.NewProductCategoryUsecase(repoCollection)
+	OrderUsecase := usecase.NewOrderUsecase(repoCollection)
+	uploadUsecase := usecase.NewUploadUsecase()
+	ReviewUsecase := usecase.NewReviewUsecase(repoCollection)
+	HealthCheckUsecase := usecase.NewHealthCheckUsecase(repoCollection)
 
-	userHandlerV1 := handlerV1.UserHandler{Service: userService}
-	productHandlerV1 := handlerV1.ProductHandler{Service: productService}
-	productCategoryHandlerV1 := handlerV1.ProductCategoryHandler{Service: productCategoryService}
-	orderHandlerV1 := handlerV1.OrderHandler{Service: orderService}
+	userHandlerV1 := handlerV1.UserHandler{usecase: UserUsecase}
+	productHandlerV1 := handlerV1.ProductHandler{usecase: ProductUsecase}
+	productCategoryHandlerV1 := handlerV1.ProductCategoryHandler{usecase: ProductCategoryUsecase}
+	orderHandlerV1 := handlerV1.OrderHandler{usecase: OrderUsecase}
 	// configHandlerV1 := handlerV1.ConfigHandler{}
-	uploadHandlerV1 := handlerV1.UploadHandler{Service: uploadService}
-	reviewHandlerV1 := handlerV1.ReviewHandler{Service: reviewService}
-	healthCheckHandlerV1 := handlerV1.NewHealthCheckHandlerHandler(healthCheckService)
+	uploadHandlerV1 := handlerV1.UploadHandler{usecase: uploadUsecase}
+	reviewHandlerV1 := handlerV1.ReviewHandler{usecase: ReviewUsecase}
+	healthCheckHandlerV1 := handlerV1.NewHealthCheckHandlerHandler(HealthCheckUsecase)
 
 	// auth v1 routes
 	authV1Route := router.PathPrefix("/api/v1/auth").Subrouter()

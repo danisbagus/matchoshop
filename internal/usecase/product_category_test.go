@@ -1,11 +1,10 @@
-package service
+package usecase
 
 import (
 	"testing"
 	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/repository"
 	"github.com/danisbagus/matchoshop/internal/repository/mocks"
@@ -13,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupProductCategoryTest(t *testing.T) (mocks.RepoCollectionMocks, port.ProductCategoryService) {
+func setupProductCategoryTest(t *testing.T) (mocks.RepoCollectionMocks, IProductCategoryUsecase) {
 	repoMock := mocks.RepoCollectionMocks{
 		ProductCategoryRepository: mocks.NewIProductCategoryRepository(t),
 	}
@@ -22,7 +21,7 @@ func setupProductCategoryTest(t *testing.T) (mocks.RepoCollectionMocks, port.Pro
 		ProductCategoryRepository: repoMock.ProductCategoryRepository,
 	}
 
-	service := NewProductCategoryService(repoCollection)
+	service := NewProductCategoryUsecase(repoCollection)
 	return repoMock, service
 }
 

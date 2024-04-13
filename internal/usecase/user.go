@@ -1,11 +1,10 @@
-package service
+package usecase
 
 import (
 	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
 	"github.com/danisbagus/go-common-packages/logger"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/repository"
 	"github.com/danisbagus/matchoshop/utils/auth"
@@ -17,19 +16,29 @@ import (
 
 const dbTSLayout = "2006-01-02 15:04:05"
 
-type UserService struct {
+type IUserUsecase interface {
+	Login(req domain.LoginRequest) (*domain.ResponseData, *errs.AppError)
+	Refresh(request domain.RefreshTokenRequest) (*domain.ResponseData, *errs.AppError)
+	RegisterCustomer(req *domain.RegisterCustomerRequest) (*domain.ResponseData, *errs.AppError)
+	GetList(roldID int64) ([]domain.UserDetail, *errs.AppError)
+	GetDetail(userID int64) (*domain.ResponseData, *errs.AppError)
+	Update(form *domain.UserModel) *errs.AppError
+	Delete(userID, roleID int64) *errs.AppError
+}
+
+type UserUsecase struct {
 	userRepo              repository.IUserRepository
 	refreshTokenStoreRepo repository.IRefreshTokenStoreRepository
 }
 
-func NewUserService(repository repository.RepositoryCollection) port.UserService {
-	return &UserService{
+func NewUserUsecase(repository repository.RepositoryCollection) IUserUsecase {
+	return &UserUsecase{
 		userRepo:              repository.UserRepository,
 		refreshTokenStoreRepo: repository.RefreshTokenStoreRepository,
 	}
 }
 
-func (r UserService) Login(req domain.LoginRequest) (*domain.ResponseData, *errs.AppError) {
+func (r UserUsecase) Login(req domain.LoginRequest) (*domain.ResponseData, *errs.AppError) {
 	var appErr *errs.AppError
 	var login *domain.UserModel
 
@@ -69,7 +78,7 @@ func (r UserService) Login(req domain.LoginRequest) (*domain.ResponseData, *errs
 	return response, nil
 }
 
-func (r UserService) Refresh(request domain.RefreshTokenRequest) (*domain.ResponseData, *errs.AppError) {
+func (r UserUsecase) Refresh(request domain.RefreshTokenRequest) (*domain.ResponseData, *errs.AppError) {
 
 	// check token is valid or not
 	validationErr := auth.IsTokenValid(request.AccessToken)
@@ -106,7 +115,7 @@ func (r UserService) Refresh(request domain.RefreshTokenRequest) (*domain.Respon
 	return nil, errs.NewAuthenticationError("cannot generate a new access token until the current one expires")
 }
 
-func (r UserService) RegisterCustomer(req *domain.RegisterCustomerRequest) (*domain.ResponseData, *errs.AppError) {
+func (r UserUsecase) RegisterCustomer(req *domain.RegisterCustomerRequest) (*domain.ResponseData, *errs.AppError) {
 	appErr := req.Validate()
 	if appErr != nil {
 		return nil, appErr
@@ -158,7 +167,7 @@ func (r UserService) RegisterCustomer(req *domain.RegisterCustomerRequest) (*dom
 	return response, nil
 }
 
-func (r UserService) GetDetail(userID int64) (*domain.ResponseData, *errs.AppError) {
+func (r UserUsecase) GetDetail(userID int64) (*domain.ResponseData, *errs.AppError) {
 	// get detail user
 	userDetail, appErr := r.userRepo.FindOneById(userID)
 	if appErr != nil {
@@ -174,7 +183,7 @@ func (r UserService) GetDetail(userID int64) (*domain.ResponseData, *errs.AppErr
 	return response, nil
 }
 
-func (r UserService) Update(form *domain.UserModel) *errs.AppError {
+func (r UserUsecase) Update(form *domain.UserModel) *errs.AppError {
 
 	user, appErr := r.userRepo.FindOneById(form.UserID)
 	if appErr != nil {
@@ -195,7 +204,7 @@ func (r UserService) Update(form *domain.UserModel) *errs.AppError {
 	return nil
 }
 
-func (r UserService) GetList(roleID int64) ([]domain.UserDetail, *errs.AppError) {
+func (r UserUsecase) GetList(roleID int64) ([]domain.UserDetail, *errs.AppError) {
 	result := make([]domain.UserDetail, 0)
 	userList, appErr := r.userRepo.GetAll()
 	if appErr != nil {
@@ -221,7 +230,7 @@ func (r UserService) GetList(roleID int64) ([]domain.UserDetail, *errs.AppError)
 	return result, nil
 }
 
-func (r UserService) Delete(userID, roleID int64) *errs.AppError {
+func (r UserUsecase) Delete(userID, roleID int64) *errs.AppError {
 
 	user, appErr := r.userRepo.FindOneById(userID)
 	if appErr != nil {

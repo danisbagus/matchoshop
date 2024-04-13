@@ -1,17 +1,16 @@
-package service
+package usecase
 
 import (
 	"testing"
 
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/repository"
 	"github.com/danisbagus/matchoshop/internal/repository/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
-func setupUserTest(t *testing.T) (mocks.RepoCollectionMocks, port.UserService) {
+func setupUserTest(t *testing.T) (mocks.RepoCollectionMocks, IUserUsecase) {
 	repoMock := mocks.RepoCollectionMocks{
 		UserRepository: mocks.NewIUserRepository(t),
 	}
@@ -20,7 +19,7 @@ func setupUserTest(t *testing.T) (mocks.RepoCollectionMocks, port.UserService) {
 		UserRepository: repoMock.UserRepository,
 	}
 
-	service := NewUserService(repoCollection)
+	service := NewUserUsecase(repoCollection)
 	return repoMock, service
 }
 

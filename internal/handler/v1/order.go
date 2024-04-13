@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/danisbagus/go-common-packages/http/response"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/domain"
+	"github.com/danisbagus/matchoshop/internal/usecase"
 	"github.com/danisbagus/matchoshop/utils/auth"
 	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/helper"
@@ -15,7 +15,7 @@ import (
 )
 
 type OrderHandler struct {
-	Service port.OrderService
+	usecase usecase.IOrderUsecase
 }
 
 func (h OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +57,7 @@ func (h OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	form.OrderProducts = orderProducts
 
-	createData, appErr := h.Service.Create(form)
+	createData, appErr := h.usecase.Create(form)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -71,7 +71,7 @@ func (h OrderHandler) GetList(w http.ResponseWriter, r *http.Request) {
 	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
 	userID := userInfo.UserID
 
-	orders, appErr := h.Service.GetListByUser(userID)
+	orders, appErr := h.usecase.GetListByUser(userID)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -85,7 +85,7 @@ func (h OrderHandler) GetDetail(w http.ResponseWriter, r *http.Request) {
 
 	OrderID := helper.StringToInt64(vars["order_id"], 0)
 
-	order, appErr := h.Service.GetDetail(int64(OrderID))
+	order, appErr := h.usecase.GetDetail(int64(OrderID))
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -121,7 +121,7 @@ func (h OrderHandler) UpdatePaid(w http.ResponseWriter, r *http.Request) {
 	form.UpdateTime = helper.StringToDate(req.UpdateTime, time.RFC3339)
 	form.Email = req.Email
 
-	appErr = h.Service.UpdatePaid(form)
+	appErr = h.usecase.UpdatePaid(form)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -136,7 +136,7 @@ func (h OrderHandler) UpdateDelivered(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	orderID := helper.StringToInt64(vars["order_id"], 0)
 
-	appErr := h.Service.UpdateDelivered(orderID)
+	appErr := h.usecase.UpdateDelivered(orderID)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -150,7 +150,7 @@ func (h OrderHandler) UpdateDelivered(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h OrderHandler) GetListAdmin(w http.ResponseWriter, r *http.Request) {
-	orders, appErr := h.Service.GetList()
+	orders, appErr := h.usecase.GetList()
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return

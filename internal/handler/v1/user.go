@@ -7,14 +7,14 @@ import (
 
 	"github.com/danisbagus/go-common-packages/http/response"
 	"github.com/danisbagus/go-common-packages/logger"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/domain"
+	"github.com/danisbagus/matchoshop/internal/usecase"
 	"github.com/danisbagus/matchoshop/utils/auth"
 	"github.com/gorilla/mux"
 )
 
 type UserHandler struct {
-	Service port.UserService
+	usecase usecase.IUserUsecase
 }
 
 func (rc UserHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +25,7 @@ func (rc UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, appErr := rc.Service.Login(loginRequest)
+	token, appErr := rc.usecase.Login(loginRequest)
 	if appErr != nil {
 		response.Write(w, appErr.Code, appErr.AsMessage())
 		return
@@ -42,7 +42,7 @@ func (rc UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, appErr := rc.Service.Refresh(refreshRequest)
+	token, appErr := rc.usecase.Refresh(refreshRequest)
 
 	if appErr != nil {
 
@@ -61,7 +61,7 @@ func (rc UserHandler) RegisterCustomer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, appErr := rc.Service.RegisterCustomer(&registerRequest)
+	token, appErr := rc.usecase.RegisterCustomer(&registerRequest)
 	if appErr != nil {
 		response.Write(w, appErr.Code, appErr.AsMessage())
 		return
@@ -74,7 +74,7 @@ func (rc UserHandler) GetUserDetail(w http.ResponseWriter, r *http.Request) {
 
 	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
 
-	userData, appErr := rc.Service.GetDetail(userInfo.UserID)
+	userData, appErr := rc.usecase.GetDetail(userInfo.UserID)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -103,7 +103,7 @@ func (rc UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	form.UserID = userInfo.UserID
 	form.Name = req.Name
 
-	appErr = rc.Service.Update(form)
+	appErr = rc.usecase.Update(form)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -117,7 +117,7 @@ func (rc UserHandler) GetUserList(w http.ResponseWriter, r *http.Request) {
 	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
 	roleID := userInfo.RoleID
 
-	users, appErr := rc.Service.GetList(roleID)
+	users, appErr := rc.usecase.GetList(roleID)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -132,7 +132,7 @@ func (rc UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID, _ := strconv.Atoi(vars["user_id"])
 	roleID := userInfo.RoleID
 
-	appErr := rc.Service.Delete(int64(userID), roleID)
+	appErr := rc.usecase.Delete(int64(userID), roleID)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -163,7 +163,7 @@ func (rc UserHandler) UpdateUserAdmin(w http.ResponseWriter, r *http.Request) {
 	form.UserID = int64(userID)
 	form.Name = req.Name
 
-	appErr = rc.Service.Update(form)
+	appErr = rc.usecase.Update(form)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -176,7 +176,7 @@ func (rc UserHandler) UpdateUserAdmin(w http.ResponseWriter, r *http.Request) {
 func (rc UserHandler) GetUserDetailAdmin(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID, _ := strconv.Atoi(vars["user_id"])
-	userData, appErr := rc.Service.GetDetail(int64(userID))
+	userData, appErr := rc.usecase.GetDetail(int64(userID))
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return

@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/danisbagus/go-common-packages/http/response"
-	"github.com/danisbagus/matchoshop/internal/core/port"
 	"github.com/danisbagus/matchoshop/internal/domain"
+	"github.com/danisbagus/matchoshop/internal/usecase"
 	"github.com/danisbagus/matchoshop/utils/auth"
 	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/helper"
@@ -14,7 +14,7 @@ import (
 )
 
 type ReviewHandler struct {
-	Service port.ReviewService
+	usecase usecase.IReviewUsecase
 }
 
 func (h ReviewHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +39,7 @@ func (h ReviewHandler) Create(w http.ResponseWriter, r *http.Request) {
 	form.Rating = req.Rating
 	form.Comment = req.Comment
 
-	appErr = h.Service.Create(form)
+	appErr = h.usecase.Create(form)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -54,7 +54,7 @@ func (h ReviewHandler) GetDetail(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	productID := helper.StringToInt64(vars["product_id"], 0)
 
-	review, appErr := h.Service.GetDetail(userInfo.UserID, productID)
+	review, appErr := h.usecase.GetDetail(userInfo.UserID, productID)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -85,7 +85,7 @@ func (h ReviewHandler) Update(w http.ResponseWriter, r *http.Request) {
 	form.Rating = req.Rating
 	form.Comment = req.Comment
 
-	appErr = h.Service.Create(form)
+	appErr = h.usecase.Create(form)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
