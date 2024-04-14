@@ -4,11 +4,22 @@ import (
 	"net/http"
 
 	"github.com/danisbagus/go-common-packages/http/response"
+	"github.com/danisbagus/matchoshop/cmd/middleware"
 	"github.com/danisbagus/matchoshop/internal/usecase"
+	"github.com/gorilla/mux"
 )
 
 type UploadHandler struct {
-	usecase usecase.IUploadUsecase
+	uploadUsecase usecase.IUploadUsecase
+}
+
+func NewUploadHandler(r *mux.Router, usecaseCollection usecase.UsecaseCollection, APIMiddleware middleware.IAPIMiddleware) {
+	handler := UploadHandler{
+		uploadUsecase: usecaseCollection.UploadUsecase,
+	}
+
+	route := r.PathPrefix("/api/v1/upload").Subrouter()
+	route.HandleFunc("/image", handler.UploadImage).Methods(http.MethodPost)
 }
 
 func (h UploadHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
@@ -23,7 +34,7 @@ func (h UploadHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 
 	defer file.Close()
 
-	url, appErr := h.usecase.UploadImage(file)
+	url, appErr := h.uploadUsecase.UploadImage(file)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return

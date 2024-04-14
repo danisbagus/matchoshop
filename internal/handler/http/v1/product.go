@@ -7,17 +7,38 @@ import (
 
 	"github.com/danisbagus/go-common-packages/http/response"
 	"github.com/danisbagus/go-common-packages/logger"
+	"github.com/danisbagus/matchoshop/cmd/middleware"
 	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/usecase"
+	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/helper"
 	"github.com/gorilla/mux"
 )
 
 type ProductHandler struct {
-	usecase usecase.IProductUsecase
+	productUsecase usecase.IProductUsecase
 }
 
-func (rc ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
+func NewProductHandler(r *mux.Router, usecaseCollection usecase.UsecaseCollection, APIMiddleware middleware.IAPIMiddleware) {
+	handler := ProductHandler{
+		productUsecase: usecaseCollection.ProductUsecase,
+	}
+
+	route := r.PathPrefix("/api/v1/product").Subrouter()
+	route.HandleFunc("", handler.GetProductListPaginate).Methods(http.MethodGet)
+	route.HandleFunc("/top", handler.GetTopProduct).Methods(http.MethodGet)
+	route.HandleFunc("/{product_id}", handler.GetProductDetail).Methods(http.MethodGet)
+
+	adminRoute := r.PathPrefix("/api/v1/admin/product").Subrouter()
+	adminRoute.Use(APIMiddleware.Authorization(), APIMiddleware.ACL(constants.AdminPermission))
+	adminRoute.HandleFunc("", handler.CreateProduct).Methods(http.MethodPost)
+	adminRoute.HandleFunc("", handler.GetProductListPaginate).Methods(http.MethodGet)
+	adminRoute.HandleFunc("/{product_id}", handler.UpdateProduct).Methods(http.MethodPut)
+	adminRoute.HandleFunc("/{product_id}", handler.Delete).Methods(http.MethodDelete)
+	adminRoute.HandleFunc("/{product_id}", handler.GetProductDetail).Methods(http.MethodGet)
+}
+
+func (h ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var req domain.ProductRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Error("Error while decoding create product request: " + err.Error())
@@ -41,7 +62,7 @@ func (rc ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	form.Stock = req.Stock
 	form.ProductCategoryIDs = req.ProductCategoryIDs
 
-	appErr = rc.usecase.Create(form)
+	appErr = h.productUsecase.Create(form)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -51,13 +72,13 @@ func (rc ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	response.Write(w, http.StatusCreated, res)
 }
 
-func (rc ProductHandler) GetTopProduct(w http.ResponseWriter, r *http.Request) {
+func (h ProductHandler) GetTopProduct(w http.ResponseWriter, r *http.Request) {
 	criteria := new(domain.ProductListCriteria)
 	criteria.Limit = 3
 	criteria.Sort = "numb_reviews"
 	criteria.Order = "DESC"
 
-	products, appErr := rc.usecase.GetList(criteria)
+	products, appErr := h.productUsecase.GetList(criteria)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -67,7 +88,7 @@ func (rc ProductHandler) GetTopProduct(w http.ResponseWriter, r *http.Request) {
 	response.Write(w, http.StatusOK, res)
 }
 
-func (rc ProductHandler) GetProductListPaginate(w http.ResponseWriter, r *http.Request) {
+func (h ProductHandler) GetProductListPaginate(w http.ResponseWriter, r *http.Request) {
 	keyword := r.URL.Query().Get("keyword")
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
@@ -75,7 +96,7 @@ func (rc ProductHandler) GetProductListPaginate(w http.ResponseWriter, r *http.R
 	criteria := new(domain.ProductListCriteria)
 	criteria.Keyword = keyword
 	criteria.Page, criteria.Limit = helper.SetPaginationParameter(int64(page), int64(limit))
-	products, total, appErr := rc.usecase.GetListPaginate(criteria)
+	products, total, appErr := h.productUsecase.GetListPaginate(criteria)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -88,11 +109,11 @@ func (rc ProductHandler) GetProductListPaginate(w http.ResponseWriter, r *http.R
 	response.Write(w, http.StatusOK, res)
 }
 
-func (rc ProductHandler) GetProductDetail(w http.ResponseWriter, r *http.Request) {
+func (h ProductHandler) GetProductDetail(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	productID, _ := strconv.Atoi(vars["product_id"])
 
-	product, appErr := rc.usecase.GetDetail(int64(productID))
+	product, appErr := h.productUsecase.GetDetail(int64(productID))
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -102,7 +123,7 @@ func (rc ProductHandler) GetProductDetail(w http.ResponseWriter, r *http.Request
 	response.Write(w, http.StatusOK, res)
 }
 
-func (rc ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
+func (h ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	productID, _ := strconv.Atoi(vars["product_id"])
 	var req domain.ProductRequest
@@ -129,7 +150,7 @@ func (rc ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	form.Description = req.Description
 	form.ProductCategoryIDs = req.ProductCategoryIDs
 
-	appErr = rc.usecase.Update(int64(productID), form)
+	appErr = h.productUsecase.Update(int64(productID), form)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -139,10 +160,10 @@ func (rc ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	response.Write(w, http.StatusOK, res)
 }
 
-func (rc ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
+func (h ProductHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	productID, _ := strconv.Atoi(vars["product_id"])
-	appErr := rc.usecase.Delete(int64(productID))
+	appErr := h.productUsecase.Delete(int64(productID))
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return

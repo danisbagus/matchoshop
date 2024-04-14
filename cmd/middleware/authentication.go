@@ -9,7 +9,7 @@ import (
 	"github.com/danisbagus/matchoshop/utils/auth"
 )
 
-func AuthorizationHandler() func(http.Handler) http.Handler {
+func (m *APIMiddleware) Authorization() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			claims, appErr := auth.ValidatedToken(r)
@@ -25,7 +25,7 @@ func AuthorizationHandler() func(http.Handler) http.Handler {
 	}
 }
 
-func ACL(permission map[int]bool) func(http.Handler) http.Handler {
+func (m *APIMiddleware) ACL(permission map[int]bool) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
@@ -35,23 +35,6 @@ func ACL(permission map[int]bool) func(http.Handler) http.Handler {
 				return
 			}
 
-			next.ServeHTTP(w, r)
-		})
-	}
-}
-
-func CorsMiddleware() func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Add("Access-Control-Allow-Headers", "Content-Type,AccessToken,X-CSRF-Token, Authorization, Token")
-			w.Header().Add("Access-Control-Allow-Credentials", "true")
-			w.Header().Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-			w.Header().Set("content-type", "application/json;charset=UTF-8")
-			if r.Method == "OPTIONS" {
-				w.WriteHeader(http.StatusNoContent)
-				return
-			}
 			next.ServeHTTP(w, r)
 		})
 	}

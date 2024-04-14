@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/danisbagus/go-common-packages/http/response"
+	"github.com/danisbagus/matchoshop/cmd/middleware"
 	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/usecase"
 	"github.com/danisbagus/matchoshop/utils/auth"
@@ -15,7 +16,26 @@ import (
 )
 
 type OrderHandler struct {
-	usecase usecase.IOrderUsecase
+	orderUsecase usecase.IOrderUsecase
+}
+
+func NewOrderHandler(r *mux.Router, usecaseCollection usecase.UsecaseCollection, APIMiddleware middleware.IAPIMiddleware) {
+	handler := OrderHandler{
+		orderUsecase: usecaseCollection.OrderUsecase,
+	}
+
+	route := r.PathPrefix("/api/v1/order").Subrouter()
+	route.Use(APIMiddleware.Authorization(), APIMiddleware.ACL(constants.CustomerPermission))
+	route.HandleFunc("", handler.Create).Methods(http.MethodPost)
+	route.HandleFunc("", handler.GetList).Methods(http.MethodGet)
+	route.HandleFunc("/{order_id}", handler.GetDetail).Methods(http.MethodGet)
+	route.HandleFunc("/{order_id}/pay", handler.UpdatePaid).Methods(http.MethodPut)
+
+	adminRoute := r.PathPrefix("/api/v1/admin/order").Subrouter()
+	adminRoute.Use(APIMiddleware.Authorization(), APIMiddleware.ACL(constants.AdminPermission))
+	adminRoute.HandleFunc("", handler.GetListAdmin).Methods(http.MethodGet)
+	adminRoute.HandleFunc("/{order_id}", handler.GetDetail).Methods(http.MethodGet)
+	adminRoute.HandleFunc("/{order_id}/deliver", handler.UpdateDelivered).Methods(http.MethodPut)
 }
 
 func (h OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +77,7 @@ func (h OrderHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	form.OrderProducts = orderProducts
 
-	createData, appErr := h.usecase.Create(form)
+	createData, appErr := h.orderUsecase.Create(form)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -71,7 +91,7 @@ func (h OrderHandler) GetList(w http.ResponseWriter, r *http.Request) {
 	userInfo := r.Context().Value("userInfo").(*auth.AccessTokenClaims)
 	userID := userInfo.UserID
 
-	orders, appErr := h.usecase.GetListByUser(userID)
+	orders, appErr := h.orderUsecase.GetListByUser(userID)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -85,7 +105,7 @@ func (h OrderHandler) GetDetail(w http.ResponseWriter, r *http.Request) {
 
 	OrderID := helper.StringToInt64(vars["order_id"], 0)
 
-	order, appErr := h.usecase.GetDetail(int64(OrderID))
+	order, appErr := h.orderUsecase.GetDetail(int64(OrderID))
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -121,7 +141,7 @@ func (h OrderHandler) UpdatePaid(w http.ResponseWriter, r *http.Request) {
 	form.UpdateTime = helper.StringToDate(req.UpdateTime, time.RFC3339)
 	form.Email = req.Email
 
-	appErr = h.usecase.UpdatePaid(form)
+	appErr = h.orderUsecase.UpdatePaid(form)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -136,7 +156,7 @@ func (h OrderHandler) UpdateDelivered(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	orderID := helper.StringToInt64(vars["order_id"], 0)
 
-	appErr := h.usecase.UpdateDelivered(orderID)
+	appErr := h.orderUsecase.UpdateDelivered(orderID)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -150,7 +170,7 @@ func (h OrderHandler) UpdateDelivered(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h OrderHandler) GetListAdmin(w http.ResponseWriter, r *http.Request) {
-	orders, appErr := h.usecase.GetList()
+	orders, appErr := h.orderUsecase.GetList()
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return

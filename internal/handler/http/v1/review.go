@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/danisbagus/go-common-packages/http/response"
+	"github.com/danisbagus/matchoshop/cmd/middleware"
 	"github.com/danisbagus/matchoshop/internal/domain"
 	"github.com/danisbagus/matchoshop/internal/usecase"
 	"github.com/danisbagus/matchoshop/utils/auth"
@@ -14,7 +15,19 @@ import (
 )
 
 type ReviewHandler struct {
-	usecase usecase.IReviewUsecase
+	reviewUsecase usecase.IReviewUsecase
+}
+
+func NewReviewHandler(r *mux.Router, usecaseCollection usecase.UsecaseCollection, APIMiddleware middleware.IAPIMiddleware) {
+	handler := ReviewHandler{
+		reviewUsecase: usecaseCollection.ReviewUsecase,
+	}
+
+	route := r.PathPrefix("/api/v1/review").Subrouter()
+	route.Use(APIMiddleware.Authorization(), APIMiddleware.ACL(constants.CustomerPermission))
+	route.HandleFunc("", handler.Create).Methods(http.MethodPost)
+	route.HandleFunc("", handler.Update).Methods(http.MethodPut)
+	route.HandleFunc("/{product_id}", handler.GetDetail).Methods(http.MethodGet)
 }
 
 func (h ReviewHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +52,7 @@ func (h ReviewHandler) Create(w http.ResponseWriter, r *http.Request) {
 	form.Rating = req.Rating
 	form.Comment = req.Comment
 
-	appErr = h.usecase.Create(form)
+	appErr = h.reviewUsecase.Create(form)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -54,7 +67,7 @@ func (h ReviewHandler) GetDetail(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	productID := helper.StringToInt64(vars["product_id"], 0)
 
-	review, appErr := h.usecase.GetDetail(userInfo.UserID, productID)
+	review, appErr := h.reviewUsecase.GetDetail(userInfo.UserID, productID)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return
@@ -85,7 +98,7 @@ func (h ReviewHandler) Update(w http.ResponseWriter, r *http.Request) {
 	form.Rating = req.Rating
 	form.Comment = req.Comment
 
-	appErr = h.usecase.Create(form)
+	appErr = h.reviewUsecase.Create(form)
 	if appErr != nil {
 		response.Error(w, appErr.Code, appErr.Message)
 		return

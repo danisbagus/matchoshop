@@ -4,20 +4,20 @@ import (
 	"github.com/danisbagus/matchoshop/internal/repository"
 )
 
-type IHealthCheckUsecase interface {
+type IHealthcheckUsecase interface {
 	Get() map[string]interface{}
 }
 
-type HealthCheckUsecase struct {
+type HealthcheckUsecase struct {
 	repo repository.IHealthcheckRepository
 }
 
-func NewHealthCheckUsecase(repository repository.RepositoryCollection) IHealthCheckUsecase {
-	return &HealthCheckUsecase{
+func NewHealthcheckUsecase(repository repository.RepositoryCollection) IHealthcheckUsecase {
+	return &HealthcheckUsecase{
 		repo: repository.HealthCheckRepository,
 	}
 }
 
-func (s HealthCheckUsecase) Get() map[string]interface{} {
+func (s HealthcheckUsecase) Get() map[string]interface{} {
 	return s.repo.Get()
 }
