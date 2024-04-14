@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/danisbagus/matchoshop/infrastructure/config"
+	"github.com/danisbagus/matchoshop/infrastructure/database"
 	"github.com/joho/godotenv"
 	"github.com/pressly/goose"
 	"github.com/spf13/cobra"
@@ -41,11 +43,11 @@ func main() {
 				os.Exit(0)
 			}
 
-			dbURL := os.Getenv("DATABASE_URL")
-			dbSSLMode := os.Getenv("DB_SSL_MODE")
+			config.SetConfig(".", ".env")
+			databaseConfig := database.GetConfigs()
+			postgresConfig := databaseConfig.Postgres
 
-			connection := fmt.Sprintf("%s?sslmode=%s", dbURL, dbSSLMode)
-
+			connection := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s", postgresConfig.Username, postgresConfig.Password, postgresConfig.Host, postgresConfig.Port, postgresConfig.Database, postgresConfig.SSLMode)
 			db, err := sql.Open("postgres", connection)
 			if err != nil {
 				panic(err)
