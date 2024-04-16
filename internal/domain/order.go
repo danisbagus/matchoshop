@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/utils/constants"
+	"github.com/danisbagus/matchoshop/internal/domain/common/constants"
 	"github.com/danisbagus/matchoshop/utils/helper"
 	validation "github.com/go-ozzo/ozzo-validation"
 )

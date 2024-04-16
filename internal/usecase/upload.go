@@ -8,7 +8,7 @@ import (
 	"github.com/cloudinary/cloudinary-go"
 	"github.com/cloudinary/cloudinary-go/api/uploader"
 	"github.com/danisbagus/go-common-packages/errs"
-	"github.com/danisbagus/matchoshop/utils/helper"
+	"github.com/danisbagus/matchoshop/infrastructure/config"
 )
 
 type IUploadUsecase interface {
@@ -24,7 +24,7 @@ func NewUploadUsecase() IUploadUsecase {
 
 func (s UploadUsecase) UploadImage(file multipart.File) (string, *errs.AppError) {
 	//create cloudinary instance
-	cld, err := cloudinary.NewFromURL(helper.EnvCloudURL())
+	cld, err := cloudinary.NewFromURL(config.CLOUDINARY_URL)
 
 	if err != nil {
 		return "", errs.NewUnexpectedError(err.Error())
@@ -34,7 +34,7 @@ func (s UploadUsecase) UploadImage(file multipart.File) (string, *errs.AppError)
 	defer cancel()
 
 	result, err := cld.Upload.Upload(ctx, file, uploader.UploadParams{
-		Folder: helper.EnvCloudUploadFolder(),
+		Folder: config.CLOUDINARY_UPLOAD_FOLDER,
 	})
 
 	if err != nil {

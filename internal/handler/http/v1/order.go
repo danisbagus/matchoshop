@@ -8,9 +8,9 @@ import (
 	"github.com/danisbagus/go-common-packages/http/response"
 	"github.com/danisbagus/matchoshop/cmd/middleware"
 	"github.com/danisbagus/matchoshop/internal/domain"
+	"github.com/danisbagus/matchoshop/internal/domain/common/constants"
 	"github.com/danisbagus/matchoshop/internal/usecase"
 	"github.com/danisbagus/matchoshop/utils/auth"
-	"github.com/danisbagus/matchoshop/utils/constants"
 	"github.com/danisbagus/matchoshop/utils/helper"
 	"github.com/gorilla/mux"
 )
