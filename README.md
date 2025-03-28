@@ -69,22 +69,22 @@ go build -o bin/matchoshop -v .
 
 ### Create new migration
 ```bash
-goose create AddSomeColumns
+./migration.sh create AddSomeColumns
 ```
 
 ### Up migration
 ```bash
-goose up
+./migration.sh up
 ```
 
 ### Down migration
 ```bash
-goose down
+./migration.sh down
 ```
 
 ### Check migration status
 ```bash
-goose status
+./migration.sh status
 ```
 
 ## Mockup
