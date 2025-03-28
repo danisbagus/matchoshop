@@ -10,6 +10,6 @@ import (
 // 	app.StartApp()
 // }
 
-func Handler(w http.ResponseWriter, r *http.Request) {
+func Main(w http.ResponseWriter, r *http.Request) {
 	app.StartApp()
 }
