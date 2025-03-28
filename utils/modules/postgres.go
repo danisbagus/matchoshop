@@ -10,12 +10,16 @@ import (
 )
 
 func GetPostgresClient() *sqlx.DB {
-	dbURL := os.Getenv("DATABASE_URL")
-	dbSSLMode := os.Getenv("DB_SSL_MODE")
+	host := os.Getenv("POSTGRES_HOST")
+	port := os.Getenv("POSTGRES_PORT")
+	username := os.Getenv("POSTGRES_USERNAME")
+	password := os.Getenv("POSTGRES_PASSWORD")
+	database := os.Getenv("POSTGRES_DATABASE")
+	sslMode := os.Getenv("POSTGRES_SSL_MODE")
+	endpointID := os.Getenv("POSTGRES_ENDPOINT_ID")
 
-	connection := fmt.Sprintf("%s?sslmode=%s", dbURL, dbSSLMode)
-
-	client, err := sqlx.Open("postgres", connection)
+	dbURL := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s options='endpoint=%s'", host, port, username, password, database, sslMode, endpointID)
+	client, err := sqlx.Open("postgres", dbURL)
 	if err != nil {
 		panic(err)
 	}
