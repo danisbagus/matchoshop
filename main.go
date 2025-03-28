@@ -1,7 +1,15 @@
 package main
 
-import app "github.com/danisbagus/matchoshop/app/api"
+import (
+	"net/http"
 
-func Main() {
+	app "github.com/danisbagus/matchoshop/app/api"
+)
+
+// func main() {
+// 	app.StartApp()
+// }
+
+func Handler(w http.ResponseWriter, r *http.Request) {
 	app.StartApp()
 }
