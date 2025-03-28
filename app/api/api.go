@@ -3,7 +3,6 @@ package api
 import (
 	"log"
 	"net/http"
-	"os"
 
 	"go.uber.org/zap"
 
@@ -21,7 +20,8 @@ import (
 	echoMid "github.com/labstack/echo/v4/middleware"
 )
 
-func StartApp() {
+// func StartApp() {
+func Init() *echo.Echo {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Failed loading .env file")
@@ -149,8 +149,9 @@ func StartApp() {
 		return c.String(http.StatusOK, "pong")
 	})
 
-	appPort := os.Getenv("PORT") // todo: move to config
-	e.Logger.Fatal(e.Start(":" + appPort))
+	// appPort := os.Getenv("PORT") // todo: move to config
+	// e.Logger.Fatal(e.Start(":" + appPort))
+	return e
 }
 
 func logHandler(c echo.Context, req, res []byte) { // todo: move to utils
