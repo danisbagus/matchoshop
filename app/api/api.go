@@ -2,6 +2,7 @@ package api
 
 import (
 	"log"
+	"net/http"
 	"os"
 
 	"go.uber.org/zap"
@@ -144,6 +145,9 @@ func StartApp() {
 	// health check v1 router
 	healthCheckRouter := e.Group("/api/v1/health-check")
 	healthCheckRouter.GET("", healthCheckHandlerV1.Get)
+	healthCheckRouter.GET("/ping", func(c echo.Context) error {
+		return c.String(http.StatusOK, "pong")
+	})
 
 	appPort := os.Getenv("PORT") // todo: move to config
 	e.Logger.Fatal(e.Start(":" + appPort))
