@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/danisbagus/go-common-packages/errs"
@@ -129,96 +128,35 @@ func (r ProductService) GetListPaginate(criteria *domain.ProductListCriteria) ([
 }
 
 func (r ProductService) GetDetail(productID int64) (*domain.ProductDetail, *errs.AppError) {
-
-	var product *domain.ProductDetail
-	var productCategories []domain.ProductCategory
-	var productReviews []domain.Review
-
-	productChan := make(chan *domain.ProductDetail, 1)
-	productCategoriesChan := make(chan []domain.ProductCategory, 1)
-	productReviewsChan := make(chan []domain.Review, 1)
-	errorChan := make(chan *errs.AppError, 3)
-
-	var wg sync.WaitGroup
-	wg.Add(3)
-
-	// get detail product
-	go func() {
-		defer wg.Done()
-
-		product, appErr := r.repo.GetOneByID(productID)
-		if appErr != nil {
-			errorChan <- appErr
-		}
-
-		productChan <- product
-	}()
-
-	// get detail product category
-	go func() {
-		defer wg.Done()
-
-		productCategories, appErr := r.productCategoryRepo.GetAllByProductID(productID)
-		if appErr != nil {
-			errorChan <- appErr
-		}
-
-		productCategoriesChan <- productCategories
-
-	}()
-
-	// get list review
-	go func() {
-		defer wg.Done()
-
-		reviews, appErr := r.reviewRepo.GetAllByProductID(productID)
-		if appErr != nil {
-			errorChan <- appErr
-		}
-
-		productReviewsChan <- reviews
-
-	}()
-
-	wg.Wait()
-
-	close(errorChan)
-	close(productChan)
-	close(productCategoriesChan)
-	close(productReviewsChan)
-
-	for appErr := range errorChan {
-		if appErr != nil {
-			return nil, appErr
-		}
+	// fetch product
+	product, err := r.repo.GetOneByID(productID)
+	if err != nil {
+		return nil, err
 	}
 
-	for dataChan := range productChan {
-		product = dataChan
+	// fetch product categories
+	productCategories, err := r.productCategoryRepo.GetAllByProductID(productID)
+	if err != nil {
+		return nil, err
 	}
-
-	for dataChan := range productCategoriesChan {
-		productCategories = dataChan
-	}
-
 	product.ProductCategories = productCategories
 
-	for dataChan := range productReviewsChan {
-		productReviews = dataChan
+	// fetch product reviews
+	productReviews, err := r.reviewRepo.GetAllByProductID(productID)
+	if err != nil {
+		return nil, err
 	}
-
 	product.Review = productReviews
 
+	// calculate rating and number of reviews
 	var totalRating int64
-	var averageRating float32
-	for _, value := range productReviews {
-		totalRating += int64(value.Rating)
+	for _, review := range productReviews {
+		totalRating += int64(review.Rating)
 	}
 
-	if totalRating > 0 {
-		averageRating = (float32(totalRating)) / (float32(len(productReviews)))
+	if len(productReviews) > 0 {
+		product.Rating = float32(totalRating) / float32(len(productReviews))
 	}
-	product.Rating = averageRating
 	product.NumbReviews = int64(len(productReviews))
 
 	return product, nil
