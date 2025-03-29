@@ -28,7 +28,12 @@ func (s UploadService) UploadImage(file *multipart.FileHeader) (string, *errs.Ap
 	defer src.Close()
 
 	//create cloudinary instance
-	cld, err := cloudinary.NewFromURL(helper.EnvCloudURL())
+	cloudUrl := helper.EnvCloudURL()
+	if cloudUrl == "" {
+		return "", errs.NewUnexpectedError("cloudinary url not found")
+	}
+
+	cld, err := cloudinary.NewFromURL(cloudUrl)
 
 	if err != nil {
 		return "", errs.NewUnexpectedError(err.Error())

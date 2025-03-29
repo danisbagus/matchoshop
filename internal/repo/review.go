@@ -50,7 +50,7 @@ func (r ReviewRepo) GetAllByProductID(productID int64) ([]domain.Review, *errs.A
 		var review domain.Review
 		err := rows.Scan(&review.ReviewID, &review.UserID, &review.ProductID, &review.Rating, &review.Comment, &review.CreatedAt, &review.UserName)
 		if err != nil && err != sql.ErrNoRows {
-			logger.Error("Error while reviews all order from database: " + err.Error())
+			logger.Error("Error while scan get all reviews from database: " + err.Error())
 			return nil, errs.NewUnexpectedError("Unexpected database error")
 		}
 		reviews = append(reviews, review)
